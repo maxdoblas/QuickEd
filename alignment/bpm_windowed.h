@@ -77,7 +77,8 @@ void windowed_matrix_allocate(
     windowed_matrix_t* const windowed_matrix,
     const uint64_t pattern_length,
     const uint64_t text_length,
-    mm_allocator_t* const mm_allocator);
+    mm_allocator_t* const mm_allocator,
+    const int window_size);
 void windowed_matrix_free(
     windowed_matrix_t* const windowed_matrix,
     mm_allocator_t* const mm_allocator);
@@ -90,7 +91,9 @@ void windowed_compute(
     windowed_pattern_t* const windowed_pattern,
     char* const text,
     const int text_length,
-    const int max_distance);
+    const int max_distance,
+    const int window_size, 
+    const int overlap_size);
 
 #endif /* BPM_WINDOWED_H_ */
 

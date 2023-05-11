@@ -49,6 +49,8 @@ align_bench_params_t parameters = {
   .text_end_free = 0.0,
   // Other algorithms parameters
   .bandwidth = -1,
+  .window_size = -1,
+  .overlap_size = -1,
 #ifdef EXTERNAL_BENCHMARKS
   /* ... */
 #endif
@@ -141,6 +143,8 @@ void parse_arguments(
     { "ends-free", required_argument, 0, 901 },
     /* Other alignment parameters */
     { "bandwidth", required_argument, 0, 2000 },
+    { "window-size", required_argument, 0, 2001 },
+    { "overlap-size", required_argument, 0, 2002 },
 #ifdef EXTERNAL_BENCHMARKS
     /* ... */
 #endif
@@ -261,6 +265,12 @@ void parse_arguments(
     case 2000: // --bandwidth
       parameters.bandwidth = atoi(optarg);
       break;
+    case 2001: // --window-size
+      parameters.window_size = atoi(optarg);
+      break;
+    case 2002: // --overlap-size
+      parameters.overlap_size = atoi(optarg);
+      break;
 #ifdef EXTERNAL_BENCHMARKS
       /* ... */
 #endif
@@ -344,10 +354,48 @@ void parse_arguments(
         fprintf(stderr,"Parameter 'bandwidth' has to be provided for banded algorithms\n");
         exit(1);
       }
+      if (parameters.window_size != -1) {
+        fprintf(stderr,"Parameter 'window-size' has no effect with the selected algorithm\n");
+        exit(1);
+      }
+      if (parameters.overlap_size != -1) {
+        fprintf(stderr,"Parameter 'overlap-size' has no effect with the selected algorithm\n");
+        exit(1);
+      }
+      break;
+    case alignment_edit_bpm_windowed:
+      if (parameters.bandwidth != -1) {
+        fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
+        exit(1);
+      }
+
+      if (parameters.window_size == -1) {
+        fprintf(stderr,"Parameter 'window-size' has to be provided for banded algorithms\n");
+        exit(1);
+      } else if (parameters.window_size < 1) {
+        fprintf(stderr,"Parameter 'window-size' has to be > 0\n");
+        exit(1);
+      }
+
+      if (parameters.overlap_size == -1) {
+        fprintf(stderr,"Parameter 'overlap-size' has to be provided for banded algorithms\n");
+        exit(1);
+      } else if (parameters.overlap_size > parameters.window_size - 1 || parameters.overlap_size < 0) {
+        fprintf(stderr,"Parameter 'overlap-size' has to be: 0 <= overlap-size < window-size \n");
+        exit(1);
+      }
       break;
     default:
       if (parameters.bandwidth != -1) {
         fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
+        exit(1);
+      }
+      if (parameters.window_size != -1) {
+        fprintf(stderr,"Parameter 'window-size' has no effect with the selected algorithm\n");
+        exit(1);
+      }
+      if (parameters.overlap_size != -1) {
+        fprintf(stderr,"Parameter 'overlap-size' has no effect with the selected algorithm\n");
         exit(1);
       }
       break;

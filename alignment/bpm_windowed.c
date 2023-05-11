@@ -91,6 +91,37 @@
   /* Finally, generate the Vout */ \
   Pv = Mh | ~(Xv | Ph); \
   Mv = Ph & Xv
+
+
+
+void bpm_advance_block_func(const uint64_t Eq, 
+    const uint64_t mask, 
+    uint64_t *Pv, 
+    uint64_t *Mv, 
+    const uint64_t PHin, 
+    const uint64_t MHin, 
+    uint64_t *PHout, 
+    uint64_t *MHout){ 
+  /* Computes modulator vector {Xv,Xh} ( cases A&C ) */ 
+  const uint64_t Xv = Eq | *Mv; 
+  const uint64_t _Eq = Eq | MHin; 
+  const uint64_t Xh = (((_Eq & *Pv) + *Pv) ^ *Pv) | _Eq; 
+  /* Calculate Hout */ 
+  uint64_t Ph = *Mv | ~(Xh | *Pv); 
+  uint64_t Mh = *Pv & Xh; 
+  /* Account Hout that propagates for the next block */ 
+  *PHout = (Ph & mask)!=0; 
+  *MHout = (Mh & mask)!=0; 
+  /* Hout become the Hin of the next cell */ 
+  Ph <<= 1; 
+  Mh <<= 1; 
+  /* Account Hin coming from the previous block */ 
+  Ph |= PHin; 
+  Mh |= MHin; 
+  /* Finally, generate the Vout */ 
+  *Pv = Mh | ~(Xv | Ph); 
+  *Mv = Ph & Xv;
+}
 /*
  * Setup
  */
@@ -170,13 +201,14 @@ void windowed_matrix_allocate(
     windowed_matrix_t* const windowed_matrix,
     const uint64_t pattern_length,
     const uint64_t text_length,
-    mm_allocator_t* const mm_allocator) {
+    mm_allocator_t* const mm_allocator,
+    const int window_size) {
   // Parameters
   //const uint64_t num_words64 = DIV_CEIL(pattern_length,BPM_W64_LENGTH);
-  const uint64_t num_words64 = 3;
+  const uint64_t num_words64 = window_size;
   // Allocate auxiliary matrix
   //const uint64_t aux_matrix_size = num_words64*UINT64_SIZE*(text_length+1); /* (+1 base-column) */
-  const uint64_t aux_matrix_size = num_words64*UINT64_SIZE*(BPM_W64_LENGTH*3+1); /* (+1 base-column) */
+  const uint64_t aux_matrix_size = num_words64*UINT64_SIZE*(BPM_W64_LENGTH*window_size+1); /* (+1 base-column) */
   uint64_t* const Pv = (uint64_t*)mm_allocator_malloc(mm_allocator,aux_matrix_size);
   uint64_t* const Mv = (uint64_t*)mm_allocator_malloc(mm_allocator,aux_matrix_size);
   windowed_matrix->Mv = Mv;
@@ -219,25 +251,26 @@ void windowed_compute_window(
     windowed_pattern_t* const windowed_pattern,
     char* const text,
     const uint64_t text_length,
-    uint64_t max_distance) {
+    uint64_t max_distance,
+    const int window_size) {
   // Pattern variables
   const uint64_t* PEQ = windowed_pattern->PEQ;
   //const uint64_t num_words64 = windowed_pattern->pattern_num_words64;
-  const uint64_t num_words64 = 3;
+  const uint64_t num_words64 = window_size;
   const uint64_t* const level_mask = windowed_pattern->level_mask;
   //int64_t* const score = windowed_pattern->score;
   uint64_t* const Pv = windowed_matrix->Pv;
   uint64_t* const Mv = windowed_matrix->Mv;
   //const uint64_t max_distance__1 = max_distance+1;
-  windowed_reset_search_cutoff(Pv,Mv,BPM_W64_LENGTH*3);
+  windowed_reset_search_cutoff(Pv,Mv,BPM_W64_LENGTH*window_size);
   // Advance in DP-bit_encoded matrix
   uint64_t text_position;
   int64_t pos_v_fi = windowed_matrix->pos_v/UINT64_LENGTH;
   int64_t pos_h_fi = windowed_matrix->pos_h;
 
-  int64_t pos_v = (pos_v_fi-2 >= 0) ? pos_v_fi - 2 : 0;
+  int64_t pos_v = (pos_v_fi-(window_size-1) >= 0) ? pos_v_fi - (window_size-1) : 0;
   //if (pos_v < 0) pos_v = 0;
-  int64_t pos_h = (pos_h_fi-UINT64_LENGTH*2 >= 0) ? (pos_h_fi / UINT64_LENGTH) * UINT64_LENGTH-2*UINT64_LENGTH : 0;
+  int64_t pos_h = (pos_h_fi-UINT64_LENGTH*(window_size-1) >= 0) ? (pos_h_fi / UINT64_LENGTH) * UINT64_LENGTH-(window_size-1)*UINT64_LENGTH : 0;
   //if (pos_h < 0) pos_h = 0;
 
   int64_t steps_v = pos_v_fi - pos_v;
@@ -272,7 +305,8 @@ void windowed_compute_window(
       //printf("Pv_in: %lx \nMv_in: %lx\n", Pv_in, Mv_in);
       //printf("PHin: %lx \nMHin: %lx\n", PHin, MHin);
 
-      BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+      //BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+      bpm_advance_block_func(Eq,mask,&Pv_in,&Mv_in,PHin,MHin,&PHout,&MHout);
       //printf("Pv_out: %lx \nMv_out: %lx\n", Pv_in, Mv_in);
       //printf("PHout: %lx \nMHout: %lx\n", PHout, MHout);
 
@@ -292,23 +326,23 @@ void windowed_compute_window(
 void windowed_backtrace_window(
     windowed_matrix_t* const windowed_matrix,
     const windowed_pattern_t* const windowed_pattern,
-    char* const text) {
+    char* const text,
+    const int window_size, 
+    const int overlap_size) {
   // Parameters
   char* const pattern = windowed_pattern->pattern;
-  const uint64_t pattern_length = windowed_pattern->pattern_length;
   const uint64_t* const Pv = windowed_matrix->Pv;
   const uint64_t* const Mv = windowed_matrix->Mv;
   char* const operations = windowed_matrix->cigar->operations;
   int op_sentinel = windowed_matrix->cigar->begin_offset;
   // Retrieve the alignment. Store the match
-  //const uint64_t num_words64 = windowed_pattern->pattern_num_words64;
-  const uint64_t num_words64 = 3;
+  const uint64_t num_words64 = window_size;
   int64_t h = windowed_matrix->pos_h;
   int64_t v = windowed_matrix->pos_v;
-  int64_t h_min = windowed_matrix->pos_h-UINT64_LENGTH*3>=0 ? ((windowed_matrix->pos_h-2*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
-  int64_t h_overlap = windowed_matrix->pos_h-UINT64_LENGTH*2>=0 ? ((windowed_matrix->pos_h-UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
-  int64_t v_min = windowed_matrix->pos_v-UINT64_LENGTH*3>=0 ? ((windowed_matrix->pos_v-2*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
-  int64_t v_overlap = windowed_matrix->pos_v-UINT64_LENGTH*2>=0 ? ((windowed_matrix->pos_v-UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
+  int64_t h_min = windowed_matrix->pos_h-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_h-2*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
+  int64_t h_overlap = windowed_matrix->pos_h-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_h-UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
+  int64_t v_min = windowed_matrix->pos_v-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_v-2*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
+  int64_t v_overlap = windowed_matrix->pos_v-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_v-UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
 
   //printf("\n\n----------------------------------------------------------\n");
   //printf("----------------------------------------------------------\n");
@@ -352,23 +386,26 @@ void windowed_compute(
     windowed_pattern_t* const windowed_pattern,
     char* const text,
     const int text_length,
-    const int max_distance) {
-    // Fill Matrix (Pv,Mv)
-    while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
-    // Fill Matrix (Pv,Mv)
-      windowed_compute_window(
-          windowed_matrix,windowed_pattern,
-          text,text_length,max_distance);
-      windowed_backtrace_window(windowed_matrix,windowed_pattern,text);
-    }
+    const int max_distance,
+    const int window_size, 
+    const int overlap_size) {
+  
+  while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
+    // Fill window (Pv,Mv)
+    windowed_compute_window(
+        windowed_matrix,windowed_pattern,
+        text,text_length,max_distance,window_size);
+    // Compute window backtrace
+    windowed_backtrace_window(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
+  }
 
-    int64_t h = windowed_matrix->pos_h;
-    int64_t v = windowed_matrix->pos_v;
-    char* const operations = windowed_matrix->cigar->operations;
-    int op_sentinel = windowed_matrix->cigar->begin_offset;
-    while (h>=0) {operations[op_sentinel--] = 'I'; --h;}
-    while (v>=0) {operations[op_sentinel--] = 'D'; --v;}
-    windowed_matrix->pos_h = h;
-    windowed_matrix->pos_v = v;
-    windowed_matrix->cigar->begin_offset= op_sentinel+1;
+  int64_t h = windowed_matrix->pos_h;
+  int64_t v = windowed_matrix->pos_v;
+  char* const operations = windowed_matrix->cigar->operations;
+  int op_sentinel = windowed_matrix->cigar->begin_offset;
+  while (h>=0) {operations[op_sentinel--] = 'I'; --h;}
+  while (v>=0) {operations[op_sentinel--] = 'D'; --v;}
+  windowed_matrix->pos_h = h;
+  windowed_matrix->pos_v = v;
+  windowed_matrix->cigar->begin_offset = op_sentinel + 1;
 }

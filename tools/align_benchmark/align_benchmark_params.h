@@ -86,6 +86,8 @@ typedef struct {
   double text_end_free;
   // Other algorithms parameters
   int bandwidth;
+  int window_size;
+  int overlap_size;
 #ifdef EXTERNAL_BENCHMARKS
   /* ... */
 #endif

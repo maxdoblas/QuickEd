@@ -91,7 +91,9 @@ void benchmark_edit_bpm_banded(
   bpm_matrix_free(&bpm_matrix,align_input->mm_allocator);
 }
 void benchmark_edit_bpm_windowed(
-    align_input_t* const align_input) {
+    align_input_t* const align_input,
+    const int window_size,
+    const int ovwelap_size) {
   // Allocate
   windowed_pattern_t windowed_pattern;
   windowed_pattern_compile(
@@ -100,12 +102,14 @@ void benchmark_edit_bpm_windowed(
   windowed_matrix_t windowed_matrix;
   windowed_matrix_allocate(
       &windowed_matrix,align_input->pattern_length,
-      align_input->text_length,align_input->mm_allocator);
+      align_input->text_length,align_input->mm_allocator,
+      window_size, ovwelap_size);
   // Align
   timer_start(&align_input->timer);
   windowed_compute(
       &windowed_matrix,&windowed_pattern,align_input->text,
-      align_input->text_length,align_input->pattern_length);
+      align_input->text_length,align_input->pattern_length,
+      window_size, ovwelap_size);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {
