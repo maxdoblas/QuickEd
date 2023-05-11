@@ -76,6 +76,7 @@ void usage() {
       "          --algorithm|a ALGORITHM                                       \n"
       "            [Edit (Levenshtein)]                                        \n"
       "              edit-bpm                                                  \n"
+      "              edit-bpm-windowed                                         \n"
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
 #ifdef EXTERNAL_BENCHMARKS
@@ -174,6 +175,8 @@ void parse_arguments(
       // Edit
       } else if (strcmp(optarg,"edit-bpm")==0) {
         parameters.algorithm = alignment_edit_bpm;
+      } else if (strcmp(optarg,"edit-bpm-windowed")==0) {
+        parameters.algorithm = alignment_edit_bpm_windowed;
       } else if (strcmp(optarg,"edit-dp")==0) {
         parameters.algorithm = alignment_edit_dp;
       } else if (strcmp(optarg,"edit-dp-banded")==0) {

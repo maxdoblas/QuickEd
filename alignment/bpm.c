@@ -158,6 +158,7 @@ void bpm_matrix_allocate(
   bpm_matrix->Pv = Pv;
   // CIGAR
   bpm_matrix->cigar = cigar_new(pattern_length+text_length);
+  bpm_matrix->cigar->end_offset = pattern_length+text_length;
 }
 void bpm_matrix_free(
     bpm_matrix_t* const bpm_matrix,

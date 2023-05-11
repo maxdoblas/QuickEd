@@ -25,7 +25,72 @@
 #ifndef BPM_WINDOWED_H_
 #define BPM_WINDOWED_H_
 
+#include "utils/commons.h"
+#include "alignment/cigar.h"
+#include "system/mm_allocator.h"
 
+
+typedef struct {
+  /* BMP Pattern */
+  char* pattern;                // Raw pattern
+  uint64_t* PEQ;                // Pattern equalities (Bit vector for Myers-DP)
+  uint64_t pattern_length;      // Length
+  uint64_t pattern_num_words64; // ceil(Length / |w|)
+  uint64_t pattern_mod;         // Length % |w|
+  /* BPM Auxiliary data */
+  uint64_t* P;
+  uint64_t* M;
+  uint64_t* level_mask;
+  int64_t* score;
+  int64_t* init_score;
+  uint64_t* pattern_left;
+} windowed_pattern_t;
+
+/*
+ * BPM matrix
+ */
+typedef struct {
+  // Bit-encoded Matrix
+  uint64_t* Pv;
+  uint64_t* Mv;
+  uint64_t min_score;
+  uint64_t min_score_column;
+  int64_t pos_v;
+  int64_t pos_h;
+  // CIGAR
+  cigar_t* cigar;
+} windowed_matrix_t;
+
+/*
+ * Setup
+ */
+void windowed_pattern_compile(
+    windowed_pattern_t* const windowed_pattern,
+    char* const pattern,
+    const int pattern_length,
+    mm_allocator_t* const mm_allocator);
+void windowed_pattern_free(
+    windowed_pattern_t* const windowed_pattern,
+    mm_allocator_t* const mm_allocator);
+
+void windowed_matrix_allocate(
+    windowed_matrix_t* const windowed_matrix,
+    const uint64_t pattern_length,
+    const uint64_t text_length,
+    mm_allocator_t* const mm_allocator);
+void windowed_matrix_free(
+    windowed_matrix_t* const windowed_matrix,
+    mm_allocator_t* const mm_allocator);
+
+/*
+ * Edit distance computation using BPM
+ */
+void windowed_compute(
+    windowed_matrix_t* const windowed_matrix,
+    windowed_pattern_t* const windowed_pattern,
+    char* const text,
+    const int text_length,
+    const int max_distance);
 
 #endif /* BPM_WINDOWED_H_ */
 

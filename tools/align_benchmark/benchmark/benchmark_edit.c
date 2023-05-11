@@ -26,6 +26,7 @@
 #include "benchmark/benchmark_utils.h"
 #include "benchmark/benchmark_check.h"
 #include "edit/edit_dp.h"
+#include "../../../alignment/bpm_windowed.h"
 
 /*
  * Benchmark Edit
@@ -58,6 +59,35 @@ void benchmark_edit_bpm(
   // Free
   bpm_pattern_free(&bpm_pattern,align_input->mm_allocator);
   bpm_matrix_free(&bpm_matrix,align_input->mm_allocator);
+}
+void benchmark_edit_bpm_windowed(
+    align_input_t* const align_input) {
+  // Allocate
+  windowed_pattern_t windowed_pattern;
+  windowed_pattern_compile(
+      &windowed_pattern,align_input->pattern,
+      align_input->pattern_length,align_input->mm_allocator);
+  windowed_matrix_t windowed_matrix;
+  windowed_matrix_allocate(
+      &windowed_matrix,align_input->pattern_length,
+      align_input->text_length,align_input->mm_allocator);
+  // Align
+  timer_start(&align_input->timer);
+  windowed_compute(
+      &windowed_matrix,&windowed_pattern,align_input->text,
+      align_input->text_length,align_input->pattern_length);
+  timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,windowed_matrix.cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,false,windowed_matrix.cigar);
+  }
+  // Free
+  windowed_pattern_free(&windowed_pattern,align_input->mm_allocator);
+  windowed_matrix_free(&windowed_matrix,align_input->mm_allocator);
 }
 void benchmark_edit_dp(
     align_input_t* const align_input) {
