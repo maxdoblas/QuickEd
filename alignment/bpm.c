@@ -171,6 +171,23 @@ void bpm_matrix_free(
 /*
  * Edit distance computation using BPM
  */
+void bpm_reset_search(
+    const uint64_t num_words,
+    uint64_t* const P,
+    uint64_t* const M,
+    int64_t* const score,
+    const int64_t* const init_score) {
+  // Reset score,P,M
+  uint64_t i;
+  P[0]=BPM_W64_ONES;
+  M[0]=0;
+  score[0] = init_score[0];
+  for (i=1;i<num_words;++i) {
+    P[i]=BPM_W64_ONES;
+    M[i]=0;
+    score[i] = score[i-1] + init_score[i];
+  }
+}
 void bpm_reset_search_cutoff(
     uint8_t* const top_level,
     uint64_t* const P,
@@ -278,6 +295,155 @@ void bpm_compute_matrix(
     bpm_matrix->min_score_column = UINT64_MAX;
   }
 }
+void bpm_compute_matrix_banded(
+    bpm_matrix_t* const bpm_matrix,
+    bpm_pattern_t* const bpm_pattern,
+    char* const text,
+    const int text_length,
+    const int bandwidth,
+    const int max_distance) {
+  // Pattern variables
+  const uint64_t* PEQ = bpm_pattern->PEQ;
+  const uint64_t num_words64 = bpm_pattern->pattern_num_words64;
+  //const uint64_t pattern_length = bpm_pattern->pattern_length;
+  const uint64_t* const level_mask = bpm_pattern->level_mask;
+  int64_t* const score = bpm_pattern->score;
+  const int64_t* const init_score = bpm_pattern->init_score;
+  uint64_t* const Pv = bpm_matrix->Pv;
+  uint64_t* const Mv = bpm_matrix->Mv;
+  bpm_reset_search(num_words64,Pv,Mv,score,init_score);
+
+  const int k_end = ABS(DIV_CEIL(text_length,BPM_W64_LENGTH)-num_words64)+1;
+  const int effective_bandwidth = MAX(k_end,bandwidth);
+
+  // Advance in DP-bit_encoded matrix
+  int last_hi = 0;
+  uint64_t text_position;
+
+  // Prologue: lo_band region
+  for (text_position=0;text_position<=effective_bandwidth;++text_position) {
+    // Fetch next character
+    const uint8_t enc_char = dna_encode(text[text_position]);
+
+    // Compute lo&hi limit
+    const int lo = 0;
+    const int hi_tmp= (effective_bandwidth+text_position-1)/BPM_W64_LENGTH; // Readability
+    const int hi = MIN(num_words64,hi_tmp);
+
+    // Advance all blocks
+    uint64_t i,PHin=1,MHin=0,PHout,MHout;
+    // Main Loop
+    for (i=lo;i<=last_hi;++i) {
+      /* Calculate Step Data */
+      const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(text_position,num_words64,i);
+      const uint64_t next_bdp_idx = bdp_idx+num_words64;
+      uint64_t Pv_in = Pv[bdp_idx];
+      uint64_t Mv_in = Mv[bdp_idx];
+      const uint64_t mask = level_mask[i];
+      const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i,enc_char)];
+
+      /* Compute Block */
+      BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+
+      /* Adjust score and swap propagate Hv */
+      score[i] += PHout-MHout;
+      Pv[next_bdp_idx] = Pv_in;
+      Mv[next_bdp_idx] = Mv_in;
+      PHin=PHout;
+      MHin=MHout;
+    }
+
+    // Epilogue: Out of band adjacent blocks
+    for (;i<=hi;++i) {
+      /* Calculate Step Data */
+      const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(text_position,num_words64,i);
+      const uint64_t next_bdp_idx = bdp_idx+num_words64;
+      uint64_t Pv_in = BPM_W64_ONES;
+      uint64_t Mv_in = 0;
+      const uint64_t mask = level_mask[i];
+      const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i,enc_char)];
+
+      /* Compute Block */
+      BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+
+      /* Adjust score and swap propagate Hv */
+      score[i] += PHout-MHout;
+      Pv[next_bdp_idx] = Pv_in;
+      Mv[next_bdp_idx] = Mv_in;
+      PHin=PHout;
+      MHin=MHout;
+    }
+
+    last_hi = hi;
+  }
+
+  // Main loop
+  for (;text_position<text_length;++text_position) {
+    // Fetch next character
+    const uint8_t enc_char = dna_encode(text[text_position]);
+
+    // Compute lo&hi limit
+    const int lo = (text_position - effective_bandwidth)/BPM_W64_LENGTH;
+    const int hi_tmp= (effective_bandwidth+text_position-1)/BPM_W64_LENGTH; // Readability
+    const int hi = MIN(num_words64,hi_tmp);
+
+    // Advance all blocks
+    uint64_t i,PHin=1,MHin=0,PHout,MHout;
+    // Main Loop
+    for (i=lo;i<=last_hi;++i) {
+      /* Calculate Step Data */
+      const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(text_position,num_words64,i);
+      const uint64_t next_bdp_idx = bdp_idx+num_words64;
+      uint64_t Pv_in = Pv[bdp_idx];
+      uint64_t Mv_in = Mv[bdp_idx];
+      const uint64_t mask = level_mask[i];
+      const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i,enc_char)];
+
+      /* Compute Block */
+      BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+
+      /* Adjust score and swap propagate Hv */
+      score[i] += PHout-MHout;
+      Pv[next_bdp_idx] = Pv_in;
+      Mv[next_bdp_idx] = Mv_in;
+      PHin=PHout;
+      MHin=MHout;
+    }
+
+    // Epilogue: Out of band adjacent blocks
+    for (;i<=hi;++i) {
+      /* Calculate Step Data */
+      const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(text_position,num_words64,i);
+      const uint64_t next_bdp_idx = bdp_idx+num_words64;
+      uint64_t Pv_in = BPM_W64_ONES;
+      uint64_t Mv_in = 0;
+      const uint64_t mask = level_mask[i];
+      const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i,enc_char)];
+
+      /* Compute Block */
+      BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+
+      /* Adjust score and swap propagate Hv */
+      score[i] += PHout-MHout;
+      Pv[next_bdp_idx] = Pv_in;
+      Mv[next_bdp_idx] = Mv_in;
+      PHin=PHout;
+      MHin=MHout;
+    }
+
+    last_hi = hi;
+  }
+
+  // Return optimal column/distance
+  const int64_t current_score = score[num_words64-1];
+  if (current_score <= max_distance) {
+    bpm_matrix->min_score = current_score;
+    bpm_matrix->min_score_column = text_length-1;
+  } else {
+    bpm_matrix->min_score = UINT64_MAX;
+    bpm_matrix->min_score_column = UINT64_MAX;
+  }
+}
 void bpm_backtrace_matrix(
     bpm_matrix_t* const bpm_matrix,
     const bpm_pattern_t* const bpm_pattern,
@@ -328,6 +494,22 @@ void bpm_compute(
   bpm_compute_matrix(
       bpm_matrix,bpm_pattern,
       text,text_length,max_distance);
+  // Check distance
+  if (bpm_matrix->min_score == UINT64_MAX) return;
+  // Backtrace and generate CIGAR
+  bpm_backtrace_matrix(bpm_matrix,bpm_pattern,text);
+}
+void bpm_compute_banded(
+    bpm_matrix_t* const bpm_matrix,
+    bpm_pattern_t* const bpm_pattern,
+    char* const text,
+    const int text_length,
+    const int bandwidth,
+    const int max_distance) {
+  // Fill Matrix (Pv,Mv)
+  bpm_compute_matrix_banded(
+      bpm_matrix,bpm_pattern,
+      text,text_length,bandwidth,max_distance);
   // Check distance
   if (bpm_matrix->min_score == UINT64_MAX) return;
   // Backtrace and generate CIGAR

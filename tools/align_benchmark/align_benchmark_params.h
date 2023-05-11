@@ -42,6 +42,7 @@ typedef enum {
   alignment_edit_dp_banded,
   //
   alignment_edit_bpm,
+  alignment_edit_bpm_banded,
   alignment_edit_bpm_windowed,
 #ifdef EXTERNAL_BENCHMARKS
   // External algorithms

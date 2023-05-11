@@ -60,6 +60,36 @@ void benchmark_edit_bpm(
   bpm_pattern_free(&bpm_pattern,align_input->mm_allocator);
   bpm_matrix_free(&bpm_matrix,align_input->mm_allocator);
 }
+void benchmark_edit_bpm_banded(
+    align_input_t* const align_input,
+    const int bandwidth) {
+  // Allocate
+  bpm_pattern_t bpm_pattern;
+  bpm_pattern_compile(
+      &bpm_pattern,align_input->pattern,
+      align_input->pattern_length,align_input->mm_allocator);
+  bpm_matrix_t bpm_matrix;
+  bpm_matrix_allocate(
+      &bpm_matrix,align_input->pattern_length,
+      align_input->text_length,align_input->mm_allocator);
+  // Align
+  timer_start(&align_input->timer);
+  bpm_compute_banded(
+      &bpm_matrix,&bpm_pattern,align_input->text,
+      align_input->text_length,bandwidth,align_input->pattern_length);
+  timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,bpm_matrix.cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,false,bpm_matrix.cigar);
+  }
+  // Free
+  bpm_pattern_free(&bpm_pattern,align_input->mm_allocator);
+  bpm_matrix_free(&bpm_matrix,align_input->mm_allocator);
+}
 void benchmark_edit_bpm_windowed(
     align_input_t* const align_input) {
   // Allocate

@@ -89,4 +89,12 @@ void bpm_compute(
     const int text_length,
     const int max_distance);
 
+void bpm_compute_banded(
+    bpm_matrix_t* const bpm_matrix,
+    bpm_pattern_t* const bpm_pattern,
+    char* const text,
+    const int text_length,
+    const int bandwidth,
+    const int max_distance);
+
 #endif /* BPM_H_ */

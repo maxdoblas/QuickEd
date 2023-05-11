@@ -76,6 +76,7 @@ void usage() {
       "          --algorithm|a ALGORITHM                                       \n"
       "            [Edit (Levenshtein)]                                        \n"
       "              edit-bpm                                                  \n"
+      "              edit-bpm-banded                                           \n"
       "              edit-bpm-windowed                                         \n"
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
@@ -175,6 +176,8 @@ void parse_arguments(
       // Edit
       } else if (strcmp(optarg,"edit-bpm")==0) {
         parameters.algorithm = alignment_edit_bpm;
+      } else if (strcmp(optarg,"edit-bpm-banded")==0) {
+        parameters.algorithm = alignment_edit_bpm_banded;
       } else if (strcmp(optarg,"edit-bpm-windowed")==0) {
         parameters.algorithm = alignment_edit_bpm_windowed;
       } else if (strcmp(optarg,"edit-dp")==0) {
@@ -335,6 +338,7 @@ void parse_arguments(
   }
   // Check 'bandwidth' parameter
   switch (parameters.algorithm) {
+    case alignment_edit_bpm_banded:
     case alignment_edit_dp_banded:
       if (parameters.bandwidth == -1) {
         fprintf(stderr,"Parameter 'bandwidth' has to be provided for banded algorithms\n");

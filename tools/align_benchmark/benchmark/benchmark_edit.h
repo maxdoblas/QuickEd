@@ -32,6 +32,9 @@
  */
 void benchmark_edit_bpm(
     align_input_t* const align_input);
+void benchmark_edit_bpm_banded(
+    align_input_t* const align_input,
+    const int bandwidth);
 void benchmark_edit_bpm_windowed(
     align_input_t* const align_input);
 void benchmark_edit_dp(
