@@ -305,7 +305,7 @@ void bpm_compute_matrix_banded(
   // Pattern variables
   const uint64_t* PEQ = bpm_pattern->PEQ;
   const uint64_t num_words64 = bpm_pattern->pattern_num_words64;
-  //const uint64_t pattern_length = bpm_pattern->pattern_length;
+  const uint64_t pattern_length = bpm_pattern->pattern_length;
   const uint64_t* const level_mask = bpm_pattern->level_mask;
   int64_t* const score = bpm_pattern->score;
   const int64_t* const init_score = bpm_pattern->init_score;
@@ -313,7 +313,7 @@ void bpm_compute_matrix_banded(
   uint64_t* const Mv = bpm_matrix->Mv;
   bpm_reset_search(num_words64,Pv,Mv,score,init_score);
 
-  const int k_end = ABS(DIV_CEIL(text_length,BPM_W64_LENGTH)-num_words64)+1;
+  const int k_end = ABS(text_length-pattern_length)+1;
   const int effective_bandwidth = MAX(k_end,bandwidth);
 
   // Advance in DP-bit_encoded matrix
@@ -327,8 +327,8 @@ void bpm_compute_matrix_banded(
 
     // Compute lo&hi limit
     const int lo = 0;
-    const int hi_tmp= (effective_bandwidth+text_position-1)/BPM_W64_LENGTH; // Readability
-    const int hi = MIN(num_words64,hi_tmp);
+    const int hi_tmp = (effective_bandwidth+text_position-1)/BPM_W64_LENGTH; // Readability
+    const int hi = MIN(num_words64-1,hi_tmp);
 
     // Advance all blocks
     uint64_t i,PHin=1,MHin=0,PHout,MHout;
@@ -384,8 +384,8 @@ void bpm_compute_matrix_banded(
 
     // Compute lo&hi limit
     const int lo = (text_position - effective_bandwidth)/BPM_W64_LENGTH;
-    const int hi_tmp= (effective_bandwidth+text_position-1)/BPM_W64_LENGTH; // Readability
-    const int hi = MIN(num_words64,hi_tmp);
+    const int hi_tmp = (effective_bandwidth+text_position-1)/BPM_W64_LENGTH; // Readability
+    const int hi = MIN(num_words64-1,hi_tmp);
 
     // Advance all blocks
     uint64_t i,PHin=1,MHin=0,PHout,MHout;
