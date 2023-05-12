@@ -345,6 +345,10 @@ int main(int argc,char* argv[]) {
   parse_arguments(argc,argv);
   // Open file
   FILE* const output_file = (parameters.output==NULL) ? stdout : fopen(parameters.output,"w");
+  if (output_file == NULL) {
+    fprintf(stderr, "Invalid path: %s\n", parameters.output);
+    exit(1);
+  }
   // Allocate sequences
   const int pattern_length = parameters.length;
   const int text_length = ceil((float)pattern_length * parameters.length_diff);
