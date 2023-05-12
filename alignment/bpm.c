@@ -462,7 +462,7 @@ void bpm_backtrace_matrix(
   while (v >= 0 && h >= 0) {
     const uint8_t block = v / UINT64_LENGTH;
     const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(h+1,num_words64,block);
-    const uint64_t mask = 1L << (v % UINT64_LENGTH);
+    const uint64_t mask = 1UL << (v % UINT64_LENGTH);
     // CIGAR operation Test
     if (Pv[bdp_idx] & mask) {
       operations[op_sentinel--] = 'D';
