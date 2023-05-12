@@ -103,7 +103,7 @@ void benchmark_edit_bpm_windowed(
   windowed_matrix_allocate(
       &windowed_matrix,align_input->pattern_length,
       align_input->text_length,align_input->mm_allocator,
-      window_size, ovwelap_size);
+      window_size);
   // Align
   timer_start(&align_input->timer);
   windowed_compute(
