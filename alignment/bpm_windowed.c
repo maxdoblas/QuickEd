@@ -71,7 +71,7 @@
  *   const @vector Eq,mask;
  *   return (Pv,Mv,PHout,MHout);
  */
-#define BPM_ADVANCE_BLOCK(Eq,mask,Pv,Mv,PHin,MHin,PHout,MHout) \
+#define BPM_ADVANCE_BLOCK(Eq,Pv,Mv,PHin,MHin,PHout,MHout) \
   /* Computes modulator vector {Xv,Xh} ( cases A&C ) */ \
   const uint64_t Xv = Eq | Mv; \
   const uint64_t _Eq = Eq | MHin; \
@@ -80,8 +80,8 @@
   uint64_t Ph = Mv | ~(Xh | Pv); \
   uint64_t Mh = Pv & Xh; \
   /* Account Hout that propagates for the next block */ \
-  PHout = (Ph & mask)!=0; \
-  MHout = (Mh & mask)!=0; \
+  PHout = Ph >> 63; \
+  MHout = Mh >> 63; \
   /* Hout become the Hin of the next cell */ \
   Ph <<= 1; \
   Mh <<= 1; \
@@ -93,9 +93,8 @@
   Mv = Ph & Xv
 
 
-
+__attribute__ ((noinline)) 
 void bpm_advance_block_func(const uint64_t Eq, 
-    const uint64_t mask, 
     uint64_t *Pv, 
     uint64_t *Mv, 
     const uint64_t PHin, 
@@ -110,8 +109,8 @@ void bpm_advance_block_func(const uint64_t Eq,
   uint64_t Ph = *Mv | ~(Xh | *Pv); 
   uint64_t Mh = *Pv & Xh; 
   /* Account Hout that propagates for the next block */ 
-  *PHout = (Ph & mask)!=0; 
-  *MHout = (Mh & mask)!=0; 
+  *PHout = Ph >> 63; 
+  *MHout = Mh >> 63; 
   /* Hout become the Hin of the next cell */ 
   Ph <<= 1; 
   Mh <<= 1; 
@@ -305,8 +304,8 @@ void windowed_compute_window(
       //printf("Pv_in: %lx \nMv_in: %lx\n", Pv_in, Mv_in);
       //printf("PHin: %lx \nMHin: %lx\n", PHin, MHin);
 
-      //BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
-      bpm_advance_block_func(Eq,mask,&Pv_in,&Mv_in,PHin,MHin,&PHout,&MHout);
+      BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+      //bpm_advance_block_func(Eq,&Pv_in,&Mv_in,PHin,MHin,&PHout,&MHout);
       //printf("Pv_out: %lx \nMv_out: %lx\n", Pv_in, Mv_in);
       //printf("PHout: %lx \nMHout: %lx\n", PHout, MHout);
 
@@ -339,10 +338,10 @@ void windowed_backtrace_window(
   const uint64_t num_words64 = window_size;
   int64_t h = windowed_matrix->pos_h;
   int64_t v = windowed_matrix->pos_v;
-  int64_t h_min = windowed_matrix->pos_h-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_h-2*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
-  int64_t h_overlap = windowed_matrix->pos_h-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_h-UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
-  int64_t v_min = windowed_matrix->pos_v-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_v-2*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
-  int64_t v_overlap = windowed_matrix->pos_v-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_v-UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
+  int64_t h_min = windowed_matrix->pos_h-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_h-(window_size - 1)*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
+  int64_t h_overlap = windowed_matrix->pos_h-UINT64_LENGTH*(window_size - overlap_size - 1) > 0 ? ((windowed_matrix->pos_h-(window_size - overlap_size - 1)*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
+  int64_t v_min = windowed_matrix->pos_v-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_v-(window_size - 1)*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
+  int64_t v_overlap = windowed_matrix->pos_v-UINT64_LENGTH*(window_size - overlap_size - 1) > 0 ? ((windowed_matrix->pos_v-(window_size - overlap_size - 1)*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
 
   //printf("\n\n----------------------------------------------------------\n");
   //printf("----------------------------------------------------------\n");
