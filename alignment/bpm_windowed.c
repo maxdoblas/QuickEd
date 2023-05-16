@@ -218,6 +218,9 @@ void windowed_matrix_allocate(
   windowed_matrix->cigar = cigar_new(pattern_length+text_length);
   windowed_matrix->cigar->end_offset = pattern_length+text_length;
   windowed_matrix->cigar->begin_offset = pattern_length+text_length-1;
+
+  const uint64_t aux_PEQ_size = window_size*UINT64_SIZE*BPM_ALPHABET_LENGTH; /* (+1 base-column) */
+  windowed_matrix->PEQ_window = (uint64_t*)mm_allocator_malloc(mm_allocator,aux_PEQ_size);
 }
 void windowed_matrix_free(
     windowed_matrix_t* const windowed_matrix,
@@ -260,6 +263,7 @@ void windowed_compute_window(
   //int64_t* const score = windowed_pattern->score;
   uint64_t* const Pv = windowed_matrix->Pv;
   uint64_t* const Mv = windowed_matrix->Mv;
+  uint64_t* const PEQ_window = windowed_matrix->PEQ_window;
   //const uint64_t max_distance__1 = max_distance+1;
   windowed_reset_search_cutoff(Pv,Mv,BPM_W64_LENGTH*window_size);
   // Advance in DP-bit_encoded matrix
@@ -277,6 +281,13 @@ void windowed_compute_window(
   uint64_t shift = pos_v % UINT64_LENGTH;
   uint64_t shift_mask = shift ? 0xFFFFFFFFFFFFFFFFULL : 0ULL;
   int64_t pos_v_block = (pos_v / UINT64_LENGTH);
+
+  for (uint64_t i=0;i<steps_v;++i) {
+    for (uint64_t enc_char = 0; enc_char < BPM_ALPHABET_LENGTH; enc_char++){
+      const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block,enc_char)] >> shift | ((PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block+1,enc_char)] << (BPM_W64_LENGTH - shift)) & shift_mask);;
+      PEQ_window[BPM_PATTERN_PEQ_IDX(i,enc_char)] = Eq;
+    }
+  }
 
 
   //printf("\n\n----------------------------------------------------------\n");
@@ -296,7 +307,7 @@ void windowed_compute_window(
       uint64_t Pv_in = Pv[bdp_idx];
       uint64_t Mv_in = Mv[bdp_idx];
       //const uint64_t mask = level_mask[i+pos_v_block];
-      const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block,enc_char)] >> shift | ((PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block+1,enc_char)] << (BPM_W64_LENGTH - shift)) & shift_mask);
+      const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(i,enc_char)];
       /* Compute Block */
 
       //printf("\n\n-----------------------------\n");

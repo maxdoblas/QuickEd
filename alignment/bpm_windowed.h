@@ -59,6 +59,7 @@ typedef struct {
   int64_t pos_h;
   // CIGAR
   cigar_t* cigar;
+  uint64_t* PEQ_window;
 } windowed_matrix_t;
 
 /*
