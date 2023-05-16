@@ -264,6 +264,154 @@ void windowed_compute_window(
   windowed_reset_search_cutoff(Pv,Mv,BPM_W64_LENGTH*window_size);
   // Advance in DP-bit_encoded matrix
   uint64_t text_position;
+  int64_t pos_v_fi = windowed_matrix->pos_v;
+  int64_t pos_h_fi = windowed_matrix->pos_h;
+
+  int64_t pos_v = (pos_v_fi-UINT64_LENGTH*(window_size)+1 >= 0) ? pos_v_fi - UINT64_LENGTH*(window_size)+1 : 0;
+  //if (pos_v < 0) pos_v = 0;
+  int64_t pos_h = (pos_h_fi-UINT64_LENGTH*(window_size)+1 >= 0) ? pos_h_fi - UINT64_LENGTH*(window_size)+1 : 0;
+  //if (pos_h < 0) pos_h = 0;
+
+  int64_t steps_v = (pos_v_fi - pos_v)/UINT64_LENGTH + 1;
+  int64_t steps_h = pos_h_fi - pos_h;
+  uint64_t shift = pos_v % UINT64_LENGTH;
+  uint64_t shift_mask = shift ? 0xFFFFFFFFFFFFFFFFULL : 0ULL;
+  int64_t pos_v_block = (pos_v / UINT64_LENGTH);
+
+
+  //printf("\n\n----------------------------------------------------------\n");
+  //printf("----------------------------------------------------------\n");
+  //printf("(pos_v, pos_h) = (%ld,%ld)\n",pos_v, pos_h);
+  //printf("(pos_v_fi, pos_h_fi) = (%ld,%ld)\n",pos_v_fi, pos_h_fi);
+  //printf("(shift) = (%ld)\n",shift);
+  for (text_position=0;text_position<=steps_h;++text_position) {
+    // Fetch next character
+    const uint8_t enc_char = dna_encode(text[text_position+pos_h]);
+    // Advance all blocks
+    uint64_t i,PHin=1,MHin=0,PHout,MHout;
+    for (i=0;i<steps_v;++i) {
+      /* Calculate Step Data */
+      const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(text_position,num_words64,i);
+      const uint64_t next_bdp_idx = bdp_idx+num_words64;
+      uint64_t Pv_in = Pv[bdp_idx];
+      uint64_t Mv_in = Mv[bdp_idx];
+      //const uint64_t mask = level_mask[i+pos_v_block];
+      const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block,enc_char)] >> shift | ((PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block+1,enc_char)] << (BPM_W64_LENGTH - shift)) & shift_mask);
+      /* Compute Block */
+
+      //printf("\n\n-----------------------------\n");
+      //printf("(text_position,i)= (%ld,%ld)\n",text_position,i);
+      //printf("(text_pos,pattern_pos)= (%ld,%ld)\n",text_position+pos_h,i+pos_v_block);
+      //printf("enc_char, Eq: %ld, %lx\n",enc_char, Eq);
+      //printf("EQ_lo, EQ_hi: %lx, %lx\n",PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block,enc_char)], PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block+1,enc_char)]);
+      //printf("EQ_lo, EQ_hi: %lx, %lx\n",PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block,enc_char)]>> shift , (PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block+1,enc_char)] << (BPM_W64_LENGTH - shift)) & shift_mask);
+      //printf("(shift,shift_mask) = (%ld, %lx)\n",shift,shift_mask);
+
+      //printf("Pv_in: %lx \nMv_in: %lx\n", Pv_in, Mv_in);
+      //printf("PHin: %lx \nMHin: %lx\n", PHin, MHin);
+
+      BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+      //bpm_advance_block_func(Eq,&Pv_in,&Mv_in,PHin,MHin,&PHout,&MHout);
+      //printf("Pv_out: %lx \nMv_out: %lx\n", Pv_in, Mv_in);
+      //printf("PHout: %lx \nMHout: %lx\n", PHout, MHout);
+
+      /* Adjust score and swap propagate Hv */
+      Pv[next_bdp_idx] = Pv_in;
+      Mv[next_bdp_idx] = Mv_in;
+      PHin=PHout;
+      MHin=MHout;
+    }
+  }
+  //printf("\n\n----------------------------------------------------------\n");
+  //printf("----------------------------------------------------------\n");
+}
+
+void windowed_backtrace_window(
+    windowed_matrix_t* const windowed_matrix,
+    const windowed_pattern_t* const windowed_pattern,
+    char* const text,
+    const int window_size, 
+    const int overlap_size) {
+  // Parameters
+  char* const pattern = windowed_pattern->pattern;
+  const uint64_t* const Pv = windowed_matrix->Pv;
+  const uint64_t* const Mv = windowed_matrix->Mv;
+  char* const operations = windowed_matrix->cigar->operations;
+  int op_sentinel = windowed_matrix->cigar->begin_offset;
+  // Retrieve the alignment. Store the match
+  const uint64_t num_words64 = window_size;
+  int64_t h = windowed_matrix->pos_h;
+  int64_t v = windowed_matrix->pos_v;
+  int64_t h_min = windowed_matrix->pos_h - UINT64_LENGTH*(window_size) + 1 > 0 ? (windowed_matrix->pos_h-(window_size)*UINT64_LENGTH + 1) : 0;
+  int64_t h_overlap = windowed_matrix->pos_h-UINT64_LENGTH*(window_size - overlap_size) + 1 > 0 ? (windowed_matrix->pos_h-(window_size - overlap_size)*UINT64_LENGTH + 1) : 0;
+  int64_t v_min = windowed_matrix->pos_v - UINT64_LENGTH*(window_size) + 1 > 0 ? (windowed_matrix->pos_v-(window_size)*UINT64_LENGTH + 1) : 0;
+  int64_t v_overlap = windowed_matrix->pos_v - UINT64_LENGTH*(window_size - overlap_size) + 1 > 0 ? (windowed_matrix->pos_v-(window_size - overlap_size)*UINT64_LENGTH + 1) : 0;
+
+  //printf("\n\n----------------------------------------------------------\n");
+  //printf("----------------------------------------------------------\n");
+  //printf("(v, h) = (%ld,%ld)\n",v, h);
+  //printf("(v_overlap, h_overlap) = (%ld,%ld)\n",v_overlap, h_overlap);
+  //printf("(v_min, h_min) = (%ld,%ld)\n",v_min, h_min);
+
+  while (v >= v_overlap && h >= h_overlap){
+    const uint8_t block = (v-v_min) / UINT64_LENGTH;
+    const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX((h-h_min+1),num_words64,block);
+    const uint64_t mask = 1L << (v-v_min % UINT64_LENGTH);
+    // CIGAR operation Test
+    //printf("block = %ld\n", block);
+    //printf("bdp_idx = %ld\n", bdp_idx);
+    //printf("mask = %lx\n", mask);
+    //printf("Pv[bdp_idx] = %lx\n", Pv[bdp_idx]);
+    //printf("Mv[(bdp_idx-num_words64)] = %lx\n", Mv[(bdp_idx-num_words64)]);
+
+    if (Pv[bdp_idx] & mask) {
+      operations[op_sentinel--] = 'D';
+      --v;
+    } else if (Mv[(bdp_idx-num_words64)] & mask) {
+      operations[op_sentinel--] = 'I';
+      --h;
+    } else if ((text[h]==pattern[v])) {
+      operations[op_sentinel--] = 'M';
+      --h;
+      --v;
+    } else {
+      operations[op_sentinel--] = 'X';
+      --h;
+      --v;
+    }
+  } 
+  windowed_matrix->pos_h = h;
+  windowed_matrix->pos_v = v;
+
+  //printf("(end_v, end_h) = (%ld,%ld)\n",v, h);
+  //printf("----------------------------------------------------------\n");
+  //printf("Partial CIGAR\n");
+  //printf("----------------------------------------------------------\n");
+  //windowed_matrix->cigar->begin_offset = op_sentinel+1;
+  //cigar_print(stdout,windowed_matrix->cigar,1);
+
+  windowed_matrix->cigar->begin_offset = op_sentinel;
+}
+
+void windowed_compute_window_aligned(
+    windowed_matrix_t* const windowed_matrix,
+    windowed_pattern_t* const windowed_pattern,
+    char* const text,
+    const uint64_t text_length,
+    uint64_t max_distance,
+    const int window_size) {
+  // Pattern variables
+  const uint64_t* PEQ = windowed_pattern->PEQ;
+  //const uint64_t num_words64 = windowed_pattern->pattern_num_words64;
+  const uint64_t num_words64 = window_size;
+  const uint64_t* const level_mask = windowed_pattern->level_mask;
+  //int64_t* const score = windowed_pattern->score;
+  uint64_t* const Pv = windowed_matrix->Pv;
+  uint64_t* const Mv = windowed_matrix->Mv;
+  //const uint64_t max_distance__1 = max_distance+1;
+  windowed_reset_search_cutoff(Pv,Mv,BPM_W64_LENGTH*window_size);
+  // Advance in DP-bit_encoded matrix
+  uint64_t text_position;
   int64_t pos_v_fi = windowed_matrix->pos_v/UINT64_LENGTH;
   int64_t pos_h_fi = windowed_matrix->pos_h;
 
@@ -322,7 +470,7 @@ void windowed_compute_window(
 }
 
 
-void windowed_backtrace_window(
+void windowed_backtrace_window_aligned(
     windowed_matrix_t* const windowed_matrix,
     const windowed_pattern_t* const windowed_pattern,
     char* const text,
@@ -380,6 +528,7 @@ void windowed_backtrace_window(
   //printf("(end_v, end_h) = (%ld,%ld)\n",v, h);
   windowed_matrix->cigar->begin_offset = op_sentinel;
 }
+
 void windowed_compute(
     windowed_matrix_t* const windowed_matrix,
     windowed_pattern_t* const windowed_pattern,
@@ -387,15 +536,27 @@ void windowed_compute(
     const int text_length,
     const int max_distance,
     const int window_size, 
-    const int overlap_size) {
+    const int overlap_size,
+    const int window_aligned) {
   
-  while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
-    // Fill window (Pv,Mv)
-    windowed_compute_window(
-        windowed_matrix,windowed_pattern,
-        text,text_length,max_distance,window_size);
-    // Compute window backtrace
-    windowed_backtrace_window(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
+  if (window_aligned){
+    while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
+      // Fill window (Pv,Mv)
+      windowed_compute_window_aligned(
+          windowed_matrix,windowed_pattern,
+          text,text_length,max_distance,window_size);
+      // Compute window backtrace
+      windowed_backtrace_window_aligned(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
+    }
+  } else {
+    while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
+      // Fill window (Pv,Mv)
+      windowed_compute_window(
+          windowed_matrix,windowed_pattern,
+          text,text_length,max_distance,window_size);
+      // Compute window backtrace
+      windowed_backtrace_window(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
+    }
   }
 
   int64_t h = windowed_matrix->pos_h;

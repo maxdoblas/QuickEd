@@ -51,6 +51,7 @@ align_bench_params_t parameters = {
   .bandwidth = -1,
   .window_size = -1,
   .overlap_size = -1,
+  .window_aligned = false,
 #ifdef EXTERNAL_BENCHMARKS
   /* ... */
 #endif
@@ -145,6 +146,7 @@ void parse_arguments(
     { "bandwidth", required_argument, 0, 2000 },
     { "window-size", required_argument, 0, 2001 },
     { "overlap-size", required_argument, 0, 2002 },
+    { "window-aligned", optional_argument, 0, 2003 },
 #ifdef EXTERNAL_BENCHMARKS
     /* ... */
 #endif
@@ -270,6 +272,9 @@ void parse_arguments(
       break;
     case 2002: // --overlap-size
       parameters.overlap_size = atoi(optarg);
+      break;
+    case 2003: // --overlap-size
+      parameters.window_aligned = true;
       break;
 #ifdef EXTERNAL_BENCHMARKS
       /* ... */

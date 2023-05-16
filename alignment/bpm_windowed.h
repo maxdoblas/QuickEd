@@ -93,7 +93,8 @@ void windowed_compute(
     const int text_length,
     const int max_distance,
     const int window_size, 
-    const int overlap_size);
+    const int overlap_size,
+    const int window_aligned);
 
 #endif /* BPM_WINDOWED_H_ */
 
