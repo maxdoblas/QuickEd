@@ -51,6 +51,7 @@
 #include "system/mm_allocator.h"
 #include "alignment/bpm_windowed.h"
 #include "utils/dna_text.h"
+#include <immintrin.h>
 
 /*
  * Constants
@@ -207,7 +208,7 @@ void windowed_matrix_allocate(
   const uint64_t num_words64 = window_size;
   // Allocate auxiliary matrix
   //const uint64_t aux_matrix_size = num_words64*UINT64_SIZE*(text_length+1); /* (+1 base-column) */
-  const uint64_t aux_matrix_size = num_words64*UINT64_SIZE*(BPM_W64_LENGTH*window_size+1); /* (+1 base-column) */
+  const uint64_t aux_matrix_size = num_words64*UINT64_SIZE*(BPM_W64_LENGTH*window_size+2); /* (+1 base-column) */
   uint64_t* const Pv = (uint64_t*)mm_allocator_malloc(mm_allocator,aux_matrix_size);
   uint64_t* const Mv = (uint64_t*)mm_allocator_malloc(mm_allocator,aux_matrix_size);
   windowed_matrix->Mv = Mv;
@@ -233,22 +234,17 @@ void windowed_matrix_free(
 /*
  * Edit distance computation using BPM
  */
-void windowed_reset_search_cutoff(
+void windowed_reset_differences(
     uint64_t* const P,
     uint64_t* const M,
     const uint64_t max_distance) {
-  // Calculate the top level (maximum bit-word for cut-off purposes)
-  const uint8_t y = (max_distance>0) ? (max_distance+(BPM_W64_LENGTH-1))/BPM_W64_LENGTH : 1;
   // Reset score,P,M
-  uint64_t i;
-  P[0]=BPM_W64_ONES;
-  M[0]=0;
-  for (i=1;i<y;++i) {
+  for (int i=0;i<max_distance;++i) {
     P[i]=BPM_W64_ONES;
     M[i]=0;
   }
 }
-void windowed_compute_window(
+void windowed_compute_window_unaligned(
     windowed_matrix_t* const windowed_matrix,
     windowed_pattern_t* const windowed_pattern,
     char* const text,
@@ -265,7 +261,7 @@ void windowed_compute_window(
   uint64_t* const Mv = windowed_matrix->Mv;
   uint64_t* const PEQ_window = windowed_matrix->PEQ_window;
   //const uint64_t max_distance__1 = max_distance+1;
-  windowed_reset_search_cutoff(Pv,Mv,BPM_W64_LENGTH*window_size);
+  windowed_reset_differences(Pv,Mv,BPM_W64_LENGTH*window_size);
   // Advance in DP-bit_encoded matrix
   uint64_t text_position;
   int64_t pos_v_fi = windowed_matrix->pos_v;
@@ -289,12 +285,6 @@ void windowed_compute_window(
     }
   }
 
-
-  //printf("\n\n----------------------------------------------------------\n");
-  //printf("----------------------------------------------------------\n");
-  //printf("(pos_v, pos_h) = (%ld,%ld)\n",pos_v, pos_h);
-  //printf("(pos_v_fi, pos_h_fi) = (%ld,%ld)\n",pos_v_fi, pos_h_fi);
-  //printf("(shift) = (%ld)\n",shift);
   for (text_position=0;text_position<=steps_h;++text_position) {
     // Fetch next character
     const uint8_t enc_char = dna_encode(text[text_position+pos_h]);
@@ -309,22 +299,7 @@ void windowed_compute_window(
       //const uint64_t mask = level_mask[i+pos_v_block];
       const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(i,enc_char)];
       /* Compute Block */
-
-      //printf("\n\n-----------------------------\n");
-      //printf("(text_position,i)= (%ld,%ld)\n",text_position,i);
-      //printf("(text_pos,pattern_pos)= (%ld,%ld)\n",text_position+pos_h,i+pos_v_block);
-      //printf("enc_char, Eq: %ld, %lx\n",enc_char, Eq);
-      //printf("EQ_lo, EQ_hi: %lx, %lx\n",PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block,enc_char)], PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block+1,enc_char)]);
-      //printf("EQ_lo, EQ_hi: %lx, %lx\n",PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block,enc_char)]>> shift , (PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block+1,enc_char)] << (BPM_W64_LENGTH - shift)) & shift_mask);
-      //printf("(shift,shift_mask) = (%ld, %lx)\n",shift,shift_mask);
-
-      //printf("Pv_in: %lx \nMv_in: %lx\n", Pv_in, Mv_in);
-      //printf("PHin: %lx \nMHin: %lx\n", PHin, MHin);
-
       BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
-      //bpm_advance_block_func(Eq,&Pv_in,&Mv_in,PHin,MHin,&PHout,&MHout);
-      //printf("Pv_out: %lx \nMv_out: %lx\n", Pv_in, Mv_in);
-      //printf("PHout: %lx \nMHout: %lx\n", PHout, MHout);
 
       /* Adjust score and swap propagate Hv */
       Pv[next_bdp_idx] = Pv_in;
@@ -333,11 +308,160 @@ void windowed_compute_window(
       MHin=MHout;
     }
   }
-  //printf("\n\n----------------------------------------------------------\n");
-  //printf("----------------------------------------------------------\n");
 }
 
-void windowed_backtrace_window(
+void windowed_compute_window_sse(
+    windowed_matrix_t* const windowed_matrix,
+    windowed_pattern_t* const windowed_pattern,
+    char* const text,
+    const uint64_t text_length,
+    uint64_t max_distance,
+    const int window_size) {
+  // Pattern variables
+  const uint64_t* PEQ = windowed_pattern->PEQ;
+  const uint64_t num_words64 = window_size;
+  uint64_t* const Pv = windowed_matrix->Pv;
+  uint64_t* const Mv = windowed_matrix->Mv;
+  uint64_t* const PEQ_window = windowed_matrix->PEQ_window;
+  windowed_reset_differences(Pv,Mv,window_size);
+  // Advance in DP-bit_encoded matrix
+  uint64_t text_position;
+  int64_t pos_v_fi = windowed_matrix->pos_v;
+  int64_t pos_h_fi = windowed_matrix->pos_h;
+
+  int64_t pos_v = (pos_v_fi-UINT64_LENGTH*(window_size)+1 >= 0) ? pos_v_fi - UINT64_LENGTH*(window_size)+1 : 0;
+  int64_t pos_h = (pos_h_fi-UINT64_LENGTH*(window_size)+1 >= 0) ? pos_h_fi - UINT64_LENGTH*(window_size)+1 : 0;
+
+  int64_t steps_v = (pos_v_fi - pos_v)/UINT64_LENGTH + 1;
+  int64_t steps_h = pos_h_fi - pos_h;
+  uint64_t shift = pos_v % UINT64_LENGTH;
+  uint64_t shift_mask = shift ? 0xFFFFFFFFFFFFFFFFULL : 0ULL;
+  int64_t pos_v_block = (pos_v / UINT64_LENGTH);
+
+  // Generate aligned PEQ vectors
+  for (uint64_t i=0;i<steps_v;++i) {
+    for (uint64_t enc_char = 0; enc_char < BPM_ALPHABET_LENGTH; enc_char++){
+      const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block,enc_char)] >> shift | ((PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v_block+1,enc_char)] << (BPM_W64_LENGTH - shift)) & shift_mask);;
+      PEQ_window[BPM_PATTERN_PEQ_IDX(i,enc_char)] = Eq;
+    }
+  }
+
+  // First cell
+  uint64_t Ph_firts=1,Mh_firts=0;
+  {
+    const uint8_t enc_char = dna_encode(text[0+pos_h]);
+    const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(0,num_words64,0);
+    const uint64_t next_bdp_idx = bdp_idx+num_words64;
+    uint64_t Pv_in = Pv[bdp_idx];
+    uint64_t Mv_in = Mv[bdp_idx];
+    uint64_t PHout,MHout;
+    const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(0,enc_char)];
+    BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,Ph_firts,Mh_firts,PHout,MHout);
+    Pv[next_bdp_idx] = Pv_in;
+    Mv[next_bdp_idx] = Mv_in;
+    Ph_firts = PHout;
+    Mh_firts = MHout;
+  }
+  __m128i PHout,MHout,PHin,MHin;
+  PHin = _mm_set_epi64x(1,Ph_firts);
+  MHin = _mm_set_epi64x(0,Mh_firts);
+
+  for (text_position=1;text_position<=steps_h;text_position+=2) {
+    // Fetch next character
+    uint8_t enc_char = dna_encode(text[text_position+pos_h]);
+    uint8_t enc_char_2 = dna_encode(text[text_position+pos_h-1]);
+    uint8_t enc_char_3 = dna_encode(text[text_position+pos_h+1]);
+
+    
+    /* Calculate Step Data */
+    const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(text_position-1,num_words64,1);
+    const uint64_t next_bdp_idx = bdp_idx+num_words64;
+    uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(0,enc_char)];
+    uint64_t Eq_2 = PEQ_window[BPM_PATTERN_PEQ_IDX(1,enc_char_2)];
+    
+    /* Compute Block */
+    __m128i Eq_v = _mm_set_epi64x(Eq,Eq_2); 
+    __m128i Mv_v = _mm_loadu_si128((__m128i*) &Mv[bdp_idx]);
+    __m128i Pv_v = _mm_loadu_si128((__m128i*) &Pv[bdp_idx]);
+    
+    __m128i Xv =  _mm_or_si128(Eq_v, Mv_v); 
+    __m128i _Eq = _mm_or_si128(Eq_v, MHin); 
+    __m128i sum_128 = _mm_add_epi64(_mm_and_si128(_Eq, Pv_v), Pv_v);
+    __m128i Xh =  _mm_or_si128(_mm_xor_si128(sum_128, Pv_v), _Eq); 
+    /* Calculate Hout */ 
+    __m128i Ph_v = _mm_or_si128(Mv_v, ~(_mm_or_si128(Xh, Pv_v))); 
+    __m128i Mh_v = _mm_and_si128(Pv_v, Xh); 
+    /* Account Hout that propagates for the next block */ 
+    PHout = _mm_srli_epi64(Ph_v, 63); 
+    MHout = _mm_srli_epi64(Mh_v, 63); 
+    /* Hout become the Hin of the next cell */ 
+    Ph_v = _mm_slli_epi64(Ph_v, 1);  
+    Mh_v = _mm_slli_epi64(Mh_v, 1); 
+    /* Account Hin coming from the previous block */ 
+    Ph_v = _mm_or_si128(Ph_v,PHin); 
+    Mh_v = _mm_or_si128(Mh_v,MHin); 
+    /* Finally, generate the Vout */ 
+    Pv_v = _mm_or_si128(Mh_v, ~(_mm_or_si128(Xv, Ph_v))); 
+    Mv_v = _mm_and_si128(Ph_v, Xv);
+
+    _mm_storeu_si128((__m128i*) &Pv[next_bdp_idx],Pv_v);
+    _mm_storeu_si128((__m128i*) &Mv[next_bdp_idx],Mv_v);
+    PHin=_mm_set_epi64x(1ULL, _mm_extract_epi64(PHout,1));
+    MHin=_mm_srli_si128(MHout,8);
+
+    // Second word (Unroll 2)
+    Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(0,enc_char_3)];
+    Eq_2 = PEQ_window[BPM_PATTERN_PEQ_IDX(1,enc_char)];
+
+    Eq_v = _mm_set_epi64x(Eq,Eq_2); 
+
+    Xv =  _mm_or_si128(Eq_v, Mv_v); 
+    _Eq = _mm_or_si128(Eq_v, MHin); 
+    sum_128 = _mm_add_epi64(_mm_and_si128(_Eq, Pv_v), Pv_v);
+    Xh =  _mm_or_si128(_mm_xor_si128(sum_128, Pv_v), _Eq); 
+    /* Calculate Hout */ 
+    Ph_v = _mm_or_si128(Mv_v, ~(_mm_or_si128(Xh, Pv_v))); 
+    Mh_v = _mm_and_si128(Pv_v, Xh); 
+    /* Account Hout that propagates for the next block */ 
+    PHout = _mm_srli_epi64(Ph_v, 63); 
+    MHout = _mm_srli_epi64(Mh_v, 63); 
+    /* Hout become the Hin of the next cell */ 
+    Ph_v = _mm_slli_epi64(Ph_v, 1);  
+    Mh_v = _mm_slli_epi64(Mh_v, 1); 
+    /* Account Hin coming from the previous block */ 
+    Ph_v = _mm_or_si128(Ph_v,PHin); 
+    Mh_v = _mm_or_si128(Mh_v,MHin); 
+    /* Finally, generate the Vout */ 
+    Pv_v = _mm_or_si128(Mh_v, ~(_mm_or_si128(Xv, Ph_v))); 
+    Mv_v = _mm_and_si128(Ph_v, Xv);
+
+    _mm_storeu_si128((__m128i*) &Pv[next_bdp_idx+2],Pv_v);
+    _mm_storeu_si128((__m128i*) &Mv[next_bdp_idx+2],Mv_v);
+    PHin=_mm_set_epi64x(1ULL, _mm_extract_epi64(PHout,1));
+    MHin=_mm_srli_si128(MHout,8);
+
+
+  }
+  // Last cell
+  Ph_firts=_mm_extract_epi64(PHout,1);
+  Mh_firts=_mm_extract_epi64(MHout,1);
+  {
+    const uint8_t enc_char = dna_encode(text[steps_h+pos_h]);
+    const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(steps_h,num_words64,1);
+    const uint64_t next_bdp_idx = bdp_idx+num_words64;
+    uint64_t Pv_in = Pv[bdp_idx];
+    uint64_t Mv_in = Mv[bdp_idx];
+    uint64_t PHout,MHout;
+    const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(1,enc_char)];
+    BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,Ph_firts,Mh_firts,PHout,MHout);
+    Pv[next_bdp_idx] = Pv_in;
+    Mv[next_bdp_idx] = Mv_in;
+    Ph_firts = PHout;
+    Mh_firts = MHout;
+  }
+}
+
+void windowed_backtrace_window_unaligned(
     windowed_matrix_t* const windowed_matrix,
     const windowed_pattern_t* const windowed_pattern,
     char* const text,
@@ -358,22 +482,10 @@ void windowed_backtrace_window(
   int64_t v_min = windowed_matrix->pos_v - UINT64_LENGTH*(window_size) + 1 > 0 ? (windowed_matrix->pos_v-(window_size)*UINT64_LENGTH + 1) : 0;
   int64_t v_overlap = windowed_matrix->pos_v - UINT64_LENGTH*(window_size - overlap_size) + 1 > 0 ? (windowed_matrix->pos_v-(window_size - overlap_size)*UINT64_LENGTH + 1) : 0;
 
-  //printf("\n\n----------------------------------------------------------\n");
-  //printf("----------------------------------------------------------\n");
-  //printf("(v, h) = (%ld,%ld)\n",v, h);
-  //printf("(v_overlap, h_overlap) = (%ld,%ld)\n",v_overlap, h_overlap);
-  //printf("(v_min, h_min) = (%ld,%ld)\n",v_min, h_min);
-
   while (v >= v_overlap && h >= h_overlap){
     const uint8_t block = (v-v_min) / UINT64_LENGTH;
     const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX((h-h_min+1),num_words64,block);
     const uint64_t mask = 1L << (v-v_min % UINT64_LENGTH);
-    // CIGAR operation Test
-    //printf("block = %ld\n", block);
-    //printf("bdp_idx = %ld\n", bdp_idx);
-    //printf("mask = %lx\n", mask);
-    //printf("Pv[bdp_idx] = %lx\n", Pv[bdp_idx]);
-    //printf("Mv[(bdp_idx-num_words64)] = %lx\n", Mv[(bdp_idx-num_words64)]);
 
     if (Pv[bdp_idx] & mask) {
       operations[op_sentinel--] = 'D';
@@ -394,13 +506,6 @@ void windowed_backtrace_window(
   windowed_matrix->pos_h = h;
   windowed_matrix->pos_v = v;
 
-  //printf("(end_v, end_h) = (%ld,%ld)\n",v, h);
-  //printf("----------------------------------------------------------\n");
-  //printf("Partial CIGAR\n");
-  //printf("----------------------------------------------------------\n");
-  //windowed_matrix->cigar->begin_offset = op_sentinel+1;
-  //cigar_print(stdout,windowed_matrix->cigar,1);
-
   windowed_matrix->cigar->begin_offset = op_sentinel;
 }
 
@@ -413,32 +518,20 @@ void windowed_compute_window_aligned(
     const int window_size) {
   // Pattern variables
   const uint64_t* PEQ = windowed_pattern->PEQ;
-  //const uint64_t num_words64 = windowed_pattern->pattern_num_words64;
   const uint64_t num_words64 = window_size;
-  const uint64_t* const level_mask = windowed_pattern->level_mask;
-  //int64_t* const score = windowed_pattern->score;
   uint64_t* const Pv = windowed_matrix->Pv;
   uint64_t* const Mv = windowed_matrix->Mv;
-  //const uint64_t max_distance__1 = max_distance+1;
-  windowed_reset_search_cutoff(Pv,Mv,BPM_W64_LENGTH*window_size);
+  windowed_reset_differences(Pv,Mv,window_size);
   // Advance in DP-bit_encoded matrix
   uint64_t text_position;
   int64_t pos_v_fi = windowed_matrix->pos_v/UINT64_LENGTH;
   int64_t pos_h_fi = windowed_matrix->pos_h;
 
   int64_t pos_v = (pos_v_fi-(window_size-1) >= 0) ? pos_v_fi - (window_size-1) : 0;
-  //if (pos_v < 0) pos_v = 0;
   int64_t pos_h = (pos_h_fi-UINT64_LENGTH*(window_size-1) >= 0) ? (pos_h_fi / UINT64_LENGTH) * UINT64_LENGTH-(window_size-1)*UINT64_LENGTH : 0;
-  //if (pos_h < 0) pos_h = 0;
 
   int64_t steps_v = pos_v_fi - pos_v;
   int64_t steps_h = pos_h_fi - pos_h;
-
-
-  //printf("\n\n----------------------------------------------------------\n");
-  //printf("----------------------------------------------------------\n");
-  //printf("(pos_v, pos_h) = (%ld,%ld)\n",pos_v, pos_h);
-  //printf("(pos_v_fi, pos_h_fi) = (%ld,%ld)\n",pos_v_fi, pos_h_fi);
 
   for (text_position=0;text_position<=steps_h;++text_position) {
     // Fetch next character
@@ -451,33 +544,16 @@ void windowed_compute_window_aligned(
       const uint64_t next_bdp_idx = bdp_idx+num_words64;
       uint64_t Pv_in = Pv[bdp_idx];
       uint64_t Mv_in = Mv[bdp_idx];
-      const uint64_t mask = level_mask[i+pos_v];
       const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v,enc_char)];
       /* Compute Block */
-
-      //printf("\n\n-----------------------------\n");
-      //printf("(text_position,i)= (%ld,%ld)\n",text_position,i);
-      //printf("(text_pos,pattern_pos)= (%ld,%ld)\n",text_position+pos_h,i+pos_v);
-      //printf("enc_char, Eq: %ld, %lx\n",enc_char, Eq);
-      //printf("mask: %lx\n", mask);
-      //printf("Pv_in: %lx \nMv_in: %lx\n", Pv_in, Mv_in);
-      //printf("PHin: %lx \nMHin: %lx\n", PHin, MHin);
-
       BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
-      //bpm_advance_block_func(Eq,&Pv_in,&Mv_in,PHin,MHin,&PHout,&MHout);
-      //printf("Pv_out: %lx \nMv_out: %lx\n", Pv_in, Mv_in);
-      //printf("PHout: %lx \nMHout: %lx\n", PHout, MHout);
 
-      /* Adjust score and swap propagate Hv */
-      //score[i] += PHout-MHout;
       Pv[next_bdp_idx] = Pv_in;
       Mv[next_bdp_idx] = Mv_in;
       PHin=PHout;
       MHin=MHout;
     }
   }
-  //printf("\n\n----------------------------------------------------------\n");
-  //printf("----------------------------------------------------------\n");
 }
 
 
@@ -502,21 +578,10 @@ void windowed_backtrace_window_aligned(
   int64_t v_min = windowed_matrix->pos_v-UINT64_LENGTH*(window_size - 1) > 0 ? ((windowed_matrix->pos_v-(window_size - 1)*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
   int64_t v_overlap = windowed_matrix->pos_v-UINT64_LENGTH*(window_size - overlap_size - 1) > 0 ? ((windowed_matrix->pos_v-(window_size - overlap_size - 1)*UINT64_LENGTH)/UINT64_LENGTH)*UINT64_LENGTH : 0;
 
-  //printf("\n\n----------------------------------------------------------\n");
-  //printf("----------------------------------------------------------\n");
-  //printf("(v, h) = (%ld,%ld)\n",v, h);
-  //printf("(v_overlap, h_overlap) = (%ld,%ld)\n",v_overlap, h_overlap);
-  //printf("(v_min, h_min) = (%ld,%ld)\n",v_min, h_min);
-
   while (v >= v_overlap && h >= h_overlap){
     const uint8_t block = (v-v_min) / UINT64_LENGTH;
     const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX((h-h_min+1),num_words64,block);
     const uint64_t mask = 1L << (v % UINT64_LENGTH);
-    // CIGAR operation Test
-    //printf("block = %ld\n", block);
-    //printf("bdp_idx = %ld\n", bdp_idx);
-    //printf("Pv[bdp_idx] = %ld\n", Pv[bdp_idx]);
-    //printf("Mv[(bdp_idx-num_words64)] = %ld\n", Mv[(bdp_idx-num_words64)]);
 
     if (Pv[bdp_idx] & mask) {
       operations[op_sentinel--] = 'D';
@@ -536,7 +601,6 @@ void windowed_backtrace_window_aligned(
   } 
   windowed_matrix->pos_h = h;
   windowed_matrix->pos_v = v;
-  //printf("(end_v, end_h) = (%ld,%ld)\n",v, h);
   windowed_matrix->cigar->begin_offset = op_sentinel;
 }
 
@@ -548,26 +612,39 @@ void windowed_compute(
     const int max_distance,
     const int window_size, 
     const int overlap_size,
-    const int window_aligned) {
+    const window_config_t window_config) {
   
-  if (window_aligned){
-    while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
-      // Fill window (Pv,Mv)
-      windowed_compute_window_aligned(
-          windowed_matrix,windowed_pattern,
-          text,text_length,max_distance,window_size);
-      // Compute window backtrace
-      windowed_backtrace_window_aligned(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
-    }
-  } else {
-    while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
-      // Fill window (Pv,Mv)
-      windowed_compute_window(
-          windowed_matrix,windowed_pattern,
-          text,text_length,max_distance,window_size);
-      // Compute window backtrace
-      windowed_backtrace_window(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
-    }
+  switch (window_config){
+    case WINDOW_ALIGNED:
+      while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
+        // Fill window (Pv,Mv)
+        windowed_compute_window_aligned(
+            windowed_matrix,windowed_pattern,
+            text,text_length,max_distance,window_size);
+        // Compute window backtrace
+        windowed_backtrace_window_aligned(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
+      }
+      break;
+    case WINDOW_UNALIGNED:
+      while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
+        // Fill window (Pv,Mv)
+        windowed_compute_window_unaligned(
+            windowed_matrix,windowed_pattern,
+            text,text_length,max_distance,window_size);
+        // Compute window backtrace
+        windowed_backtrace_window_unaligned(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
+      }
+      break;
+    case WINDOW_SSE:
+      while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
+        // Fill window (Pv,Mv)
+        windowed_compute_window_sse(
+            windowed_matrix,windowed_pattern,
+            text,text_length,max_distance,window_size);
+        // Compute window backtrace
+        windowed_backtrace_window_unaligned(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
+      }
+      break;
   }
 
   int64_t h = windowed_matrix->pos_h;

@@ -94,7 +94,7 @@ void benchmark_edit_bpm_windowed(
     align_input_t* const align_input,
     const int window_size,
     const int overlap_size,
-    const int window_aligned) {
+    const window_config_t window_config) {
   // Allocate
   windowed_pattern_t windowed_pattern;
   windowed_pattern_compile(
@@ -110,7 +110,7 @@ void benchmark_edit_bpm_windowed(
   windowed_compute(
       &windowed_matrix,&windowed_pattern,align_input->text,
       align_input->text_length,align_input->pattern_length,
-      window_size, overlap_size, window_aligned);
+      window_size, overlap_size, window_config);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {

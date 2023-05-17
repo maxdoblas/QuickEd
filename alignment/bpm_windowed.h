@@ -28,7 +28,7 @@
 #include "utils/commons.h"
 #include "alignment/cigar.h"
 #include "system/mm_allocator.h"
-
+#include "../tools/align_benchmark/benchmark/benchmark_utils.h"
 
 typedef struct {
   /* BMP Pattern */
@@ -95,7 +95,7 @@ void windowed_compute(
     const int max_distance,
     const int window_size, 
     const int overlap_size,
-    const int window_aligned);
+    const window_config_t window_config);
 
 #endif /* BPM_WINDOWED_H_ */
 

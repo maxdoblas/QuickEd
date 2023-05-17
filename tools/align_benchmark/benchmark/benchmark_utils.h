@@ -85,6 +85,12 @@ typedef struct {
   bool verbose;
 } align_input_t;
 
+typedef enum{
+    WINDOW_ALIGNED,
+    WINDOW_UNALIGNED,
+    WINDOW_SSE
+} window_config_t;
+
 /*
  * Setup
  */

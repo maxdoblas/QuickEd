@@ -88,7 +88,7 @@ typedef struct {
   int bandwidth;
   int window_size;
   int overlap_size;
-  int window_aligned;
+  window_config_t window_config;
 #ifdef EXTERNAL_BENCHMARKS
   /* ... */
 #endif

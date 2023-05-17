@@ -51,7 +51,7 @@ align_bench_params_t parameters = {
   .bandwidth = -1,
   .window_size = -1,
   .overlap_size = -1,
-  .window_aligned = false,
+  .window_config = WINDOW_ALIGNED,
 #ifdef EXTERNAL_BENCHMARKS
   /* ... */
 #endif
@@ -146,7 +146,7 @@ void parse_arguments(
     { "bandwidth", required_argument, 0, 2000 },
     { "window-size", required_argument, 0, 2001 },
     { "overlap-size", required_argument, 0, 2002 },
-    { "window-aligned", optional_argument, 0, 2003 },
+    { "window-config", required_argument, 0, 2003 },
 #ifdef EXTERNAL_BENCHMARKS
     /* ... */
 #endif
@@ -274,7 +274,16 @@ void parse_arguments(
       parameters.overlap_size = atoi(optarg);
       break;
     case 2003: // --overlap-size
-      parameters.window_aligned = true;
+      if (strcmp(optarg,"aligned")==0) {
+        parameters.window_config = WINDOW_ALIGNED;
+      } else if (strcmp(optarg,"unaligned")==0) {
+        parameters.window_config = WINDOW_UNALIGNED;
+      } else if (strcmp(optarg,"sse")==0) {
+        parameters.window_config = WINDOW_SSE;
+      } else {
+        fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);
+        exit(1);
+      }
       break;
 #ifdef EXTERNAL_BENCHMARKS
       /* ... */
