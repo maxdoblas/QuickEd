@@ -87,16 +87,12 @@ void banded_pattern_compile(
   // Allocate memory
   const uint64_t aux_vector_size = pattern_num_words64*BPM_W64_SIZE;
   const uint64_t PEQ_size = BPM_ALPHABET_LENGTH*aux_vector_size;
-  const uint64_t score_size = pattern_num_words64*UINT64_SIZE;
-  const uint64_t total_memory = PEQ_size + 3*aux_vector_size + 2*score_size + (pattern_num_words64+1)*UINT64_SIZE;
+  const uint64_t total_memory = PEQ_size + 3*aux_vector_size + (pattern_num_words64)*UINT64_SIZE;
   void* memory = mm_allocator_malloc(mm_allocator,total_memory);
   banded_pattern->PEQ = memory; memory += PEQ_size;
   banded_pattern->P = memory; memory += aux_vector_size;
   banded_pattern->M = memory; memory += aux_vector_size;
-  banded_pattern->level_mask = memory; memory += aux_vector_size;
-  banded_pattern->score = memory; memory += score_size;
-  banded_pattern->init_score = memory; memory += score_size;
-  banded_pattern->pattern_left = memory;
+  banded_pattern->level_mask = memory;
   // Init PEQ
   memset(banded_pattern->PEQ,0,PEQ_size);
   uint64_t i;
@@ -115,26 +111,16 @@ void banded_pattern_compile(
     }
   }
   // Init auxiliary data
-  uint64_t pattern_left = pattern_length;
   const uint64_t top = pattern_num_words64-1;
   memset(banded_pattern->level_mask,0,aux_vector_size);
   for (i=0;i<top;++i) {
     banded_pattern->level_mask[i] = BPM_W64_MASK;
-    banded_pattern->init_score[i] = BPM_W64_LENGTH;
-    banded_pattern->pattern_left[i] = pattern_left;
-    pattern_left = (pattern_left > BPM_W64_LENGTH) ? pattern_left-BPM_W64_LENGTH : 0;
-  }
-  for (;i<=pattern_num_words64;++i) {
-    banded_pattern->pattern_left[i] = pattern_left;
-    pattern_left = (pattern_left > BPM_W64_LENGTH) ? pattern_left-BPM_W64_LENGTH : 0;
   }
   if (pattern_mod > 0) {
     const uint64_t mask_shift = pattern_mod-1;
     banded_pattern->level_mask[top] = 1ull<<(mask_shift);
-    banded_pattern->init_score[top] = pattern_mod;
   } else {
     banded_pattern->level_mask[top] = BPM_W64_MASK;
-    banded_pattern->init_score[top] = BPM_W64_LENGTH;
   }
 }
 void banded_pattern_free(
@@ -173,18 +159,14 @@ void banded_matrix_free(
 void bpm_reset_search(
     const uint64_t num_words,
     uint64_t* const P,
-    uint64_t* const M,
-    int64_t* const score,
-    const int64_t* const init_score) {
-  // Reset score,P,M
+    uint64_t* const M) {
+  // Reset P,M
   uint64_t i;
   P[0]=BPM_W64_ONES;
   M[0]=0;
-  score[0] = init_score[0];
   for (i=1;i<num_words;++i) {
     P[i]=BPM_W64_ONES;
     M[i]=0;
-    score[i] = score[i-1] + init_score[i];
   }
 }
 void bpm_compute_matrix_banded(
@@ -192,18 +174,15 @@ void bpm_compute_matrix_banded(
     banded_pattern_t* const banded_pattern,
     char* const text,
     const int text_length,
-    const int bandwidth,
-    const int max_distance) {
+    const int bandwidth) {
   // Pattern variables
   const uint64_t* PEQ = banded_pattern->PEQ;
   const uint64_t num_words64 = banded_pattern->pattern_num_words64;
   const uint64_t pattern_length = banded_pattern->pattern_length;
   const uint64_t* const level_mask = banded_pattern->level_mask;
-  int64_t* const score = banded_pattern->score;
-  const int64_t* const init_score = banded_pattern->init_score;
   uint64_t* const Pv = banded_matrix->Pv;
   uint64_t* const Mv = banded_matrix->Mv;
-  bpm_reset_search(num_words64,Pv,Mv,score,init_score);
+  bpm_reset_search(num_words64,Pv,Mv);
 
   const int k_end = ABS(text_length-pattern_length)+1;
   const int effective_bandwidth = MAX(k_end,bandwidth);
@@ -236,8 +215,7 @@ void bpm_compute_matrix_banded(
       /* Compute Block */
       BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
 
-      /* Adjust score and swap propagate Hv */
-      score[i] += PHout-MHout;
+      /* Swap propagate Hv */
       Pv[next_bdp_idx] = Pv_in;
       Mv[next_bdp_idx] = Mv_in;
       PHin=PHout;
@@ -257,8 +235,7 @@ void bpm_compute_matrix_banded(
       /* Compute Block */
       BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
 
-      /* Adjust score and swap propagate Hv */
-      score[i] += PHout-MHout;
+      /* Swap propagate Hv */
       Pv[next_bdp_idx] = Pv_in;
       Mv[next_bdp_idx] = Mv_in;
       PHin=PHout;
@@ -268,7 +245,7 @@ void bpm_compute_matrix_banded(
     last_hi = hi;
     // Compute new lo&hi limit
     hi_tmp++;
-    hi = MIN(num_words64-1,hi_tmp/BPM_W64_SIZE);
+    hi = MIN(num_words64-1,hi_tmp/BPM_W64_LENGTH);
   }
 
   // Main loop
@@ -291,8 +268,7 @@ void bpm_compute_matrix_banded(
       /* Compute Block */
       BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
 
-      /* Adjust score and swap propagate Hv */
-      score[i] += PHout-MHout;
+      /* Swap propagate Hv */
       Pv[next_bdp_idx] = Pv_in;
       Mv[next_bdp_idx] = Mv_in;
       PHin=PHout;
@@ -312,8 +288,7 @@ void bpm_compute_matrix_banded(
       /* Compute Block */
       BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
 
-      /* Adjust score and swap propagate Hv */
-      score[i] += PHout-MHout;
+      /* Swap propagate Hv */
       Pv[next_bdp_idx] = Pv_in;
       Mv[next_bdp_idx] = Mv_in;
       PHin=PHout;
@@ -325,23 +300,14 @@ void bpm_compute_matrix_banded(
     lo_tmp++;
     lo = lo_tmp/BPM_W64_LENGTH;
     hi_tmp++;
-    hi = MIN(num_words64-1,hi_tmp/BPM_W64_SIZE);
-  }
-
-  // Return optimal column/distance
-  const int64_t current_score = score[num_words64-1];
-  if (current_score <= max_distance) {
-    banded_matrix->min_score = current_score;
-    banded_matrix->min_score_column = text_length-1;
-  } else {
-    banded_matrix->min_score = UINT64_MAX;
-    banded_matrix->min_score_column = UINT64_MAX;
+    hi = MIN(num_words64-1,hi_tmp/BPM_W64_LENGTH);
   }
 }
 void banded_backtrace_matrix(
     banded_matrix_t* const banded_matrix,
     const banded_pattern_t* const banded_pattern,
-    char* const text) {
+    char* const text,
+    const int text_length) {
   // Parameters
   char* const pattern = banded_pattern->pattern;
   const uint64_t pattern_length = banded_pattern->pattern_length;
@@ -351,7 +317,7 @@ void banded_backtrace_matrix(
   int op_sentinel = banded_matrix->cigar->end_offset-1;
   // Retrieve the alignment. Store the match
   const uint64_t num_words64 = banded_pattern->pattern_num_words64;
-  int64_t h = banded_matrix->min_score_column;
+  int64_t h = text_length - 1;
   int64_t v = pattern_length - 1;
   while (v >= 0 && h >= 0) {
     const uint8_t block = v / UINT64_LENGTH;
@@ -384,14 +350,11 @@ void banded_compute(
     banded_pattern_t* const banded_pattern,
     char* const text,
     const int text_length,
-    const int bandwidth,
-    const int max_distance) {
+    const int bandwidth) {
   // Fill Matrix (Pv,Mv)
   bpm_compute_matrix_banded(
       banded_matrix,banded_pattern,
-      text,text_length,bandwidth,max_distance);
-  // Check distance
-  if (banded_matrix->min_score == UINT64_MAX) return;
+      text,text_length,bandwidth);
   // Backtrace and generate CIGAR
-  banded_backtrace_matrix(banded_matrix,banded_pattern,text);
+  banded_backtrace_matrix(banded_matrix,banded_pattern,text,text_length);
 }

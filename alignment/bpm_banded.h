@@ -41,9 +41,6 @@ typedef struct {
   uint64_t* P;
   uint64_t* M;
   uint64_t* level_mask;
-  int64_t* score;
-  int64_t* init_score;
-  uint64_t* pattern_left;
 } banded_pattern_t;
 
 /*
@@ -53,8 +50,6 @@ typedef struct {
   // Bit-encoded Matrix
   uint64_t* Pv;
   uint64_t* Mv;
-  uint64_t min_score;
-  uint64_t min_score_column;
   // CIGAR
   cigar_t* cigar;
 } banded_matrix_t;
@@ -88,7 +83,6 @@ void banded_compute(
     banded_pattern_t* const banded_pattern,
     char* const text,
     const int text_length,
-    const int bandwidth,
-    const int max_distance);
+    const int bandwidth);
 
 #endif /* BPM_BANDED_H_ */

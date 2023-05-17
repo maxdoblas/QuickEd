@@ -77,7 +77,7 @@ void benchmark_edit_bpm_banded(
   timer_start(&align_input->timer);
   banded_compute(
       &banded_matrix,&banded_pattern,align_input->text,
-      align_input->text_length,bandwidth,align_input->pattern_length);
+      align_input->text_length,bandwidth);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {
