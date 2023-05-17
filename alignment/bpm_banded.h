@@ -22,9 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef BPM_H_
-#define BPM_H_
+#ifndef BPM_BANDED_H_
+#define BPM_BANDED_H_
 
+#include "utils/commons.h"
 #include "alignment/cigar.h"
 #include "system/mm_allocator.h"
 
@@ -43,7 +44,7 @@ typedef struct {
   int64_t* score;
   int64_t* init_score;
   uint64_t* pattern_left;
-} bpm_pattern_t;
+} banded_pattern_t;
 
 /*
  * BPM matrix
@@ -56,37 +57,38 @@ typedef struct {
   uint64_t min_score_column;
   // CIGAR
   cigar_t* cigar;
-} bpm_matrix_t;
+} banded_matrix_t;
 
 /*
  * Setup
  */
-void bpm_pattern_compile(
-    bpm_pattern_t* const bpm_pattern,
+void banded_pattern_compile(
+    banded_pattern_t* const banded_pattern,
     char* const pattern,
     const int pattern_length,
     mm_allocator_t* const mm_allocator);
-void bpm_pattern_free(
-    bpm_pattern_t* const bpm_pattern,
+void banded_pattern_free(
+    banded_pattern_t* const banded_pattern,
     mm_allocator_t* const mm_allocator);
 
-void bpm_matrix_allocate(
-    bpm_matrix_t* const bpm_matrix,
+void banded_matrix_allocate(
+    banded_matrix_t* const banded_matrix,
     const uint64_t pattern_length,
     const uint64_t text_length,
     mm_allocator_t* const mm_allocator);
-void bpm_matrix_free(
-    bpm_matrix_t* const bpm_matrix,
+void banded_matrix_free(
+    banded_matrix_t* const banded_matrix,
     mm_allocator_t* const mm_allocator);
 
 /*
  * Edit distance computation using BPM
  */
-void bpm_compute(
-    bpm_matrix_t* const bpm_matrix,
-    bpm_pattern_t* const bpm_pattern,
+void banded_compute(
+    banded_matrix_t* const banded_matrix,
+    banded_pattern_t* const banded_pattern,
     char* const text,
     const int text_length,
+    const int bandwidth,
     const int max_distance);
 
-#endif /* BPM_H_ */
+#endif /* BPM_BANDED_H_ */
