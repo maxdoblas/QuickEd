@@ -174,6 +174,9 @@ void align_benchmark_run_algorithm(
     case alignment_edit_bpm_banded:
       benchmark_edit_bpm_banded(align_input,parameters.bandwidth);
       break;
+    case alignment_edit_bpm_quicked:
+      benchmark_edit_bpm_quicked(align_input);
+      break;
     case alignment_edit_bpm_windowed:
       benchmark_edit_bpm_windowed(align_input,parameters.window_size,parameters.overlap_size,parameters.window_config);
       break;

@@ -88,7 +88,8 @@ typedef struct {
 typedef enum{
     WINDOW_ALIGNED,
     WINDOW_UNALIGNED,
-    WINDOW_SSE
+    WINDOW_SSE,
+    WINDOW_QUICKED
 } window_config_t;
 
 /*

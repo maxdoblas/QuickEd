@@ -219,6 +219,7 @@ void windowed_matrix_allocate(
   windowed_matrix->cigar = cigar_new(pattern_length+text_length);
   windowed_matrix->cigar->end_offset = pattern_length+text_length;
   windowed_matrix->cigar->begin_offset = pattern_length+text_length-1;
+  windowed_matrix->cigar->score = 0;
 
   const uint64_t aux_PEQ_size = window_size*UINT64_SIZE*BPM_ALPHABET_LENGTH; /* (+1 base-column) */
   windowed_matrix->PEQ_window = (uint64_t*)mm_allocator_malloc(mm_allocator,aux_PEQ_size);
@@ -255,7 +256,6 @@ void windowed_compute_window_unaligned(
   const uint64_t* PEQ = windowed_pattern->PEQ;
   //const uint64_t num_words64 = windowed_pattern->pattern_num_words64;
   const uint64_t num_words64 = window_size;
-  const uint64_t* const level_mask = windowed_pattern->level_mask;
   //int64_t* const score = windowed_pattern->score;
   uint64_t* const Pv = windowed_matrix->Pv;
   uint64_t* const Mv = windowed_matrix->Mv;
@@ -509,6 +509,51 @@ void windowed_backtrace_window_unaligned(
   windowed_matrix->cigar->begin_offset = op_sentinel;
 }
 
+void windowed_backtrace_window_score_only(
+    windowed_matrix_t* const windowed_matrix,
+    const windowed_pattern_t* const windowed_pattern,
+    char* const text,
+    const int window_size, 
+    const int overlap_size) {
+  // Parameters
+  char* const pattern = windowed_pattern->pattern;
+  const uint64_t* const Pv = windowed_matrix->Pv;
+  const uint64_t* const Mv = windowed_matrix->Mv;
+  // Retrieve the alignment. Store the match
+  const uint64_t num_words64 = window_size;
+  int64_t h = windowed_matrix->pos_h;
+  int64_t v = windowed_matrix->pos_v;
+  int64_t h_min = windowed_matrix->pos_h - UINT64_LENGTH*(window_size) + 1 > 0 ? (windowed_matrix->pos_h-(window_size)*UINT64_LENGTH + 1) : 0;
+  int64_t h_overlap = windowed_matrix->pos_h-UINT64_LENGTH*(window_size - overlap_size) + 1 > 0 ? (windowed_matrix->pos_h-(window_size - overlap_size)*UINT64_LENGTH + 1) : 0;
+  int64_t v_min = windowed_matrix->pos_v - UINT64_LENGTH*(window_size) + 1 > 0 ? (windowed_matrix->pos_v-(window_size)*UINT64_LENGTH + 1) : 0;
+  int64_t v_overlap = windowed_matrix->pos_v - UINT64_LENGTH*(window_size - overlap_size) + 1 > 0 ? (windowed_matrix->pos_v-(window_size - overlap_size)*UINT64_LENGTH + 1) : 0;
+  int64_t score = 0;
+
+  while (v >= v_overlap && h >= h_overlap){
+    const uint8_t block = (v-v_min) / UINT64_LENGTH;
+    const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX((h-h_min+1),num_words64,block);
+    const uint64_t mask = 1L << (v-v_min % UINT64_LENGTH);
+
+    if (Pv[bdp_idx] & mask) {
+      score++;
+      --v;
+    } else if (Mv[(bdp_idx-num_words64)] & mask) {
+      score++;
+      --h;
+    } else if ((text[h]==pattern[v])) {
+      --h;
+      --v;
+    } else {
+      score++;
+      --h;
+      --v;
+    }
+  } 
+  windowed_matrix->pos_h = h;
+  windowed_matrix->pos_v = v;
+  windowed_matrix->cigar->score += score; 
+}
+
 void windowed_compute_window_aligned(
     windowed_matrix_t* const windowed_matrix,
     windowed_pattern_t* const windowed_pattern,
@@ -645,15 +690,31 @@ void windowed_compute(
         windowed_backtrace_window_unaligned(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
       }
       break;
+    case WINDOW_QUICKED:
+      while (windowed_matrix->pos_v >= 0 && windowed_matrix->pos_h >= 0) {
+        // Fill window (Pv,Mv)
+        windowed_compute_window_sse(
+            windowed_matrix,windowed_pattern,
+            text,text_length,max_distance,window_size);
+        // Compute window backtrace
+        windowed_backtrace_window_score_only(windowed_matrix,windowed_pattern,text,window_size,overlap_size);
+      }
+      break;
   }
-
-  int64_t h = windowed_matrix->pos_h;
-  int64_t v = windowed_matrix->pos_v;
-  char* const operations = windowed_matrix->cigar->operations;
-  int op_sentinel = windowed_matrix->cigar->begin_offset;
-  while (h>=0) {operations[op_sentinel--] = 'I'; --h;}
-  while (v>=0) {operations[op_sentinel--] = 'D'; --v;}
-  windowed_matrix->pos_h = h;
-  windowed_matrix->pos_v = v;
-  windowed_matrix->cigar->begin_offset = op_sentinel + 1;
+  if(window_config == WINDOW_QUICKED){
+    int64_t h = windowed_matrix->pos_h;
+    int64_t v = windowed_matrix->pos_v;
+    if (h>=0) windowed_matrix->cigar->score += h+1; 
+    if (v>=0) windowed_matrix->cigar->score += v+1; 
+  }else{
+    int64_t h = windowed_matrix->pos_h;
+    int64_t v = windowed_matrix->pos_v;
+    char* const operations = windowed_matrix->cigar->operations;
+    int op_sentinel = windowed_matrix->cigar->begin_offset;
+    while (h>=0) {operations[op_sentinel--] = 'I'; --h;}
+    while (v>=0) {operations[op_sentinel--] = 'D'; --v;}
+    windowed_matrix->pos_h = h;
+    windowed_matrix->pos_v = v;
+    windowed_matrix->cigar->begin_offset = op_sentinel + 1;
+  }
 }

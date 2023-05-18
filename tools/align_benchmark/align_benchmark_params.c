@@ -184,6 +184,8 @@ void parse_arguments(
         parameters.algorithm = alignment_edit_bpm;
       } else if (strcmp(optarg,"edit-bpm-banded")==0) {
         parameters.algorithm = alignment_edit_bpm_banded;
+      } else if (strcmp(optarg,"quicked")==0) {
+        parameters.algorithm = alignment_edit_bpm_quicked;
       } else if (strcmp(optarg,"edit-bpm-windowed")==0) {
         parameters.algorithm = alignment_edit_bpm_windowed;
       } else if (strcmp(optarg,"edit-dp")==0) {
