@@ -78,6 +78,7 @@ void usage() {
       "        [Algorithm]                                                     \n"
       "          --algorithm|a ALGORITHM                                       \n"
       "            [Edit (Levenshtein)]                                        \n"
+      "              quicked                                                   \n"
       "              edit-bpm                                                  \n"
       "              edit-bpm-banded                                           \n"
       "              edit-bpm-windowed                                         \n"
@@ -113,6 +114,9 @@ void usage() {
       "          --ends-free P0,Pf,T0,Tf                                       \n"
       "        [Other Parameters]                                              \n"
       "          --bandwidth INT                                               \n"
+      "          --window-size INT                                             \n"
+      "          --overlap-size INT                                            \n"
+      "          --window-config 'aligned'|'unaligned'|'sse'                   \n"
 #ifdef EXTERNAL_BENCHMARKS
       /* ... */
 #endif
@@ -275,7 +279,7 @@ void parse_arguments(
     case 2002: // --overlap-size
       parameters.overlap_size = atoi(optarg);
       break;
-    case 2003: // --overlap-size
+    case 2003: // --window-config
       if (strcmp(optarg,"aligned")==0) {
         parameters.window_config = WINDOW_ALIGNED;
       } else if (strcmp(optarg,"unaligned")==0) {
@@ -368,6 +372,9 @@ void parse_arguments(
     case alignment_edit_dp_banded:
       if (parameters.bandwidth == -1) {
         fprintf(stderr,"Parameter 'bandwidth' has to be provided for banded algorithms\n");
+        exit(1);
+      } else if (parameters.bandwidth < 1) {
+        fprintf(stderr,"Parameter 'bandwidth' has to be > 0\n");
         exit(1);
       }
       if (parameters.window_size != -1) {
