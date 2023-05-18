@@ -72,12 +72,12 @@ void benchmark_edit_bpm_banded(
   banded_matrix_t banded_matrix;
   banded_matrix_allocate(
       &banded_matrix,align_input->pattern_length,
-      align_input->text_length,align_input->mm_allocator);
+      align_input->text_length,bandwidth,align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
   banded_compute(
       &banded_matrix,&banded_pattern,align_input->text,
-      align_input->text_length,bandwidth);
+      align_input->text_length);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {
@@ -100,9 +100,6 @@ void benchmark_edit_bpm_quicked(
       &banded_pattern,align_input->pattern,
       align_input->pattern_length,align_input->mm_allocator);
   banded_matrix_t banded_matrix;
-  banded_matrix_allocate(
-      &banded_matrix,align_input->pattern_length,
-      align_input->text_length,align_input->mm_allocator);
 
   windowed_pattern_t windowed_pattern;
   windowed_matrix_t windowed_matrix;
@@ -120,9 +117,15 @@ void benchmark_edit_bpm_quicked(
       &windowed_matrix,&windowed_pattern,align_input->text,
       align_input->text_length,align_input->pattern_length,
       2, 1, WINDOW_QUICKED);
+  timer_pause(&align_input->timer);
+  banded_matrix_allocate(
+      &banded_matrix,align_input->pattern_length,
+      align_input->text_length,windowed_matrix.cigar->score,
+      align_input->mm_allocator);
+  timer_continue(&align_input->timer);
   banded_compute(
       &banded_matrix,&banded_pattern,align_input->text,
-      align_input->text_length,windowed_matrix.cigar->score);
+      align_input->text_length);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {

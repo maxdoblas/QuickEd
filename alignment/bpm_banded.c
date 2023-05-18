@@ -132,6 +132,7 @@ void banded_matrix_allocate(
     banded_matrix_t* const banded_matrix,
     const uint64_t pattern_length,
     const uint64_t text_length,
+    const int bandwidth,
     mm_allocator_t* const mm_allocator) {
   // Parameters
   const uint64_t num_words64 = DIV_CEIL(pattern_length,BPM_W64_LENGTH);
@@ -141,6 +142,41 @@ void banded_matrix_allocate(
   uint64_t* const Mv = (uint64_t*)mm_allocator_malloc(mm_allocator,aux_matrix_size);
   banded_matrix->Mv = Mv;
   banded_matrix->Pv = Pv;
+
+  const int k_end = ABS(text_length-pattern_length)+1;
+  const int effective_bandwidth = MAX(k_end,bandwidth);
+  banded_matrix->effective_bandwidth = effective_bandwidth;
+  // Lower and upper bounds
+  int* const lo = (int*)mm_allocator_malloc(mm_allocator,(text_length+1)*sizeof(int));
+  int* const hi = (int*)mm_allocator_malloc(mm_allocator,(text_length+1)*sizeof(int));
+  banded_matrix->lo = lo;
+  banded_matrix->hi = hi;
+
+  uint64_t lo_tmp = 0;
+  uint64_t hi_tmp = effective_bandwidth-1;
+
+  int i;
+  for (i = 0; i <= effective_bandwidth; i++) {
+    lo[i] = 0;
+    hi_tmp++;
+    hi[i] = MIN(num_words64-1,hi_tmp/BPM_W64_LENGTH);
+
+    // printf("lo[%d] = %d, hi[%d] = %d\n",i,lo[i],i,hi[i]);
+  }
+  for (; (hi[i-1]) < (num_words64-1); i++) {
+    lo_tmp++;
+    lo[i] = lo_tmp/BPM_W64_LENGTH;
+    hi_tmp++;
+    hi[i] = MIN(num_words64-1,hi_tmp/BPM_W64_LENGTH);
+    // printf("lo[%d] = %d, hi[%d] = %d\n",i,lo[i],i,hi[i]);
+  }
+  for (; i <= text_length; i++) {
+    lo_tmp++;
+    lo[i] = lo_tmp/BPM_W64_LENGTH;
+    hi[i] = num_words64-1;
+    // printf("lo[%d] = %d, hi[%d] = %d\n",i,lo[i],i,hi[i]);
+  }
+
   // CIGAR
   banded_matrix->cigar = cigar_new(pattern_length+text_length);
   banded_matrix->cigar->end_offset = pattern_length+text_length;
@@ -150,6 +186,8 @@ void banded_matrix_free(
     mm_allocator_t* const mm_allocator) {
   mm_allocator_free(mm_allocator,banded_matrix->Mv);
   mm_allocator_free(mm_allocator,banded_matrix->Pv);
+  mm_allocator_free(mm_allocator,banded_matrix->lo);
+  mm_allocator_free(mm_allocator,banded_matrix->hi);
   // CIGAR
   cigar_free(banded_matrix->cigar);
 }
@@ -173,36 +211,33 @@ void bpm_compute_matrix_banded(
     banded_matrix_t* const banded_matrix,
     banded_pattern_t* const banded_pattern,
     char* const text,
-    const int text_length,
-    const int bandwidth) {
+    const int text_length) {
   // Pattern variables
   const uint64_t* PEQ = banded_pattern->PEQ;
   const uint64_t num_words64 = banded_pattern->pattern_num_words64;
-  const uint64_t pattern_length = banded_pattern->pattern_length;
+  //const uint64_t pattern_length = banded_pattern->pattern_length;
   const uint64_t* const level_mask = banded_pattern->level_mask;
   uint64_t* const Pv = banded_matrix->Pv;
   uint64_t* const Mv = banded_matrix->Mv;
+  //const int effective_bandwidth = banded_matrix->effective_bandwidth;
+  const int* lo_vec = banded_matrix->lo;
+  const int* hi_vec = banded_matrix->hi;
   bpm_reset_search(num_words64,Pv,Mv);
 
-  const int k_end = ABS(text_length-pattern_length)+1;
-  const int effective_bandwidth = MAX(k_end,bandwidth);
-
   // Advance in DP-bit_encoded matrix
-  int lo_tmp = 0;
-  int lo = 0;
-  int hi_tmp = effective_bandwidth-1;
-  int hi = 0;
   int last_hi = 0;
   uint64_t text_position;
 
-  // Prologue: lo_band region
-  for (text_position=0;text_position<=effective_bandwidth;++text_position) {
+  for (text_position=0;text_position<text_length;++text_position) {
     // Fetch next character
     const uint8_t enc_char = dna_encode(text[text_position]);
 
     // Advance all blocks
     uint64_t i,PHin=1,MHin=0,PHout,MHout;
+
     // Main Loop
+    const int lo = lo_vec[text_position];
+    const int hi = hi_vec[text_position];
     for (i=lo;i<=last_hi;++i) {
       /* Calculate Step Data */
       const uint64_t bdp_idx = banded_pattern_BDP_IDX(text_position,num_words64,i);
@@ -243,64 +278,6 @@ void bpm_compute_matrix_banded(
     }
 
     last_hi = hi;
-    // Compute new lo&hi limit
-    hi_tmp++;
-    hi = MIN(num_words64-1,hi_tmp/BPM_W64_LENGTH);
-  }
-
-  // Main loop
-  for (;text_position<text_length;++text_position) {
-    // Fetch next character
-    const uint8_t enc_char = dna_encode(text[text_position]);
-
-    // Advance all blocks
-    uint64_t i,PHin=1,MHin=0,PHout,MHout;
-    // Main Loop
-    for (i=lo;i<=last_hi;++i) {
-      /* Calculate Step Data */
-      const uint64_t bdp_idx = banded_pattern_BDP_IDX(text_position,num_words64,i);
-      const uint64_t next_bdp_idx = bdp_idx+num_words64;
-      uint64_t Pv_in = Pv[bdp_idx];
-      uint64_t Mv_in = Mv[bdp_idx];
-      const uint64_t mask = level_mask[i];
-      const uint64_t Eq = PEQ[banded_pattern_PEQ_IDX(i,enc_char)];
-
-      /* Compute Block */
-      BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
-
-      /* Swap propagate Hv */
-      Pv[next_bdp_idx] = Pv_in;
-      Mv[next_bdp_idx] = Mv_in;
-      PHin=PHout;
-      MHin=MHout;
-    }
-
-    // Epilogue: Out of band adjacent blocks
-    for (;i<=hi;++i) {
-      /* Calculate Step Data */
-      const uint64_t bdp_idx = banded_pattern_BDP_IDX(text_position,num_words64,i);
-      const uint64_t next_bdp_idx = bdp_idx+num_words64;
-      uint64_t Pv_in = BPM_W64_ONES;
-      uint64_t Mv_in = 0;
-      const uint64_t mask = level_mask[i];
-      const uint64_t Eq = PEQ[banded_pattern_PEQ_IDX(i,enc_char)];
-
-      /* Compute Block */
-      BPM_ADVANCE_BLOCK(Eq,mask,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
-
-      /* Swap propagate Hv */
-      Pv[next_bdp_idx] = Pv_in;
-      Mv[next_bdp_idx] = Mv_in;
-      PHin=PHout;
-      MHin=MHout;
-    }
-
-    last_hi = hi;
-    // Compute lo&hi limit
-    lo_tmp++;
-    lo = lo_tmp/BPM_W64_LENGTH;
-    hi_tmp++;
-    hi = MIN(num_words64-1,hi_tmp/BPM_W64_LENGTH);
   }
 }
 void banded_backtrace_matrix(
@@ -349,12 +326,11 @@ void banded_compute(
     banded_matrix_t* const banded_matrix,
     banded_pattern_t* const banded_pattern,
     char* const text,
-    const int text_length,
-    const int bandwidth) {
+    const int text_length) {
   // Fill Matrix (Pv,Mv)
   bpm_compute_matrix_banded(
       banded_matrix,banded_pattern,
-      text,text_length,bandwidth);
+      text,text_length);
   // Backtrace and generate CIGAR
   banded_backtrace_matrix(banded_matrix,banded_pattern,text,text_length);
 }

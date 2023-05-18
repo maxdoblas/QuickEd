@@ -50,6 +50,10 @@ typedef struct {
   // Bit-encoded Matrix
   uint64_t* Pv;
   uint64_t* Mv;
+  // Lower and upper bounds
+  int effective_bandwidth;
+  int* lo;
+  int* hi;
   // CIGAR
   cigar_t* cigar;
 } banded_matrix_t;
@@ -70,6 +74,7 @@ void banded_matrix_allocate(
     banded_matrix_t* const banded_matrix,
     const uint64_t pattern_length,
     const uint64_t text_length,
+    const int bandwidth,
     mm_allocator_t* const mm_allocator);
 void banded_matrix_free(
     banded_matrix_t* const banded_matrix,
@@ -82,7 +87,6 @@ void banded_compute(
     banded_matrix_t* const banded_matrix,
     banded_pattern_t* const banded_pattern,
     char* const text,
-    const int text_length,
-    const int bandwidth);
+    const int text_length);
 
 #endif /* BPM_BANDED_H_ */
