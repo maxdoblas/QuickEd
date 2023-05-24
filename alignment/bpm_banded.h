@@ -51,6 +51,7 @@ typedef struct {
   uint64_t* Pv;
   uint64_t* Mv;
   // Lower and upper bounds
+  int effective_bandwidth_blocks;
   int effective_bandwidth;
   int* lo;
   int* hi;
@@ -79,11 +80,42 @@ void banded_matrix_allocate(
 void banded_matrix_free(
     banded_matrix_t* const banded_matrix,
     mm_allocator_t* const mm_allocator);
+void banded_matrix_free_unaligned(
+    banded_matrix_t* const banded_matrix,
+    mm_allocator_t* const mm_allocator);    
+void banded_matrix_allocate_unaligned(
+    banded_matrix_t* const banded_matrix,
+    const uint64_t pattern_length,
+    const uint64_t text_length,
+    const int bandwidth,
+    mm_allocator_t* const mm_allocator);
+
+void banded_matrix_free_blocking(
+    banded_matrix_t* const banded_matrix,
+    mm_allocator_t* const mm_allocator);    
+void banded_matrix_allocate_blocking(
+    banded_matrix_t* const banded_matrix,
+    const uint64_t pattern_length,
+    const uint64_t text_length,
+    const int bandwidth,
+    mm_allocator_t* const mm_allocator);
 
 /*
  * Edit distance computation using BPM
  */
 void banded_compute(
+    banded_matrix_t* const banded_matrix,
+    banded_pattern_t* const banded_pattern,
+    char* const text,
+    const int text_length);
+
+void banded_compute_unaligned(
+    banded_matrix_t* const banded_matrix,
+    banded_pattern_t* const banded_pattern,
+    char* const text,
+    const int text_length);
+    
+void banded_compute_blocking(
     banded_matrix_t* const banded_matrix,
     banded_pattern_t* const banded_pattern,
     char* const text,

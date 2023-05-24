@@ -92,6 +92,68 @@ void benchmark_edit_bpm_banded(
   banded_matrix_free(&banded_matrix,align_input->mm_allocator);
 }
 
+void benchmark_edit_bpm_banded_unaligned(
+    align_input_t* const align_input,
+    const int bandwidth) {
+  // Allocate
+  banded_pattern_t banded_pattern;
+  banded_pattern_compile(
+      &banded_pattern,align_input->pattern,
+      align_input->pattern_length,align_input->mm_allocator);
+  banded_matrix_t banded_matrix;
+  banded_matrix_allocate_unaligned(
+      &banded_matrix,align_input->pattern_length,
+      align_input->text_length,bandwidth,align_input->mm_allocator);
+  // Align
+  timer_start(&align_input->timer);
+  banded_compute_unaligned(
+      &banded_matrix,&banded_pattern,align_input->text,
+      align_input->text_length);
+  timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,banded_matrix.cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,false,banded_matrix.cigar);
+  }
+  // Free
+  banded_pattern_free(&banded_pattern,align_input->mm_allocator);
+  banded_matrix_free_unaligned(&banded_matrix,align_input->mm_allocator);
+}
+
+void benchmark_edit_bpm_banded_blocking(
+    align_input_t* const align_input,
+    const int bandwidth) {
+  // Allocate
+  banded_pattern_t banded_pattern;
+  banded_pattern_compile(
+      &banded_pattern,align_input->pattern,
+      align_input->pattern_length,align_input->mm_allocator);
+  banded_matrix_t banded_matrix;
+  banded_matrix_allocate_blocking(
+      &banded_matrix,align_input->pattern_length,
+      align_input->text_length,bandwidth,align_input->mm_allocator);
+  // Align
+  timer_start(&align_input->timer);
+  banded_compute_blocking(
+      &banded_matrix,&banded_pattern,align_input->text,
+      align_input->text_length);
+  timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,banded_matrix.cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,false,banded_matrix.cigar);
+  }
+  // Free
+  banded_pattern_free(&banded_pattern,align_input->mm_allocator);
+  banded_matrix_free_blocking(&banded_matrix,align_input->mm_allocator);
+}
+
 void benchmark_edit_bpm_quicked(
     align_input_t* const align_input) {
   // Allocate
@@ -118,12 +180,12 @@ void benchmark_edit_bpm_quicked(
       align_input->text_length,align_input->pattern_length,
       2, 1, WINDOW_QUICKED);
   timer_pause(&align_input->timer);
-  banded_matrix_allocate(
+  banded_matrix_allocate_blocking(
       &banded_matrix,align_input->pattern_length,
-      align_input->text_length,windowed_matrix.cigar->score,
+      align_input->text_length,windowed_matrix.cigar->score/2,
       align_input->mm_allocator);
   timer_continue(&align_input->timer);
-  banded_compute(
+  banded_compute_blocking(
       &banded_matrix,&banded_pattern,align_input->text,
       align_input->text_length);
   timer_stop(&align_input->timer);
@@ -139,7 +201,7 @@ void benchmark_edit_bpm_quicked(
   windowed_pattern_free(&windowed_pattern,align_input->mm_allocator);
   windowed_matrix_free(&windowed_matrix,align_input->mm_allocator);
   banded_pattern_free(&banded_pattern,align_input->mm_allocator);
-  banded_matrix_free(&banded_matrix,align_input->mm_allocator);
+  banded_matrix_free_blocking(&banded_matrix,align_input->mm_allocator);
 }
 
 void benchmark_edit_bpm_windowed(

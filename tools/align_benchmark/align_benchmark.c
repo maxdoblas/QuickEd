@@ -65,7 +65,7 @@ void align_input_configure_global(
   align_input->output_file = parameters.output_file;
   align_input->output_full = parameters.output_full;
   // MM
-  align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_1M);
+  align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);
   // PROFILE/STATS
   timer_reset(&align_input->timer);
   // DEBUG
@@ -173,6 +173,12 @@ void align_benchmark_run_algorithm(
       break;
     case alignment_edit_bpm_banded:
       benchmark_edit_bpm_banded(align_input,parameters.bandwidth);
+      break;
+    case alignment_edit_bpm_banded_unaligned:
+      benchmark_edit_bpm_banded_unaligned(align_input,parameters.bandwidth);
+      break;
+    case alignment_edit_bpm_banded_blocking:
+      benchmark_edit_bpm_banded_blocking(align_input,parameters.bandwidth);
       break;
     case alignment_edit_bpm_quicked:
       benchmark_edit_bpm_quicked(align_input);
