@@ -41,6 +41,9 @@ void benchmark_edit_bpm_banded_unaligned(
 void benchmark_edit_bpm_banded_blocking(
     align_input_t* const align_input,
     const int bandwidth);
+void benchmark_edit_bpm_banded_cutoff(
+    align_input_t* const align_input,
+    const int bandwidth);
 void benchmark_edit_bpm_quicked(
     align_input_t* const align_input);
 void benchmark_edit_bpm_windowed(

@@ -50,6 +50,7 @@ typedef struct {
   // Bit-encoded Matrix
   uint64_t* Pv;
   uint64_t* Mv;
+  uint64_t* scores;
   // Lower and upper bounds
   int effective_bandwidth_blocks;
   int effective_bandwidth;
@@ -100,6 +101,16 @@ void banded_matrix_allocate_blocking(
     const int bandwidth,
     mm_allocator_t* const mm_allocator);
 
+void banded_matrix_free_cutoff(
+    banded_matrix_t* const banded_matrix,
+    mm_allocator_t* const mm_allocator);    
+void banded_matrix_allocate_cutoff(
+    banded_matrix_t* const banded_matrix,
+    const uint64_t pattern_length,
+    const uint64_t text_length,
+    const int bandwidth,
+    mm_allocator_t* const mm_allocator);
+
 /*
  * Edit distance computation using BPM
  */
@@ -120,5 +131,12 @@ void banded_compute_blocking(
     banded_pattern_t* const banded_pattern,
     char* const text,
     const int text_length);
+
+void banded_compute_cutoff(
+    banded_matrix_t* const banded_matrix,
+    banded_pattern_t* const banded_pattern,
+    char* const text,
+    const int text_length,
+    const uint64_t cutoff_score);
 
 #endif /* BPM_BANDED_H_ */

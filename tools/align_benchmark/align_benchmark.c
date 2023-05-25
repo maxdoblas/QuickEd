@@ -180,6 +180,9 @@ void align_benchmark_run_algorithm(
     case alignment_edit_bpm_banded_blocking:
       benchmark_edit_bpm_banded_blocking(align_input,parameters.bandwidth);
       break;
+    case alignment_edit_bpm_banded_cutoff:
+      benchmark_edit_bpm_banded_cutoff(align_input,parameters.bandwidth);
+      break;
     case alignment_edit_bpm_quicked:
       benchmark_edit_bpm_quicked(align_input);
       break;
