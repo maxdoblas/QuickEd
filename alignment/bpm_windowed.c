@@ -229,6 +229,7 @@ void windowed_matrix_free(
     mm_allocator_t* const mm_allocator) {
   mm_allocator_free(mm_allocator,windowed_matrix->Mv);
   mm_allocator_free(mm_allocator,windowed_matrix->Pv);
+  mm_allocator_free(mm_allocator,windowed_matrix->PEQ_window);
   // CIGAR
   cigar_free(windowed_matrix->cigar);
 }
