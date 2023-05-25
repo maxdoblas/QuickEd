@@ -65,6 +65,11 @@ void benchmark_edit_bpm(
 void benchmark_edit_bpm_banded(
     align_input_t* const align_input,
     const int bandwidth) {
+  
+  const int pattern_length = align_input->pattern_length;
+  const int text_length = align_input->text_length;
+  const int bandwidth_k = (MAX(text_length,pattern_length)*bandwidth)/100;
+
   // Allocate
   banded_pattern_t banded_pattern;
   banded_pattern_compile(
@@ -73,7 +78,7 @@ void benchmark_edit_bpm_banded(
   banded_matrix_t banded_matrix;
   banded_matrix_allocate(
       &banded_matrix,align_input->pattern_length,
-      align_input->text_length,bandwidth,align_input->mm_allocator);
+      align_input->text_length,bandwidth_k,align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
   banded_compute(
@@ -96,6 +101,11 @@ void benchmark_edit_bpm_banded(
 void benchmark_edit_bpm_banded_unaligned(
     align_input_t* const align_input,
     const int bandwidth) {
+
+  const int pattern_length = align_input->pattern_length;
+  const int text_length = align_input->text_length;
+  const int bandwidth_k = (MAX(text_length,pattern_length)*bandwidth)/100;
+
   // Allocate
   banded_pattern_t banded_pattern;
   banded_pattern_compile(
@@ -104,7 +114,7 @@ void benchmark_edit_bpm_banded_unaligned(
   banded_matrix_t banded_matrix;
   banded_matrix_allocate_unaligned(
       &banded_matrix,align_input->pattern_length,
-      align_input->text_length,bandwidth,align_input->mm_allocator);
+      align_input->text_length,bandwidth_k,align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
   banded_compute_unaligned(
@@ -127,6 +137,11 @@ void benchmark_edit_bpm_banded_unaligned(
 void benchmark_edit_bpm_banded_blocking(
     align_input_t* const align_input,
     const int bandwidth) {
+  
+  const int pattern_length = align_input->pattern_length;
+  const int text_length = align_input->text_length;
+  const int bandwidth_k = (MAX(text_length,pattern_length)*bandwidth)/100;
+
   // Allocate
   banded_pattern_t banded_pattern;
   banded_pattern_compile(
@@ -135,7 +150,7 @@ void benchmark_edit_bpm_banded_blocking(
   banded_matrix_t banded_matrix;
   banded_matrix_allocate_blocking(
       &banded_matrix,align_input->pattern_length,
-      align_input->text_length,bandwidth,align_input->mm_allocator);
+      align_input->text_length,bandwidth_k,align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
   banded_compute_blocking(
@@ -158,6 +173,11 @@ void benchmark_edit_bpm_banded_blocking(
 void benchmark_edit_bpm_banded_cutoff(
     align_input_t* const align_input,
     const int bandwidth) {
+  
+  const int pattern_length = align_input->pattern_length;
+  const int text_length = align_input->text_length;
+  const int bandwidth_k = (MAX(text_length,pattern_length)*bandwidth)/100;
+
   // Allocate
   banded_pattern_t banded_pattern;
   banded_pattern_compile(
@@ -166,12 +186,12 @@ void benchmark_edit_bpm_banded_cutoff(
   banded_matrix_t banded_matrix;
   banded_matrix_allocate_cutoff(
       &banded_matrix,align_input->pattern_length,
-      align_input->text_length,bandwidth,align_input->mm_allocator);
+      align_input->text_length,bandwidth_k,align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
   banded_compute_cutoff(
       &banded_matrix,&banded_pattern,align_input->text,
-      align_input->text_length,bandwidth);
+      align_input->text_length,bandwidth_k);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {
@@ -216,14 +236,6 @@ void benchmark_edit_bpm_quicked(
   const int64_t pattern_len = align_input->pattern_length;
 
   const int64_t band = (windowed_matrix.cigar->score + ABS(text_len-pattern_len))/2+1; 
-
-  //printf("Score: %ld\n",windowed_matrix.cigar->score);
-  //printf("text, patt: %ld, %ld\n",align_input->text_length,align_input->pattern_length);
-  //printf("text - patt: %ld\n", ABS(text_len-pattern_len));
-  //printf("band: %ld\n",band);
-  //printf("-------------------------------\n");
-
-
 
   banded_matrix_allocate_cutoff(
       &banded_matrix,align_input->pattern_length,
@@ -319,6 +331,7 @@ void benchmark_edit_dp_banded(
   // Parameters
   const int pattern_length = align_input->pattern_length;
   const int text_length = align_input->text_length;
+  const int bandwidth_k = (MAX(text_length,pattern_length)*bandwidth)/100;
   // Allocate
   score_matrix_t score_matrix;
   score_matrix_allocate(
@@ -331,7 +344,7 @@ void benchmark_edit_dp_banded(
   edit_dp_align_banded(&score_matrix,
       align_input->pattern,pattern_length,
       align_input->text,text_length,
-      bandwidth,cigar);
+      bandwidth_k,cigar);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {
