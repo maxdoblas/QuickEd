@@ -450,9 +450,9 @@ void bpm_compute_matrix_banded_unaligned(
   // Advance in DP-bit_encoded matrix
   uint64_t text_position;
   //uint64_t count = 0;
-
+  uint64_t prologue_rows = MIN(text_length,(effective_bandwidth-1));
   // Prologue: lo_band region
-  for (text_position=0;text_position<effective_bandwidth-1;++text_position) {
+  for (text_position=0;text_position<prologue_rows;++text_position) {
     // Fetch next character
     const uint8_t enc_char = dna_encode(text[text_position]);
     // Advance all blocks
@@ -585,8 +585,9 @@ void bpm_compute_matrix_banded_blocking(
   uint64_t text_position;
   //uint64_t count = 0;
 
+  uint64_t prologue_rows = MIN(text_length,(effective_bandwidth_blocks/2)*BPM_W64_LENGTH);
   // Prologue: lo_band region
-  for (text_position=0;text_position<(effective_bandwidth_blocks/2)*BPM_W64_LENGTH;++text_position) {
+  for (text_position=0;text_position<prologue_rows;++text_position) {
     // Fetch next character
     const uint8_t enc_char = dna_encode(text[text_position]);
     // Advance all blocks
@@ -752,9 +753,9 @@ void bpm_compute_matrix_banded_cutoff(
   // Advance in DP-bit_encoded matrix
   uint64_t text_position;
   //uint64_t count = 0;
-
+  uint64_t prologue_rows = MIN(text_length,(effective_bandwidth_blocks/2)*BPM_W64_LENGTH);
   // Prologue: lo_band region
-  for (text_position = 0; text_position < (effective_bandwidth_blocks/2)*BPM_W64_LENGTH; ++text_position) {
+  for (text_position = 0; text_position < prologue_rows; ++text_position) {
     // Fetch next character
     const uint8_t enc_char = dna_encode(text[text_position]);
     // Advance all blocks
