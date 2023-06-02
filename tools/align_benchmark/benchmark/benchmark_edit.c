@@ -206,6 +206,42 @@ void benchmark_edit_bpm_banded_cutoff(
   banded_matrix_free_cutoff(&banded_matrix,align_input->mm_allocator);
 }
 
+void benchmark_edit_bpm_banded_cutoff_score(
+    align_input_t* const align_input,
+    const int bandwidth) {
+  
+  const int pattern_length = align_input->pattern_length;
+  const int text_length = align_input->text_length;
+  const int bandwidth_k = (MAX(text_length,pattern_length)*bandwidth)/100;
+
+  // Allocate
+  banded_pattern_t banded_pattern;
+  banded_pattern_compile(
+      &banded_pattern,align_input->pattern,
+      align_input->pattern_length,align_input->mm_allocator);
+  banded_matrix_t banded_matrix;
+  banded_matrix_allocate_cutoff_score(
+      &banded_matrix,align_input->pattern_length,
+      align_input->text_length,bandwidth_k,align_input->mm_allocator);
+  // Align
+  timer_start(&align_input->timer);
+  banded_compute_cutoff_score(
+      &banded_matrix,&banded_pattern,align_input->text,
+      align_input->text_length,bandwidth_k);
+  timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,banded_matrix.cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,true,banded_matrix.cigar);
+  }
+  // Free
+  banded_pattern_free(&banded_pattern,align_input->mm_allocator);
+  banded_matrix_free_cutoff(&banded_matrix,align_input->mm_allocator);
+}
+
 void benchmark_edit_bpm_quicked(
     align_input_t* const align_input) {
   // Allocate

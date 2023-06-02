@@ -366,6 +366,11 @@ void windowed_compute_window_sse(
   __m128i PHout,MHout,PHin,MHin;
   PHin = _mm_set_epi64x(1,Ph_firts);
   MHin = _mm_set_epi64x(0,Mh_firts);
+  
+  const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(0,num_words64,1);
+  uint64_t next_bdp_idx = bdp_idx+num_words64;
+  __m128i Mv_v = _mm_loadu_si128((__m128i*) &Mv[bdp_idx]);
+  __m128i Pv_v = _mm_loadu_si128((__m128i*) &Pv[bdp_idx]);
 
   for (text_position=1;text_position<=steps_h;text_position+=2) {
     // Fetch next character
@@ -375,15 +380,11 @@ void windowed_compute_window_sse(
 
     
     /* Calculate Step Data */
-    const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(text_position-1,num_words64,1);
-    const uint64_t next_bdp_idx = bdp_idx+num_words64;
     uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(0,enc_char)];
     uint64_t Eq_2 = PEQ_window[BPM_PATTERN_PEQ_IDX(1,enc_char_2)];
     
     /* Compute Block */
     __m128i Eq_v = _mm_set_epi64x(Eq,Eq_2); 
-    __m128i Mv_v = _mm_loadu_si128((__m128i*) &Mv[bdp_idx]);
-    __m128i Pv_v = _mm_loadu_si128((__m128i*) &Pv[bdp_idx]);
     
     __m128i Xv =  _mm_or_si128(Eq_v, Mv_v); 
     __m128i _Eq = _mm_or_si128(Eq_v, MHin); 
@@ -407,6 +408,7 @@ void windowed_compute_window_sse(
 
     _mm_storeu_si128((__m128i*) &Pv[next_bdp_idx],Pv_v);
     _mm_storeu_si128((__m128i*) &Mv[next_bdp_idx],Mv_v);
+    next_bdp_idx+=num_words64;
     PHin=_mm_set_epi64x(1ULL, _mm_extract_epi64(PHout,1));
     MHin=_mm_srli_si128(MHout,8);
 
@@ -436,12 +438,11 @@ void windowed_compute_window_sse(
     Pv_v = _mm_or_si128(Mh_v, ~(_mm_or_si128(Xv, Ph_v))); 
     Mv_v = _mm_and_si128(Ph_v, Xv);
 
-    _mm_storeu_si128((__m128i*) &Pv[next_bdp_idx+2],Pv_v);
-    _mm_storeu_si128((__m128i*) &Mv[next_bdp_idx+2],Mv_v);
+    _mm_storeu_si128((__m128i*) &Pv[next_bdp_idx],Pv_v);
+    _mm_storeu_si128((__m128i*) &Mv[next_bdp_idx],Mv_v);
     PHin=_mm_set_epi64x(1ULL, _mm_extract_epi64(PHout,1));
     MHin=_mm_srli_si128(MHout,8);
-
-
+    next_bdp_idx+=num_words64;
   }
   // Last cell
   Ph_firts=_mm_extract_epi64(PHout,1);

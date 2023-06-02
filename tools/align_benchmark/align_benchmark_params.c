@@ -84,6 +84,7 @@ void usage() {
       "              edit-bpm-banded-unaligned                                 \n"
       "              edit-bpm-banded-blocking                                  \n"
       "              edit-bpm-banded-cutoff                                    \n"
+      "              edit-bpm-banded-cutoff-score                              \n"
       "              edit-bpm-windowed                                         \n"
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
@@ -197,6 +198,8 @@ void parse_arguments(
         parameters.algorithm = alignment_edit_bpm_banded_blocking;
       } else if (strcmp(optarg,"edit-bpm-banded-cutoff")==0) {
         parameters.algorithm = alignment_edit_bpm_banded_cutoff;
+      } else if (strcmp(optarg,"edit-bpm-banded-cutoff-score")==0) {
+        parameters.algorithm = alignment_edit_bpm_banded_cutoff_score;
       } else if (strcmp(optarg,"quicked")==0) {
         parameters.algorithm = alignment_edit_bpm_quicked;
       } else if (strcmp(optarg,"edit-bpm-windowed")==0) {
@@ -381,6 +384,7 @@ void parse_arguments(
     case alignment_edit_bpm_banded_unaligned:
     case alignment_edit_bpm_banded_blocking:
     case alignment_edit_bpm_banded_cutoff:
+    case alignment_edit_bpm_banded_cutoff_score:
     case alignment_edit_dp_banded:
       if (parameters.bandwidth == -1) {
         fprintf(stderr,"Parameter 'bandwidth' has to be provided for banded algorithms\n");

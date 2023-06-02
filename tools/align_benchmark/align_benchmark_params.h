@@ -46,6 +46,7 @@ typedef enum {
   alignment_edit_bpm_banded_unaligned,
   alignment_edit_bpm_banded_blocking,
   alignment_edit_bpm_banded_cutoff,
+  alignment_edit_bpm_banded_cutoff_score,
   alignment_edit_bpm_windowed,
   alignment_edit_bpm_quicked,
 #ifdef EXTERNAL_BENCHMARKS
