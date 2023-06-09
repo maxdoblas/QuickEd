@@ -98,6 +98,12 @@ typedef enum{
 void benchmark_align_input_clear(
     align_input_t* const align_input);
 
+void cigar_insert(
+    cigar_t* const cigar_in,
+    cigar_t* const cigar_out);
+
+void reverse_string(char* in_string, char* out_string, uint64_t lenght);
+
 /*
  * Display
  */

@@ -54,6 +54,9 @@ void benchmark_edit_bpm_windowed(
     const int window_size,
     const int overlap_size,
     const window_config_t window_config);
+void benchmark_edit_bpm_band_hirschberg(
+    align_input_t* const align_input,
+    const int bandwidth);
 void benchmark_edit_dp(
     align_input_t* const align_input);
 void benchmark_edit_dp_banded(

@@ -183,6 +183,9 @@ void align_benchmark_run_algorithm(
     case alignment_edit_bpm_banded_cutoff:
       benchmark_edit_bpm_banded_cutoff(align_input,parameters.bandwidth);
       break;
+    case alignment_edit_bpm_band_hirschberg:
+      benchmark_edit_bpm_band_hirschberg(align_input,parameters.bandwidth);
+      break;
     case alignment_edit_bpm_banded_cutoff_score:
       benchmark_edit_bpm_banded_cutoff_score(align_input,parameters.bandwidth);
       break;

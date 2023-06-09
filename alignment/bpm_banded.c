@@ -907,10 +907,14 @@ void bpm_compute_matrix_banded_cutoff_score(
     banded_pattern_t* const banded_pattern,
     char* const text,
     const int text_length,
-    const uint64_t cutoff_score) {
+    const int text_finish_pos,
+    const uint64_t cutoff_score,
+    const uint64_t bandwidth) {
   // Pattern variables
   const uint64_t* PEQ = banded_pattern->PEQ;
-  const int effective_bandwidth_blocks = banded_matrix->effective_bandwidth_blocks;
+  const int k_end = ABS(((int64_t)text_length)-(int64_t)(banded_pattern->pattern_length))+1;
+  const int real_bandwidth = MAX(k_end,bandwidth);
+  const int effective_bandwidth_blocks = 2*DIV_CEIL(real_bandwidth, BPM_W64_LENGTH) + 1;
   const uint64_t* const level_mask = banded_pattern->level_mask;
   uint64_t* const Pv = banded_matrix->Pv;
   uint64_t* const Mv = banded_matrix->Mv;
@@ -922,7 +926,7 @@ void bpm_compute_matrix_banded_cutoff_score(
   // Advance in DP-bit_encoded matrix
   uint64_t text_position;
   //uint64_t count = 0;
-  uint64_t prologue_rows = MIN(text_length,(effective_bandwidth_blocks/2)*BPM_W64_LENGTH);
+  uint64_t prologue_rows = MIN(text_finish_pos,(effective_bandwidth_blocks/2)*BPM_W64_LENGTH);
   // Prologue: lo_band region
   for (text_position = 0; text_position < prologue_rows; ++text_position) {
     // Fetch next character
@@ -962,7 +966,7 @@ void bpm_compute_matrix_banded_cutoff_score(
   uint64_t first_block_v = 0;
   uint64_t last_block_v = effective_bandwidth_blocks-1;
   // Main loop
-  for (;text_position<text_length;++text_position) {
+  for (;text_position<text_finish_pos;++text_position) {
     // Fetch next character
     const uint8_t enc_char = dna_encode(text[text_position]);
     // Advance all blocks
@@ -1020,6 +1024,8 @@ void bpm_compute_matrix_banded_cutoff_score(
     final_score = scores[(banded_pattern->pattern_length-1)/BPM_W64_LENGTH];
   }
   banded_matrix->cigar->score = final_score;
+  banded_matrix->higher_block = last_block_v;
+  banded_matrix->lower_block = first_block_v;
 }
 
 void bpm_compute_matrix_banded_cutoff_simd(
@@ -1392,10 +1398,12 @@ void banded_compute_cutoff_score(
     banded_pattern_t* const banded_pattern,
     char* const text,
     const int text_length,
-    const uint64_t cutoff_score) {
+    const int text_finish_pos,
+    const uint64_t cutoff_score,
+    const uint64_t bandwidth) {
   // Fill Matrix (Pv,Mv)
   bpm_compute_matrix_banded_cutoff_score(
       banded_matrix,banded_pattern,
-      text,text_length,cutoff_score);
+      text,text_length,text_finish_pos,cutoff_score, bandwidth);
 }
 

@@ -56,6 +56,9 @@ typedef struct {
   int effective_bandwidth;
   int* lo;
   int* hi;
+
+  uint64_t higher_block;
+  uint64_t lower_block;
   // CIGAR
   cigar_t* cigar;
 } banded_matrix_t;
@@ -151,6 +154,8 @@ void banded_compute_cutoff_score(
     banded_pattern_t* const banded_pattern,
     char* const text,
     const int text_length,
-    const uint64_t cutoff_score);
+    const int text_finish_pos,
+    const uint64_t cutoff_score,
+    const uint64_t bandwidth);
 
 #endif /* BPM_BANDED_H_ */

@@ -9,6 +9,7 @@ FOLDER_BUILD=../build
 ###############################################################################
 MODULES=bpm \
         bpm_banded \
+        bpm_hirschberg \
         bpm_windowed \
         cigar \
         score_matrix
