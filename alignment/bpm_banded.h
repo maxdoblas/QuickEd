@@ -52,8 +52,12 @@ typedef struct {
   uint64_t* Mv;
   uint64_t* scores;
   // Lower and upper bounds
-  int effective_bandwidth_blocks;
-  int effective_bandwidth;
+  uint64_t effective_bandwidth_blocks;
+  uint64_t effective_bandwidth;
+  int64_t cutoff_score;
+  int64_t sequence_length_diff;
+  int64_t relative_cutoff_score;
+  int64_t prolog_column_blocks;
   int* lo;
   int* hi;
 
@@ -109,16 +113,16 @@ void banded_matrix_free_cutoff(
     mm_allocator_t* const mm_allocator);    
 void banded_matrix_allocate_cutoff(
     banded_matrix_t* const banded_matrix,
-    const uint64_t pattern_length,
-    const uint64_t text_length,
-    const int bandwidth,
+    const int64_t pattern_length,
+    const int64_t text_length,
+    const int64_t cutoff_score,
     mm_allocator_t* const mm_allocator);
 
 void banded_matrix_allocate_cutoff_score(
     banded_matrix_t* const banded_matrix,
-    const uint64_t pattern_length,
-    const uint64_t text_length,
-    const int bandwidth,
+    const int64_t pattern_length,
+    const int64_t text_length,
+    const int64_t bandwidth,
     mm_allocator_t* const mm_allocator);
 
 /*
@@ -153,9 +157,8 @@ void banded_compute_cutoff_score(
     banded_matrix_t* const banded_matrix,
     banded_pattern_t* const banded_pattern,
     char* const text,
-    const int text_length,
-    const int text_finish_pos,
-    const uint64_t cutoff_score,
-    const uint64_t bandwidth);
+    const int64_t text_length,
+    const int64_t text_finish_pos,
+    const int64_t cutoff_score);
 
 #endif /* BPM_BANDED_H_ */

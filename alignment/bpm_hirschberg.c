@@ -38,29 +38,35 @@
 void bpm_compute_matrix_hirschberg(
     char* const text,
     char* const text_r,
-    const int text_length,
+    const int64_t text_length,
     char* const pattern,
     char* const pattern_r,
-    const int pattern_length,
+    const int64_t pattern_length,
     const uint64_t cutoff_score,
     const cigar_t* cigar_out,
     mm_allocator_t* const mm_allocator){
-  
 
-  int band = (cutoff_score + ABS(text_length-pattern_length))/2+1;
+  const int64_t k_end = ABS(((int64_t)text_length)-(int64_t)(pattern_length))+1;
+  const int64_t cutoff_score_real = MAX(MAX(k_end,cutoff_score),65);
+  const int64_t sequence_length_diff = pattern_length - text_length;
+  const int64_t relative_cutoff_score = DIV_CEIL((cutoff_score_real - ABS(sequence_length_diff)), 2);
+  int64_t prolog_column_blocks;
+  int64_t effective_bandwidth_blocks;
+  if(sequence_length_diff >= 0){
+    prolog_column_blocks = DIV_CEIL(relative_cutoff_score, BPM_W64_LENGTH);
+    effective_bandwidth_blocks = DIV_CEIL(relative_cutoff_score + sequence_length_diff, BPM_W64_LENGTH) + 1 + prolog_column_blocks;
+  } else {
+    prolog_column_blocks = DIV_CEIL(relative_cutoff_score - sequence_length_diff, BPM_W64_LENGTH);
+    effective_bandwidth_blocks = DIV_CEIL(relative_cutoff_score, BPM_W64_LENGTH) + 1 + prolog_column_blocks;
+  }
 
-  const int k_end = ABS(((int64_t)text_length)-(int64_t)(pattern_length))+1;
-  const int real_bandwidth = MAX(k_end,band);
-  const int effective_bandwidth_blocks = 2*DIV_CEIL(real_bandwidth, BPM_W64_LENGTH) + 1;
-
-  uint64_t alignment_footprint = MIN(2*effective_bandwidth_blocks*text_length*BPM_W64_SIZE,2*pattern_length*text_length*BPM_W64_SIZE/BPM_W64_LENGTH);
-  int full_matrix = (2*effective_bandwidth_blocks*text_length*BPM_W64_SIZE) >= (2*pattern_length*text_length*BPM_W64_SIZE/BPM_W64_LENGTH);
+  int64_t alignment_footprint = effective_bandwidth_blocks*text_length*BPM_W64_SIZE*2;
 
   if (alignment_footprint > BUFFER_SIZE_16M){ // divide the alignment in 2
     //printf("-------------------------------------------------------------\n");
-    //printf("divining sequence of size: %lu\n",alignment_footprint);
-    //printf("text, pattern: %lu, %lu\n",text_length, pattern_length);
-    //printf("cutoff_score, band, effective_bandwidth_blocks: %lu, %lu, %lu\n",cutoff_score, band, effective_bandwidth_blocks);
+    //printf("divining sequence of size: %ld\n",alignment_footprint);
+    //printf("text, pattern: %ld, %lu\n",text_length, pattern_length);
+    //printf("cutoff_score, effective_bandwidth_blocks: %lu, %lu\n",cutoff_score, effective_bandwidth_blocks);
     const int64_t text_len = (text_length+1)/2;
     const int64_t text_len_r = text_length - text_len;
 
@@ -81,24 +87,31 @@ void bpm_compute_matrix_hirschberg(
     // Compute left side (for getting the central column)
     banded_matrix_allocate_cutoff_score(
         &banded_matrix,pattern_length,
-        text_len,band,mm_allocator);
+        text_length,cutoff_score,mm_allocator);
     
     banded_compute_cutoff_score(
         &banded_matrix,&banded_pattern,text,
-        text_length, text_len, cutoff_score, band);
+        text_length, text_len, cutoff_score);
+    //printf("computing_l\n");
+    //printf("text_length, text_len, cutoff_score: %lu, %lu, %lu\n",text_length, text_len, cutoff_score);
+
 
     // Compute right side (for getting the central column)
     banded_matrix_allocate_cutoff_score(
         &banded_matrix_r,pattern_length,
-        text_len_r,band,mm_allocator);
+        text_length,cutoff_score,mm_allocator);
+    //printf("computing_r\n");
+    //printf("text_length, text_len_r, cutoff_score: %lu, %lu, %lu\n",text_length, text_len, cutoff_score);
+
 
     banded_compute_cutoff_score(
         &banded_matrix_r,&banded_pattern_r,text_r,
-        text_length, text_len_r, cutoff_score, band);
+        text_length, text_len_r, cutoff_score);
 
-    int64_t first_block_band_pos_v = text_len < (effective_bandwidth_blocks/2)*BPM_W64_LENGTH ? 0 : (text_len/BPM_W64_LENGTH) - (effective_bandwidth_blocks/2);
-    int64_t first_block_band_pos_v_r = text_len_r < (effective_bandwidth_blocks/2)*BPM_W64_LENGTH ? 0 : (text_len_r/BPM_W64_LENGTH) - (effective_bandwidth_blocks/2);
-
+    int64_t first_block_band_pos_v = text_len < prolog_column_blocks*BPM_W64_LENGTH ? 0 : (text_len/BPM_W64_LENGTH) - (prolog_column_blocks);
+    int64_t first_block_band_pos_v_r = text_len_r < prolog_column_blocks*BPM_W64_LENGTH ? 0 : (text_len_r/BPM_W64_LENGTH) - (prolog_column_blocks);
+    //printf("sequence_length_diff, prolog_column_blocks, first_block_band_pos_v, first_block_band_pos_v_r = %ld, %ld, %ld, %ld\n", sequence_length_diff, prolog_column_blocks, first_block_band_pos_v, first_block_band_pos_v_r);
+    //printf(".lower_block, .higher_block, _r.lower_block, _r.higher_block = %ld, %ld, %ld, %ld\n", banded_matrix.lower_block, banded_matrix.higher_block, banded_matrix_r.lower_block, banded_matrix_r.higher_block);
 
     int64_t bottom_cell, bottom_cell_r;
     int64_t higher_cell, higher_cell_r;
@@ -108,6 +121,7 @@ void bpm_compute_matrix_hirschberg(
     const int64_t higher_pos = banded_matrix.higher_block*64 + 63 + first_block_band_pos_v*64;
     const int64_t higher_pos_r = (pattern_len-1) - (banded_matrix_r.lower_block*64 + 63 + first_block_band_pos_v_r*64);
 
+    //printf("bottom_pos, bottom_pos_r, higher_pos, higher_pos_r = %ld, %ld, %ld, %ld\n", bottom_pos, bottom_pos_r, higher_pos, higher_pos_r);
     
     // select lower cell
     if (bottom_pos > bottom_pos_r){
@@ -159,20 +173,23 @@ void bpm_compute_matrix_hirschberg(
         smaller_score = new_score;
       }
     }
-
   
-    int pattern_length_left = starting_pos + smaller_pos;
-    int pattern_length_right = pattern_length - pattern_length_left;
+    
+    int64_t pattern_length_left = starting_pos + smaller_pos;
+    int64_t pattern_length_right = pattern_length - pattern_length_left;
+
+    int64_t score_pos_r = DIV_CEIL(pattern_length_right,BPM_W64_LENGTH)*BPM_W64_LENGTH - (higher_cell_r+ first_block_band_pos_v_r*64);
+    int64_t score_pos_l = DIV_CEIL(pattern_length_left,BPM_W64_LENGTH)*BPM_W64_LENGTH - (bottom_cell+ first_block_band_pos_v*64);
 
     char* pattern_r_left = pattern_r + pattern_length_right;
     char* pattern_right = pattern + pattern_length_left;
 
-    int text_length_right = text_length - text_len;
+    int64_t text_length_right = text_length - text_len;
     char* text_right = text + text_len;
     char* text_r_left = text_r + text_length_right;
 
-    int score_r = banded_matrix_r.scores[(pattern_length_right)/BPM_W64_LENGTH];
-    int score_l = banded_matrix.scores[pattern_length_left/BPM_W64_LENGTH];
+    int64_t score_r = cell_score_r[number_of_cells-1-smaller_pos] - cell_score_r[score_pos_r] + banded_matrix_r.scores[(pattern_length_right)/BPM_W64_LENGTH];
+    int64_t score_l = cell_score[smaller_pos] - cell_score[score_pos_l] + banded_matrix.scores[(pattern_length_left)/BPM_W64_LENGTH];
 
     // Free
     banded_pattern_free(&banded_pattern,mm_allocator);
@@ -210,67 +227,28 @@ void bpm_compute_matrix_hirschberg(
     //printf("-------------------------------------------------------------\n");
     //printf("Computing sequence of size: %lu\n",alignment_footprint);
     //printf("text, pattern: %lu, %lu\n",text_length, pattern_length);
-    //printf("full: %lu\n",full_matrix);
+    //printf("cutoff_score, effective_bandwidth_blocks: %lu, %lu\n",cutoff_score, effective_bandwidth_blocks);
 
+    banded_pattern_t banded_pattern;
+    banded_matrix_t banded_matrix;
+    
     // Allocate
-    if(false){
-      bpm_pattern_t bpm_pattern;
-      bpm_matrix_t bpm_matrix;
-
-      bpm_pattern_compile(
-          &bpm_pattern,pattern,
-          pattern_length,mm_allocator);
-      bpm_matrix_allocate(
-          &bpm_matrix,pattern_length,
-          text_length,mm_allocator);
-      // Align
-      bpm_compute(
-          &bpm_matrix,&bpm_pattern,text,
-          text_length,text_length+pattern_length);
-
-      //printf("begin, end: %lu, %lu\n",cigar_out->begin_offset, cigar_out->begin_offset);
-      //cigar_print(stdout,cigar_out,1);
-      //printf("\n",full_matrix);
-
-      //printf("begin, end: %lu, %lu\n",bpm_matrix.cigar->begin_offset, bpm_matrix.cigar->begin_offset);
-      //cigar_print(stdout,bpm_matrix.cigar,1);
-      //printf("\n",full_matrix);
-
-
-      cigar_insert(bpm_matrix.cigar,cigar_out);
-
-      //printf("begin, end: %lu, %lu\n",cigar_out->begin_offset, cigar_out->begin_offset);
-      //cigar_print(stdout,cigar_out,1);
-      //printf("\n",full_matrix);
-
-      bpm_pattern_free(&bpm_pattern,mm_allocator);
-      bpm_matrix_free(&bpm_matrix,mm_allocator);
-      
-    }else{
-      banded_pattern_t banded_pattern;
-      banded_matrix_t banded_matrix;
-
-      // Allocate
-      banded_pattern_compile(
-          &banded_pattern,pattern,
-          pattern_length,mm_allocator);
-      banded_matrix_allocate_cutoff(
-          &banded_matrix,pattern_length,
-          text_length,band,mm_allocator);
-      
-      // Align
-      banded_compute_cutoff(
-          &banded_matrix,&banded_pattern,text,
-          text_length,cutoff_score);
-      // Merge cigar    
-      //printf("cigar inser\n");
-
-      cigar_insert(banded_matrix.cigar,cigar_out);
-      // free variables
-      banded_pattern_free(&banded_pattern,mm_allocator);
-      banded_matrix_free_cutoff(&banded_matrix,mm_allocator);
-    }
-
+    banded_pattern_compile(
+        &banded_pattern,pattern,
+        pattern_length,mm_allocator);
+    banded_matrix_allocate_cutoff(
+        &banded_matrix,pattern_length,
+        text_length,cutoff_score,mm_allocator);
+    
+    // Align
+    banded_compute_cutoff(
+        &banded_matrix,&banded_pattern,text,
+        text_length,cutoff_score);
+    // Merge cigar    
+    cigar_insert(banded_matrix.cigar,cigar_out);
+    // free variables
+    banded_pattern_free(&banded_pattern,mm_allocator);
+    banded_matrix_free_cutoff(&banded_matrix,mm_allocator);
   }
 }
 

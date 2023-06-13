@@ -213,9 +213,9 @@ void benchmark_edit_bpm_banded_cutoff_score(
     align_input_t* const align_input,
     const int bandwidth) {
   
-  const int pattern_length = align_input->pattern_length;
-  const int text_length = align_input->text_length;
-  const int bandwidth_k = (MAX(text_length,pattern_length)*bandwidth)/100;
+  const int64_t pattern_length = align_input->pattern_length;
+  const int64_t text_length = align_input->text_length;
+  const int64_t score = (MAX(text_length,pattern_length)*bandwidth)/100;
 
   // Allocate
   banded_pattern_t banded_pattern;
@@ -225,12 +225,12 @@ void benchmark_edit_bpm_banded_cutoff_score(
   banded_matrix_t banded_matrix;
   banded_matrix_allocate_cutoff_score(
       &banded_matrix,align_input->pattern_length,
-      align_input->text_length,bandwidth_k,align_input->mm_allocator);
+      align_input->text_length,score,align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
   banded_compute_cutoff_score(
       &banded_matrix,&banded_pattern,align_input->text,
-      align_input->text_length, align_input->text_length, bandwidth_k,bandwidth_k);
+      align_input->text_length, align_input->text_length, score);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {
@@ -251,8 +251,6 @@ void benchmark_edit_bpm_quicked(
   windowed_pattern_t windowed_pattern;
   windowed_matrix_t windowed_matrix;
 
-
-
   timer_start(&align_input->timer);
 
   windowed_pattern_compile(
@@ -272,14 +270,9 @@ void benchmark_edit_bpm_quicked(
   const int64_t pattern_len = align_input->pattern_length;
   
   int64_t score = windowed_matrix.cigar->score; 
-  int64_t band = (score + ABS(text_len-pattern_len))/2+1;
-
   
-  //printf("band = %ld\n",band);
   //printf("score, 0.25 = %ld,%ld\n",score,MAX(text_len,pattern_len)/4);
   if(score > MAX(text_len,pattern_len)/4){
-
-    //printf("Try to reduce the band\n");
 
     banded_pattern_t banded_pattern;
     banded_matrix_t banded_matrix_score;
@@ -291,16 +284,15 @@ void benchmark_edit_bpm_quicked(
 
 
     score = MAX(text_len,pattern_len)/5;
-    band = (score + ABS(text_len-pattern_len))/2+1; 
 
     banded_matrix_allocate_cutoff_score(
       &banded_matrix_score,align_input->pattern_length,
-      align_input->text_length,band,
+      align_input->text_length,score,
       align_input->mm_allocator);
 
     banded_compute_cutoff_score(
         &banded_matrix_score,&banded_pattern,align_input->text,
-        align_input->text_length, align_input->text_length, score, band);
+        align_input->text_length, align_input->text_length, score);
 
     int64_t new_score = banded_matrix_score.cigar->score;
     //printf("new score, cutoff = %ld,%ld\n",new_score,score);
@@ -309,16 +301,15 @@ void benchmark_edit_bpm_quicked(
 
     while(score < new_score || new_score<0){
       score *= 2; 
-      band = (score + ABS(text_len-pattern_len))/2+1;
 
       banded_matrix_allocate_cutoff_score(
         &banded_matrix_score,align_input->pattern_length,
-        align_input->text_length,band,
+        align_input->text_length,score,
         align_input->mm_allocator); 
 
       banded_compute_cutoff_score(
           &banded_matrix_score,&banded_pattern,align_input->text,
-          align_input->text_length, align_input->text_length, score, band);
+          align_input->text_length, align_input->text_length, score);
 
       //printf("new score, cutoff = %ld,%ld\n",new_score,score);
 
@@ -327,11 +318,10 @@ void benchmark_edit_bpm_quicked(
 
     }
 
-    band = (new_score + ABS(text_len-pattern_len))/2+1;
     score = new_score; 
   }
 
-  //printf("Alignment band = %ld\n",band);
+  //printf("Alignment score = %ld\n",score);
 
   char* text_r = (char*)mm_allocator_malloc(align_input->mm_allocator,align_input->text_length);
   char* pattern_r = (char*)mm_allocator_malloc(align_input->mm_allocator,align_input->pattern_length);
