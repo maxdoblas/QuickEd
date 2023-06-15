@@ -83,13 +83,18 @@ typedef struct {
   int debug_flags;
   int check_bandwidth;
   bool verbose;
+  bool seq_with_6x2;
+  bool seq_with_6x2_r;
+  bool seqs_with_15;
+  bool seqs_with_30;
 } align_input_t;
 
 typedef enum{
     WINDOW_ALIGNED,
     WINDOW_UNALIGNED,
     WINDOW_SSE,
-    WINDOW_QUICKED
+    WINDOW_QUICKED,
+    WINDOW_SCORE
 } window_config_t;
 
 /*

@@ -68,6 +68,18 @@
   Pv = Mh | ~(Xv | Ph); \
   Mv = Ph & Xv
 
+#define BPM_ADVANCE_BLOCK_LCS(Eq,mask,V,Hin,Hout) \
+  const uint64_t _Eq = Eq; \
+  const uint64_t H = V & Eq; \
+  /* Account Hout that propagates for the next block */ \
+  Hout = (H & mask)!=0; \
+  /* Hout become the Hin of the next cell */ \
+  H <<= 1; \
+  /* Account Hin coming from the previous block */ \
+  H |= Hin; \
+  /* Finally, generate the Vout */ \
+  V = Mh | ~(Xv | Ph); \
+
 #define BPM_ADVANCE_BLOCK_NO_MASK(Eq,Pv,Mv,PHin,MHin,PHout,MHout) \
   /* Computes modulator vector {Xv,Xh} ( cases A&C ) */ \
   const uint64_t Xv = Eq | Mv; \
@@ -802,7 +814,6 @@ void bpm_compute_matrix_banded_cutoff(
   const uint64_t* PEQ = banded_pattern->PEQ;
   const int64_t effective_bandwidth_blocks = banded_matrix->effective_bandwidth_blocks;
 
-  const int64_t num_block_columns = DIV_CEIL(text_length,BPM_W64_LENGTH);
   const int64_t num_block_rows = DIV_CEIL(banded_pattern->pattern_length,BPM_W64_LENGTH);
 
   const uint64_t* const level_mask = banded_pattern->level_mask;
@@ -1283,8 +1294,6 @@ void banded_backtrace_matrix_cutoff(
   char* const operations = banded_matrix->cigar->operations;
   int op_sentinel = banded_matrix->cigar->end_offset-1;
   const int effective_bandwidth_blocks = banded_matrix->effective_bandwidth_blocks;
-
-  const int64_t sequence_length_diff = banded_matrix->sequence_length_diff;
   const int64_t prologue_columns = banded_matrix->prolog_column_blocks;
 
   // Retrieve the alignment. Store the match

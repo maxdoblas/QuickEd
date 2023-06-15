@@ -76,6 +76,10 @@ void align_input_configure_global(
   if (parameters.check_alignments) align_input->debug_flags |= ALIGN_DEBUG_CHECK_ALIGNMENT;
   align_input->check_bandwidth = parameters.check_bandwidth;
   align_input->verbose = parameters.verbose;
+  align_input->seq_with_6x2 = false;
+  align_input->seq_with_6x2_r = false;
+  align_input->seqs_with_15 = false;
+  align_input->seqs_with_30 = false;
 }
 void align_input_configure_local(
     align_input_t* const align_input) {
@@ -266,17 +270,33 @@ void align_benchmark_sequential() {
   align_input_configure_global(&align_input);
   // Read-align loop
   int seqs_processed = 0, progress = 0;
+  int seqs_with_6x2 = 0;
+  int seqs_with_6x2_r = 0;
+  int seqs_with_15 = 0;
+  int seqs_with_30 = 0;
   while (true) {
     // Read input sequence-pair
     const bool input_read = align_benchmark_read_input(
         parameters.input_file,&parameters.line1,&parameters.line2,
         &parameters.line1_allocated,&parameters.line2_allocated,
         seqs_processed,&align_input);
+    align_input.seq_with_6x2 = false;
+    align_input.seq_with_6x2_r = false;
+    align_input.seqs_with_15 = false;
+    align_input.seqs_with_30 = false;
     if (!input_read) break;
     // Execute the selected algorithm
     align_benchmark_run_algorithm(&align_input);
     // Update progress
+
     ++seqs_processed;
+    if (parameters.algorithm == alignment_edit_bpm_quicked && parameters.verbose){
+      seqs_with_6x2+=align_input.seq_with_6x2;
+      seqs_with_6x2_r+=align_input.seq_with_6x2_r;
+      seqs_with_15+=align_input.seqs_with_15;
+      seqs_with_30+=align_input.seqs_with_30;
+    }
+
     if (++progress == parameters.progress) {
       progress = 0;
       if (parameters.verbose >= 0) align_benchmark_print_progress(seqs_processed);
@@ -284,6 +304,20 @@ void align_benchmark_sequential() {
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);
+
+  if (parameters.algorithm == alignment_edit_bpm_quicked && parameters.verbose){
+    printf("------------------------------------------\n");
+    printf("-- Execution Distribution\n");
+    printf("------------------------------------------\n");
+    printf("seqs_processed  = %d\n", seqs_processed);
+    printf("seqs_with_6x2   = %d\n", seqs_with_6x2);
+    printf("seqs_with_6x2_r = %d\n", seqs_with_6x2_r);
+    printf("seqs_with_15    = %d\n", seqs_with_15);
+    printf("seqs_with_30    = %d\n", seqs_with_30);
+    printf("------------------------------------------\n");
+    printf("\n");
+  }
+
   if (parameters.verbose >= 0) align_benchmark_print_results(&align_input,seqs_processed,true);
   // Free
   align_benchmark_free(&align_input);

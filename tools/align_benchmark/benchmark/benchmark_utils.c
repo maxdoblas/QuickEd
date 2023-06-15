@@ -167,6 +167,7 @@ void benchmark_print_output(
       score = cigar->score;
     } else if (cigar->begin_offset < cigar->end_offset) {
       score = cigar_score_edit(cigar);
+      //printf("score = %ld\n",score);
     }
     // Print summary
     if (align_input->output_full) {

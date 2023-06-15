@@ -113,7 +113,7 @@ void bpm_compute_matrix_hirschberg(
     //printf("sequence_length_diff, prolog_column_blocks, first_block_band_pos_v, first_block_band_pos_v_r = %ld, %ld, %ld, %ld\n", sequence_length_diff, prolog_column_blocks, first_block_band_pos_v, first_block_band_pos_v_r);
     //printf(".lower_block, .higher_block, _r.lower_block, _r.higher_block = %ld, %ld, %ld, %ld\n", banded_matrix.lower_block, banded_matrix.higher_block, banded_matrix_r.lower_block, banded_matrix_r.higher_block);
 
-    int64_t bottom_cell, bottom_cell_r;
+    int64_t bottom_cell;
     int64_t higher_cell, higher_cell_r;
     int64_t starting_pos;
     const int64_t bottom_pos = banded_matrix.lower_block*64 + 63 + first_block_band_pos_v*64;
@@ -126,11 +126,9 @@ void bpm_compute_matrix_hirschberg(
     // select lower cell
     if (bottom_pos > bottom_pos_r){
       bottom_cell = banded_matrix.lower_block*64 + 63;
-      bottom_cell_r = (pattern_len-1) - bottom_pos - first_block_band_pos_v_r*64;
       starting_pos = bottom_pos;
     }else{
       bottom_cell = bottom_pos_r - first_block_band_pos_v*64;
-      bottom_cell_r = banded_matrix_r.higher_block*64 + 63;
       starting_pos = bottom_pos_r;
     }
 
