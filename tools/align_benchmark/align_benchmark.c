@@ -68,6 +68,11 @@ void align_input_configure_global(
   align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);
   // PROFILE/STATS
   timer_reset(&align_input->timer);
+  timer_reset(&align_input->timer_window_sse);
+  timer_reset(&align_input->timer_window_6x2);
+  timer_reset(&align_input->timer_banded_15);
+  timer_reset(&align_input->timer_banded_30);
+  timer_reset(&align_input->timer_banded_hirschberg);
   // DEBUG
   align_input->debug_flags = 0;
   if (parameters.check_display) align_input->debug_flags |= ALIGN_DEBUG_DISPLAY_INFO;
@@ -142,12 +147,24 @@ void align_benchmark_print_results(
     const bool print_stats) {
   // Print benchmark results
   fprintf(stderr,"[Benchmark]\n");
-  fprintf(stderr,"=> Total.reads            %d\n",seqs_processed);
-  fprintf(stderr,"=> Time.Benchmark      ");
+  fprintf(stderr,"=> Total.reads             %d\n",seqs_processed);
+  fprintf(stderr,"=> Time.Benchmark       ");
   timer_print(stderr,&parameters.timer_global,NULL);
   if (parameters.num_threads == 1) {
-    fprintf(stderr,"  => Time.Alignment    ");
+    fprintf(stderr,"  => Time.Alignment     ");
     timer_print(stderr,&align_input->timer,&parameters.timer_global);
+    if (parameters.algorithm == alignment_edit_bpm_quicked && parameters.verbose){
+      fprintf(stderr,"  => Time.Windowed.SSE  ");
+      timer_print(stderr,&align_input->timer_window_sse,&parameters.timer_global);
+      fprintf(stderr,"  => Time.Windowed(6,2) ");
+      timer_print(stderr,&align_input->timer_window_6x2,&parameters.timer_global);
+      fprintf(stderr,"  => Time.Banded(15)    ");
+      timer_print(stderr,&align_input->timer_banded_15,&parameters.timer_global);
+      fprintf(stderr,"  => Time.Banded(30)    ");
+      timer_print(stderr,&align_input->timer_banded_30,&parameters.timer_global);
+      fprintf(stderr,"  => Time.Hirschberg    ");
+      timer_print(stderr,&align_input->timer_banded_hirschberg,&parameters.timer_global);
+    }
   } else {
     for (int i=0;i<parameters.num_threads;++i) {
       fprintf(stderr,"  => Time.Alignment.Thread.%0d    ",i);
@@ -274,6 +291,7 @@ void align_benchmark_sequential() {
   int seqs_with_6x2_r = 0;
   int seqs_with_15 = 0;
   int seqs_with_30 = 0;
+  float diff_scores = 0.0;
   while (true) {
     // Read input sequence-pair
     const bool input_read = align_benchmark_read_input(
@@ -284,6 +302,7 @@ void align_benchmark_sequential() {
     align_input.seq_with_6x2_r = false;
     align_input.seqs_with_15 = false;
     align_input.seqs_with_30 = false;
+    align_input.diff_scores = 0.0;
     if (!input_read) break;
     // Execute the selected algorithm
     align_benchmark_run_algorithm(&align_input);
@@ -295,6 +314,7 @@ void align_benchmark_sequential() {
       seqs_with_6x2_r+=align_input.seq_with_6x2_r;
       seqs_with_15+=align_input.seqs_with_15;
       seqs_with_30+=align_input.seqs_with_30;
+      diff_scores+=align_input.diff_scores;
     }
 
     if (++progress == parameters.progress) {
@@ -306,6 +326,7 @@ void align_benchmark_sequential() {
   timer_stop(&parameters.timer_global);
 
   if (parameters.algorithm == alignment_edit_bpm_quicked && parameters.verbose){
+    diff_scores = diff_scores/seqs_processed;
     printf("------------------------------------------\n");
     printf("-- Execution Distribution\n");
     printf("------------------------------------------\n");
@@ -314,6 +335,7 @@ void align_benchmark_sequential() {
     printf("seqs_with_6x2_r = %d\n", seqs_with_6x2_r);
     printf("seqs_with_15    = %d\n", seqs_with_15);
     printf("seqs_with_30    = %d\n", seqs_with_30);
+    printf("diff_scores     = %.03f\n", diff_scores);
     printf("------------------------------------------\n");
     printf("\n");
   }

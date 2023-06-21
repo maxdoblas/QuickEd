@@ -68,6 +68,11 @@ typedef struct {
   mm_allocator_t* mm_allocator;
   // PROFILE/STATS
   profiler_timer_t timer;
+  profiler_timer_t timer_window_sse;
+  profiler_timer_t timer_window_6x2;
+  profiler_timer_t timer_banded_15;
+  profiler_timer_t timer_banded_30;
+  profiler_timer_t timer_banded_hirschberg;
   profiler_counter_t align;
   profiler_counter_t align_correct;
   profiler_counter_t align_score;
@@ -87,6 +92,7 @@ typedef struct {
   bool seq_with_6x2_r;
   bool seqs_with_15;
   bool seqs_with_30;
+  float diff_scores;
 } align_input_t;
 
 typedef enum{
