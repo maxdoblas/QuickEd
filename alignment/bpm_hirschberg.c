@@ -176,8 +176,8 @@ void bpm_compute_matrix_hirschberg(
     int64_t pattern_length_left = starting_pos + smaller_pos;
     int64_t pattern_length_right = pattern_length - pattern_length_left;
 
-    int64_t score_pos_r = DIV_CEIL(pattern_length_right,BPM_W64_LENGTH)*BPM_W64_LENGTH - (higher_cell_r+ first_block_band_pos_v_r*64);
-    int64_t score_pos_l = DIV_CEIL(pattern_length_left,BPM_W64_LENGTH)*BPM_W64_LENGTH - (bottom_cell+ first_block_band_pos_v*64);
+    int64_t score_pos_r = DIV_CEIL(pattern_length_right,BPM_W64_LENGTH)*BPM_W64_LENGTH - (higher_cell_r + first_block_band_pos_v_r*64);
+    int64_t score_pos_l = DIV_CEIL(pattern_length_left,BPM_W64_LENGTH)*BPM_W64_LENGTH - (bottom_cell + first_block_band_pos_v*64);
 
     char* pattern_r_left = pattern_r + pattern_length_right;
     char* pattern_right = pattern + pattern_length_left;
@@ -186,8 +186,8 @@ void bpm_compute_matrix_hirschberg(
     char* text_right = text + text_len;
     char* text_r_left = text_r + text_length_right;
 
-    int64_t score_r = cell_score_r[number_of_cells-1-smaller_pos] - cell_score_r[score_pos_r] + banded_matrix_r.scores[(pattern_length_right)/BPM_W64_LENGTH];
-    int64_t score_l = cell_score[smaller_pos] - cell_score[score_pos_l] + banded_matrix.scores[(pattern_length_left)/BPM_W64_LENGTH];
+    int64_t score_r = cell_score_r[number_of_cells-1-smaller_pos] - cell_score_r[score_pos_r] + banded_matrix_r.scores[DIV_CEIL(pattern_length_right,BPM_W64_LENGTH)-1];
+    int64_t score_l = cell_score[smaller_pos] - cell_score[score_pos_l] + banded_matrix.scores[DIV_CEIL(pattern_length_left,BPM_W64_LENGTH)-1];
 
     // Free
     banded_pattern_free(&banded_pattern,mm_allocator);

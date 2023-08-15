@@ -31,7 +31,7 @@
 /*
  * Constants
  */
-#define BPM_ALPHABET_LENGTH 4
+#define BPM_ALPHABET_LENGTH 5
 #define BPM_W64_LENGTH UINT64_LENGTH
 #define BPM_W64_SIZE   UINT64_SIZE
 #define BPM_W64_ONES   UINT64_MAX
