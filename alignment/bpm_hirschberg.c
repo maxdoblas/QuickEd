@@ -63,10 +63,7 @@ void bpm_compute_matrix_hirschberg(
   int64_t alignment_footprint = effective_bandwidth_blocks*text_length*BPM_W64_SIZE*2;
 
   if (alignment_footprint > BUFFER_SIZE_16M){ // divide the alignment in 2
-    //printf("-------------------------------------------------------------\n");
-    //printf("divining sequence of size: %ld\n",alignment_footprint);
-    //printf("text, pattern: %ld, %lu\n",text_length, pattern_length);
-    //printf("cutoff_score, effective_bandwidth_blocks: %lu, %lu\n",cutoff_score, effective_bandwidth_blocks);
+
     const int64_t text_len = (text_length+1)/2;
     const int64_t text_len_r = text_length - text_len;
 
@@ -83,7 +80,6 @@ void bpm_compute_matrix_hirschberg(
 
     banded_matrix_t banded_matrix, banded_matrix_r;
 
-
     // Compute left side (for getting the central column)
     banded_matrix_allocate_cutoff_score(
         &banded_matrix,pattern_length,
@@ -92,27 +88,21 @@ void bpm_compute_matrix_hirschberg(
     banded_compute_cutoff_score(
         &banded_matrix,&banded_pattern,text,
         text_length, text_len, cutoff_score);
-    //printf("computing_l\n");
-    //printf("text_length, text_len, cutoff_score: %lu, %lu, %lu\n",text_length, text_len, cutoff_score);
-
 
     // Compute right side (for getting the central column)
     banded_matrix_allocate_cutoff_score(
         &banded_matrix_r,pattern_length,
         text_length,cutoff_score,mm_allocator);
-    //printf("computing_r\n");
-    //printf("text_length, text_len_r, cutoff_score: %lu, %lu, %lu\n",text_length, text_len, cutoff_score);
-
 
     banded_compute_cutoff_score(
         &banded_matrix_r,&banded_pattern_r,text_r,
         text_length, text_len_r, cutoff_score);
 
+    // vertival position of the first blocks computed on each aligments
     int64_t first_block_band_pos_v = text_len < prolog_column_blocks*BPM_W64_LENGTH ? 0 : (text_len/BPM_W64_LENGTH) - (prolog_column_blocks);
     int64_t first_block_band_pos_v_r = text_len_r < prolog_column_blocks*BPM_W64_LENGTH ? 0 : (text_len_r/BPM_W64_LENGTH) - (prolog_column_blocks);
-    //printf("sequence_length_diff, prolog_column_blocks, first_block_band_pos_v, first_block_band_pos_v_r = %ld, %ld, %ld, %ld\n", sequence_length_diff, prolog_column_blocks, first_block_band_pos_v, first_block_band_pos_v_r);
-    //printf(".lower_block, .higher_block, _r.lower_block, _r.higher_block = %ld, %ld, %ld, %ld\n", banded_matrix.lower_block, banded_matrix.higher_block, banded_matrix_r.lower_block, banded_matrix_r.higher_block);
 
+    // Higher and lower cell's position computen in each aligments
     int64_t bottom_cell;
     int64_t higher_cell, higher_cell_r;
     int64_t starting_pos;
@@ -120,10 +110,8 @@ void bpm_compute_matrix_hirschberg(
     const int64_t bottom_pos_r = (pattern_len-1) - (banded_matrix_r.higher_block*64 + 63 + first_block_band_pos_v_r*64);
     const int64_t higher_pos = banded_matrix.higher_block*64 + 63 + first_block_band_pos_v*64;
     const int64_t higher_pos_r = (pattern_len-1) - (banded_matrix_r.lower_block*64 + 63 + first_block_band_pos_v_r*64);
-
-    //printf("bottom_pos, bottom_pos_r, higher_pos, higher_pos_r = %ld, %ld, %ld, %ld\n", bottom_pos, bottom_pos_r, higher_pos, higher_pos_r);
     
-    // select lower cell
+    // select lower cell between the two aligmnets
     if (bottom_pos > bottom_pos_r){
       bottom_cell = banded_matrix.lower_block*64 + 63;
       starting_pos = bottom_pos;
@@ -132,7 +120,7 @@ void bpm_compute_matrix_hirschberg(
       starting_pos = bottom_pos_r;
     }
 
-    // select higher cell
+    // select higher cell between the two aligmnets
     if (higher_pos < higher_pos_r){
       higher_cell = banded_matrix.higher_block*64 + 63;
       higher_cell_r = (pattern_len-1) - higher_pos - first_block_band_pos_v_r*64;
@@ -141,7 +129,6 @@ void bpm_compute_matrix_hirschberg(
       higher_cell_r = banded_matrix_r.lower_block*64 + 63;
     }
     const int64_t number_of_cells = higher_cell - bottom_cell + 2;
-    //printf("bottom_cell, higher_cell, bottom_cell_r, higher_cell_r, starting_pos, number_of_cells : %ld,%ld,%ld,%ld,%ld,%ld \n", bottom_cell, higher_cell, bottom_cell_r, higher_cell_r, starting_pos,number_of_cells);
 
     int32_t* cell_score = (int32_t*)mm_allocator_malloc(mm_allocator,number_of_cells*sizeof(int32_t));
     int32_t* cell_score_r = (int32_t*)mm_allocator_malloc(mm_allocator,number_of_cells*sizeof(int32_t));
@@ -172,12 +159,9 @@ void bpm_compute_matrix_hirschberg(
       }
     }
   
-    
+    // Divide the text and the pattern for the recursive call
     int64_t pattern_length_left = starting_pos + smaller_pos;
     int64_t pattern_length_right = pattern_length - pattern_length_left;
-
-    int64_t score_pos_r = DIV_CEIL(pattern_length_right,BPM_W64_LENGTH)*BPM_W64_LENGTH - (higher_cell_r + first_block_band_pos_v_r*64);
-    int64_t score_pos_l = DIV_CEIL(pattern_length_left,BPM_W64_LENGTH)*BPM_W64_LENGTH - (bottom_cell + first_block_band_pos_v*64);
 
     char* pattern_r_left = pattern_r + pattern_length_right;
     char* pattern_right = pattern + pattern_length_left;
@@ -186,8 +170,14 @@ void bpm_compute_matrix_hirschberg(
     char* text_right = text + text_len;
     char* text_r_left = text_r + text_length_right;
 
-    int64_t score_r = cell_score_r[number_of_cells-1-smaller_pos] - cell_score_r[score_pos_r] + banded_matrix_r.scores[DIV_CEIL(pattern_length_right,BPM_W64_LENGTH)-1];
-    int64_t score_l = cell_score[smaller_pos] - cell_score[score_pos_l] + banded_matrix.scores[DIV_CEIL(pattern_length_left,BPM_W64_LENGTH)-1];
+    // Obtain the score of rach sub aligmnet
+    int64_t block_reference = DIV_CEIL(pattern_length_left,BPM_W64_LENGTH) - (number_of_cells < smaller_pos + BPM_W64_LENGTH);
+    int64_t score_pos_l = block_reference*BPM_W64_LENGTH - (bottom_cell + first_block_band_pos_v*64);
+    int64_t score_l = cell_score[smaller_pos] - cell_score[score_pos_l] + banded_matrix.scores[block_reference-1];
+
+    int64_t block_reference_r = DIV_CEIL(pattern_length_right,BPM_W64_LENGTH) - (smaller_pos < BPM_W64_LENGTH);
+    int64_t score_pos_r = block_reference_r*BPM_W64_LENGTH - (higher_cell_r + first_block_band_pos_v_r*64);
+    int64_t score_r = cell_score_r[number_of_cells-1-smaller_pos] - cell_score_r[score_pos_r] + banded_matrix_r.scores[block_reference_r-1];
 
     // Free
     banded_pattern_free(&banded_pattern,mm_allocator);
@@ -222,10 +212,6 @@ void bpm_compute_matrix_hirschberg(
       mm_allocator);
 
   }else{ // solve the alignment
-    //printf("-------------------------------------------------------------\n");
-    //printf("Computing sequence of size: %lu\n",alignment_footprint);
-    //printf("text, pattern: %lu, %lu\n",text_length, pattern_length);
-    //printf("cutoff_score, effective_bandwidth_blocks: %lu, %lu\n",cutoff_score, effective_bandwidth_blocks);
 
     banded_pattern_t banded_pattern;
     banded_matrix_t banded_matrix;
