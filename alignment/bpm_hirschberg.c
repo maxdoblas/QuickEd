@@ -27,13 +27,10 @@
 #include "alignment/bpm_banded.h"
 #include "alignment/bpm.h"
 #include "utils/dna_text.h"
+#include "tools/align_benchmark/benchmark/benchmark_utils.h"  // TODO: Remove this dependency
+#include "common.h"
 #include <immintrin.h>
 
-/*
- * Constants
- */
-#define BPM_W64_LENGTH UINT64_LENGTH
-#define BPM_W64_SIZE   UINT64_SIZE
 
 void bpm_compute_matrix_hirschberg(
     char* const text,
@@ -43,7 +40,7 @@ void bpm_compute_matrix_hirschberg(
     char* const pattern_r,
     const int64_t pattern_length,
     const uint64_t cutoff_score,
-    const cigar_t* cigar_out,
+    cigar_t* cigar_out,
     mm_allocator_t* const mm_allocator){
 
   const int64_t k_end = ABS(((int64_t)text_length)-(int64_t)(pattern_length))+1;

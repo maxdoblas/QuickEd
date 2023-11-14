@@ -32,12 +32,12 @@
 void bpm_compute_matrix_hirschberg(
     char* const text,
     char* const text_r,
-    const int text_length,
+    const int64_t text_length,
     char* const pattern,
     char* const pattern_r,
-    const int pattern_length,
+    const int64_t pattern_length,
     const uint64_t cutoff_score,
-    const cigar_t* cigar_out,
+    cigar_t* cigar_out,
     mm_allocator_t* const mm_allocator);
 
 #endif /* BPM_HIRSCHBERG_H_ */

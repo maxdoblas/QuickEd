@@ -28,6 +28,7 @@
 #include "../../../alignment/bpm.h"
 #include "../../../alignment/bpm_banded.h"
 #include "../../../alignment/bpm_windowed.h"
+#include "../../../alignment/bpm_hirschberg.h"
 #include "utils/commons.h"
 
 #define BPM_W64_LENGTH UINT64_LENGTH

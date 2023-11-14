@@ -28,7 +28,7 @@
 #include "utils/commons.h"
 #include "alignment/cigar.h"
 #include "system/mm_allocator.h"
-#include "../tools/align_benchmark/benchmark/benchmark_utils.h"
+#include "../tools/align_benchmark/benchmark/benchmark_utils.h"  // TODO: Remove this dependency
 
 typedef struct {
   /* BMP Pattern */

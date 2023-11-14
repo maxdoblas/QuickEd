@@ -27,46 +27,7 @@
 #include "utils/commons.h"
 #include "system/mm_allocator.h"
 #include "utils/dna_text.h"
-
-/*
- * Constants
- */
-#define BPM_ALPHABET_LENGTH 4
-#define BPM_W64_LENGTH UINT64_LENGTH
-#define BPM_W64_SIZE   UINT64_SIZE
-#define BPM_W64_ONES   UINT64_MAX
-#define BPM_W64_MASK   (1ull<<63)
-
-/*
- * Pattern Accessors
- */
-#define BPM_PATTERN_PEQ_IDX(word_pos,encoded_character)   ((word_pos*BPM_ALPHABET_LENGTH)+(encoded_character))
-#define BPM_PATTERN_BDP_IDX(position,num_words,word_pos)  ((position)*(num_words)+(word_pos))
-/*
- * Advance block functions (Improved)
- *   const @vector Eq,mask;
- *   return (Pv,Mv,PHout,MHout);
- */
-#define BPM_ADVANCE_BLOCK(Eq,mask,Pv,Mv,PHin,MHin,PHout,MHout) \
-  /* Computes modulator vector {Xv,Xh} ( cases A&C ) */ \
-  const uint64_t Xv = Eq | Mv; \
-  const uint64_t _Eq = Eq | MHin; \
-  const uint64_t Xh = (((_Eq & Pv) + Pv) ^ Pv) | _Eq; \
-  /* Calculate Hout */ \
-  uint64_t Ph = Mv | ~(Xh | Pv); \
-  uint64_t Mh = Pv & Xh; \
-  /* Account Hout that propagates for the next block */ \
-  PHout = (Ph & mask)!=0; \
-  MHout = (Mh & mask)!=0; \
-  /* Hout become the Hin of the next cell */ \
-  Ph <<= 1; \
-  Mh <<= 1; \
-  /* Account Hin coming from the previous block */ \
-  Ph |= PHin; \
-  Mh |= MHin; \
-  /* Finally, generate the Vout */ \
-  Pv = Mh | ~(Xv | Ph); \
-  Mv = Ph & Xv
+#include "common.h"
 
 /*
  * Setup

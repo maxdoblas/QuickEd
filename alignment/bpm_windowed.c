@@ -51,77 +51,9 @@
 #include "system/mm_allocator.h"
 #include "alignment/bpm_windowed.h"
 #include "utils/dna_text.h"
+#include "common.h"
 #include <immintrin.h>
 
-/*
- * Constants
- */
-#define BPM_ALPHABET_LENGTH 4
-#define BPM_W64_LENGTH UINT64_LENGTH
-#define BPM_W64_SIZE   UINT64_SIZE
-#define BPM_W64_ONES   UINT64_MAX
-#define BPM_W64_MASK   (1ull<<63)
-
-/*
- * Pattern Accessors
- */
-#define BPM_PATTERN_PEQ_IDX(word_pos,encoded_character)   (((word_pos)*BPM_ALPHABET_LENGTH)+(encoded_character))
-#define BPM_PATTERN_BDP_IDX(position,num_words,word_pos)  ((position)*(num_words)+(word_pos))
-/*
- * Advance block functions (Improved)
- *   const @vector Eq,mask;
- *   return (Pv,Mv,PHout,MHout);
- */
-#define BPM_ADVANCE_BLOCK(Eq,Pv,Mv,PHin,MHin,PHout,MHout) \
-  /* Computes modulator vector {Xv,Xh} ( cases A&C ) */ \
-  const uint64_t Xv = Eq | Mv; \
-  const uint64_t _Eq = Eq | MHin; \
-  const uint64_t Xh = (((_Eq & Pv) + Pv) ^ Pv) | _Eq; \
-  /* Calculate Hout */ \
-  uint64_t Ph = Mv | ~(Xh | Pv); \
-  uint64_t Mh = Pv & Xh; \
-  /* Account Hout that propagates for the next block */ \
-  PHout = Ph >> 63; \
-  MHout = Mh >> 63; \
-  /* Hout become the Hin of the next cell */ \
-  Ph <<= 1; \
-  Mh <<= 1; \
-  /* Account Hin coming from the previous block */ \
-  Ph |= PHin; \
-  Mh |= MHin; \
-  /* Finally, generate the Vout */ \
-  Pv = Mh | ~(Xv | Ph); \
-  Mv = Ph & Xv
-
-
-__attribute__ ((noinline)) 
-void bpm_advance_block_func(const uint64_t Eq, 
-    uint64_t *Pv, 
-    uint64_t *Mv, 
-    const uint64_t PHin, 
-    const uint64_t MHin, 
-    uint64_t *PHout, 
-    uint64_t *MHout){ 
-  /* Computes modulator vector {Xv,Xh} ( cases A&C ) */ 
-  const uint64_t Xv = Eq | *Mv; 
-  const uint64_t _Eq = Eq | MHin; 
-  const uint64_t Xh = (((_Eq & *Pv) + *Pv) ^ *Pv) | _Eq; 
-  /* Calculate Hout */ 
-  uint64_t Ph = *Mv | ~(Xh | *Pv); 
-  uint64_t Mh = *Pv & Xh; 
-  /* Account Hout that propagates for the next block */ 
-  *PHout = Ph >> 63; 
-  *MHout = Mh >> 63; 
-  /* Hout become the Hin of the next cell */ 
-  Ph <<= 1; 
-  Mh <<= 1; 
-  /* Account Hin coming from the previous block */ 
-  Ph |= PHin; 
-  Mh |= MHin; 
-  /* Finally, generate the Vout */ 
-  *Pv = Mh | ~(Xv | Ph); 
-  *Mv = Ph & Xv;
-}
 /*
  * Setup
  */
@@ -311,7 +243,7 @@ void windowed_compute_window_unaligned(
       //const uint64_t mask = level_mask[i+pos_v_block];
       const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(i,enc_char)];
       /* Compute Block */
-      BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
+      BPM_ADVANCE_BLOCK_NO_MASK(Eq,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
 
       /* Adjust score and swap propagate Hv */
       Pv[next_bdp_idx] = Pv_in;
@@ -368,7 +300,7 @@ void windowed_compute_window_sse(
     uint64_t Mv_in = Mv[bdp_idx];
     uint64_t PHout,MHout;
     const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(0,enc_char)];
-    BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,Ph_firts,Mh_firts,PHout,MHout);
+    BPM_ADVANCE_BLOCK_NO_MASK(Eq,Pv_in,Mv_in,Ph_firts,Mh_firts,PHout,MHout);
     Pv[next_bdp_idx] = Pv_in;
     Mv[next_bdp_idx] = Mv_in;
     Ph_firts = PHout;
@@ -466,7 +398,7 @@ void windowed_compute_window_sse(
     uint64_t Mv_in = Mv[bdp_idx];
     uint64_t PHout,MHout;
     const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(1,enc_char)];
-    BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,Ph_firts,Mh_firts,PHout,MHout);
+    BPM_ADVANCE_BLOCK_NO_MASK(Eq,Pv_in,Mv_in,Ph_firts,Mh_firts,PHout,MHout);
     Pv[next_bdp_idx] = Pv_in;
     Mv[next_bdp_idx] = Mv_in;
     Ph_firts = PHout;
@@ -696,8 +628,7 @@ void windowed_compute_window_aligned(
       uint64_t Mv_in = Mv[bdp_idx];
       const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i+pos_v,enc_char)];
       /* Compute Block */
-      BPM_ADVANCE_BLOCK(Eq,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
-
+      BPM_ADVANCE_BLOCK_NO_MASK(Eq,Pv_in,Mv_in,PHin,MHin,PHout,MHout);
       Pv[next_bdp_idx] = Pv_in;
       Mv[next_bdp_idx] = Mv_in;
       PHin=PHout;
