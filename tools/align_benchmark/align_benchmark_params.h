@@ -28,9 +28,6 @@
 #include "utils/commons.h"
 #include "benchmark/benchmark_utils.h"
 
-// Enable external benchmarks
-#define EXTERNAL_BENCHMARKS
-
 /*
  * Algorithms
  */
@@ -50,21 +47,6 @@ typedef enum {
   alignment_edit_bpm_banded_cutoff_score,
   alignment_edit_bpm_windowed,
   alignment_edit_bpm_quicked,
-#ifdef EXTERNAL_BENCHMARKS
-  // External algorithms
-  alignment_bitpal_edit,
-  alignment_daligner,
-  alignment_diffutils,
-  alignment_edlib,
-  alignment_lv89,
-  alignment_parasail_nw_stripped,
-  alignment_parasail_nw_scan,
-  alignment_parasail_nw_diag,
-  alignment_parasail_nw_banded,
-  alignment_scrooge,
-  alignment_seqan_edit,
-  alignment_seqan_edit_bpm,
-#endif
 } alignment_algorithm_type;
 
 /*
@@ -95,9 +77,6 @@ typedef struct {
   int window_size;
   int overlap_size;
   window_config_t window_config;
-#ifdef EXTERNAL_BENCHMARKS
-  /* ... */
-#endif
   // Misc
   bool check_display;
   bool check_correct;

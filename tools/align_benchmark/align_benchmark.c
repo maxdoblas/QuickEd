@@ -34,16 +34,6 @@
 #include "edit/edit_dp.h"
 
 #include "benchmark/benchmark_edit.h"
-#ifdef EXTERNAL_BENCHMARKS
-#include "benchmark/external/benchmark_bitpal.h"
-#include "benchmark/external/benchmark_daligner.h"
-#include "benchmark/external/benchmark_diffutils.h"
-#include "benchmark/external/benchmark_edlib.h"
-#include "benchmark/external/benchmark_lv89.h"
-#include "benchmark/external/benchmark_parasail.h"
-#include "benchmark/external/benchmark_scrooge.h"
-#include "benchmark/external/benchmark_seqan.h"
-#endif
 
 /*
  * Benchmark UTest
@@ -222,47 +212,6 @@ void align_benchmark_run_algorithm(
     case alignment_edit_dp_banded:
       benchmark_edit_dp_banded(align_input,parameters.bandwidth);
       break;
-      /*
-       * External Algorithms
-       */
-#ifdef EXTERNAL_BENCHMARKS
-      case alignment_bitpal_edit:
-        benchmark_bitpal_m0_x1_g1(align_input);
-        break;
-      case alignment_daligner:
-        benchmark_daligner(align_input);
-        break;
-      case alignment_diffutils:
-        benchmark_diffutils(align_input,true);
-        break;
-      case alignment_edlib:
-        benchmark_edlib(align_input);
-        break;
-      case alignment_lv89:
-        benchmark_lv89(align_input);
-        break;
-      case alignment_parasail_nw_stripped:
-        benchmark_parasail_nw_stripped(align_input);
-        break;
-      case alignment_parasail_nw_scan:
-        benchmark_parasail_nw_scan(align_input);
-        break;
-      case alignment_parasail_nw_diag:
-        benchmark_parasail_nw_diag(align_input);
-        break;
-      case alignment_parasail_nw_banded:
-        benchmark_parasail_nw_banded(align_input,parameters.bandwidth);
-        break;
-      case alignment_scrooge:
-        benchmark_scrooge(align_input);
-        break;
-      case alignment_seqan_edit:
-        benchmark_seqan_global_edit(align_input);
-        break;
-      case alignment_seqan_edit_bpm:
-        benchmark_seqan_global_edit_bpm(align_input);
-        break;
-#endif
     default:
       fprintf(stderr,"Algorithm not implemented\n");
       exit(1);

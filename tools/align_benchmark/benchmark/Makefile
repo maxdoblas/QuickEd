@@ -18,19 +18,8 @@ OBJS=$(addprefix $(FOLDER_BUILD)/, $(SRCS:.c=.o))
 ###############################################################################
 # Rules
 ###############################################################################
-SUBDIRS=external
-
-all: $(SUBDIRS) $(OBJS) 
+all: $(OBJS) 
 
 # General building rule
 $(FOLDER_BUILD)/%.o : %.c
 	$(CC) $(CC_FLAGS) -I$(FOLDER_ROOT) -I$(FOLDER_TOOL) -c $< -o $@
-
-###############################################################################
-# Subdir rule
-###############################################################################
-export
-$(SUBDIRS):
-	$(MAKE) --directory=$@ all
-	
-.PHONY: $(SUBDIRS) 

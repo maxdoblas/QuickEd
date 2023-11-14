@@ -52,9 +52,6 @@ align_bench_params_t parameters = {
   .window_size = -1,
   .overlap_size = -1,
   .window_config = WINDOW_ALIGNED,
-#ifdef EXTERNAL_BENCHMARKS
-  /* ... */
-#endif
   // Misc
   .check_bandwidth = -1,
   .check_display = false,
@@ -88,28 +85,6 @@ void usage() {
       "              edit-bpm-windowed                                         \n"
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
-#ifdef EXTERNAL_BENCHMARKS
-      "            [External/BitPal]                                           \n"
-      "              bitpal-edit          (Edit)[score-only]                   \n"
-      "            [External/Daligner]                                         \n"
-      "              daligner             (Edit)                               \n"
-      "            [External/Diffutils]                                        \n"
-      "              diffutils            (Edit)                               \n"
-      "            [External/Edlib]                                            \n"
-      "              edlib                (Edit)                               \n"
-      "            [External/LV89]                                             \n"
-      "              lv89                 (Edit)[score-only]                   \n"
-      "            [External/Parasail]                                         \n"
-      "              parasail-nw-stripped (Gap-affine)                         \n"
-      "              parasail-nw-scan     (Gap-affine)                         \n"
-      "              parasail-nw-diag     (Gap-affine)                         \n"
-      "              parasail-nw-banded   (Gap-affine)[score-only]             \n"
-      "            [External/Scrooge]                                          \n"
-      "              scrooge              (Edit)                               \n"
-      "            [External/SeqAn]                                            \n"
-      "              seqan-edit           (Edit)                               \n"
-      "              seqan-edit-bpm       (Edit)[score-only]                   \n"
-#endif
       "        [Input & Output]                                                \n"
       "          --input|i PATH                                                \n"
       "          --output|o PATH                                               \n"
@@ -121,9 +96,6 @@ void usage() {
       "          --window-size INT                                             \n"
       "          --overlap-size INT                                            \n"
       "          --window-config 'aligned'|'unaligned'|'sse'                   \n"
-#ifdef EXTERNAL_BENCHMARKS
-      /* ... */
-#endif
       "        [Misc]                                                          \n"
       "          --check|c 'correct'|'score'|'alignment'                       \n"
       "          --check-bandwidth INT                                         \n"
@@ -155,9 +127,6 @@ void parse_arguments(
     { "window-size", required_argument, 0, 2001 },
     { "overlap-size", required_argument, 0, 2002 },
     { "window-config", required_argument, 0, 2003 },
-#ifdef EXTERNAL_BENCHMARKS
-    /* ... */
-#endif
     /* Misc */
     { "check", required_argument, 0, 'c' },
     { "check-bandwidth", required_argument, 0, 3002 },
@@ -210,43 +179,6 @@ void parse_arguments(
         parameters.algorithm = alignment_edit_dp;
       } else if (strcmp(optarg,"edit-dp-banded")==0) {
         parameters.algorithm = alignment_edit_dp_banded;
-#ifdef EXTERNAL_BENCHMARKS
-      /*
-       * External Algorithm
-       */
-      // External (BitPal)
-      } else if (strcmp(optarg,"bitpal-edit")==0) {
-        parameters.algorithm = alignment_bitpal_edit;
-      // External (Daligner)
-      } else if (strcmp(optarg,"daligner")==0) {
-        parameters.algorithm = alignment_daligner;
-      // External (Diffutils)
-      } else if (strcmp(optarg,"diffutils")==0) {
-        parameters.algorithm = alignment_diffutils;
-      // External (Edlib)
-      } else if (strcmp(optarg,"edlib")==0) {
-        parameters.algorithm = alignment_edlib;
-      // External (LV89)
-      } else if (strcmp(optarg,"lv89")==0) {
-        parameters.algorithm = alignment_lv89;
-      // External (Parasail)
-      } else if (strcmp(optarg,"parasail-nw-stripped")==0) {
-        parameters.algorithm = alignment_parasail_nw_stripped;
-      } else if (strcmp(optarg,"parasail-nw-scan")==0) {
-        parameters.algorithm = alignment_parasail_nw_scan;
-      } else if (strcmp(optarg,"parasail-nw-diag")==0) {
-        parameters.algorithm = alignment_parasail_nw_diag;
-      } else if (strcmp(optarg,"parasail-nw-banded")==0) {
-        parameters.algorithm = alignment_parasail_nw_banded;
-      // External (Scrooge)
-      } else if (strcmp(optarg,"scrooge")==0) {
-        parameters.algorithm = alignment_scrooge;
-      // External (SeqAn)
-      } else if (strcmp(optarg,"seqan-edit")==0) {
-        parameters.algorithm = alignment_seqan_edit;
-      } else if (strcmp(optarg,"seqan-edit-bpm")==0) {
-        parameters.algorithm = alignment_seqan_edit_bpm;
-#endif
       } else {
         fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);
         exit(1);
@@ -305,9 +237,6 @@ void parse_arguments(
         exit(1);
       }
       break;
-#ifdef EXTERNAL_BENCHMARKS
-      /* ... */
-#endif
     /*
      * Misc
      */
