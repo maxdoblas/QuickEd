@@ -30,7 +30,7 @@
  */
 
 #include "benchmark/benchmark_utils.h"
-#include "alignment/score_matrix.h"
+#include "score_matrix.h"
 #include "edit/edit_dp.h"
 
 /*
@@ -59,18 +59,6 @@ void benchmark_align_input_clear(
   counter_reset(&(align_input->align_mismatches));
   counter_reset(&(align_input->align_del));
   counter_reset(&(align_input->align_ins));
-}
-// Inserts cigar_in just before the last carecter of the cigar_out
-// TODO: check possible errors (not enough spcace)
-void cigar_insert(
-    cigar_t* const cigar_in,
-    cigar_t* const cigar_out) {
-  // Print Sequence
-  int op_sentinel = cigar_out->begin_offset-1;
-  for(int i = cigar_in->end_offset-1; i >= cigar_in->begin_offset; i--){
-    cigar_out->operations[op_sentinel--] = cigar_in->operations[i];
-  }
-  cigar_out->begin_offset = op_sentinel + 1;
 }
 
 void reverse_string(char* in_string, char* out_string, uint64_t lenght){

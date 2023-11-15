@@ -22,32 +22,55 @@
  * SOFTWARE.
  */
 
-#ifndef EDIT_DP_H_
-#define EDIT_DP_H_
+#ifndef QUICKED_H
+#define QUICKED_H
 
-#include "score_matrix.h"
-#include "utils/include/cigar.h"
+#include "utils/include/mm_allocator.h"
+#include <stdbool.h>
 
-/*
- * Edit distance computation using dynamic-programming matrix
- */
-void edit_dp_align(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    cigar_t* const cigar);
-/*
- * Edit distance computation using dynamic-programming matrix (banded)
- */
-void edit_dp_align_banded(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int bandwidth,
-    cigar_t* const cigar);
+typedef enum {
+    QUICKED,
+    WINDOWED,
+    BANDED,
+    ERA,
+    H_ERA
+} quicked_algo_t;
 
-#endif /* EDIT_DP_H_ */
+typedef struct quicked_params_t {
+    quicked_algo_t algo;
+    bool only_score;
+    int bandwidth;
+} quicked_params_t;
+
+typedef struct quicked_aligner_t {
+    quicked_params_t params;
+    mm_allocator_t *mm_allocator;
+    int score;
+    char* cigar;
+} quicked_aligner_t;
+
+typedef enum {
+    QUICKED_OK = 0,
+    QUICKED_ERROR,          // Default error code
+    QUICKED_UNKNOWN_ALGO,   // Provided algorithm is not supported
+
+    // Development codes
+    QUICKED_UNIMPLEMENTED,  // function declared but not implemented
+    QUICKED_WIP,            // function implementation in progress
+} quicked_status_t;
+
+quicked_params_t quicked_default_params();
+quicked_status_t quicked_new(
+    quicked_aligner_t *aligner,
+    quicked_params_t params
+);
+quicked_status_t quicked_free(
+    quicked_aligner_t *aligner
+);
+quicked_status_t quicked_align(
+    quicked_aligner_t *aligner,
+    char* const pattern, const int pattern_len,
+    char* const text, const int text_len
+);
+
+#endif // QUICKED_H

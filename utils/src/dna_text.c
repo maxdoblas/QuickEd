@@ -22,32 +22,33 @@
  * SOFTWARE.
  */
 
-#ifndef EDIT_DP_H_
-#define EDIT_DP_H_
-
-#include "score_matrix.h"
-#include "utils/include/cigar.h"
+/*
+ * Pragmas
+ */
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Winitializer-overrides"
+#endif
 
 /*
- * Edit distance computation using dynamic-programming matrix
+ * Include
  */
-void edit_dp_align(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    cigar_t* const cigar);
-/*
- * Edit distance computation using dynamic-programming matrix (banded)
- */
-void edit_dp_align_banded(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int bandwidth,
-    cigar_t* const cigar);
+#include "utils/include/commons.h"
+#include "utils/include/dna_text.h"
 
-#endif /* EDIT_DP_H_ */
+/*
+ * Tables/Conversions Implementation
+ */
+const uint8_t dna_encode_table[256] =
+{
+  [0 ... 255] = 4,
+  ['A'] = 0, ['C'] = 1, ['G'] = 2,  ['T'] = 3, ['N'] = 4,
+  ['a'] = 0, ['c'] = 1, ['g'] = 2,  ['t'] = 3, ['n'] = 4,
+};
+const char dna_decode_table[DNA_EXTENDED_RANGE] =
+{
+  [ENC_DNA_CHAR_A] = DNA_CHAR_A,
+  [ENC_DNA_CHAR_C] = DNA_CHAR_C,
+  [ENC_DNA_CHAR_G] = DNA_CHAR_G,
+  [ENC_DNA_CHAR_T] = DNA_CHAR_T,
+  [ENC_DNA_CHAR_N] = DNA_CHAR_N,
+};

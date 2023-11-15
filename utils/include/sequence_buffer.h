@@ -22,32 +22,52 @@
  * SOFTWARE.
  */
 
-#ifndef EDIT_DP_H_
-#define EDIT_DP_H_
+#ifndef SEQUENCE_BUFFER_H_
+#define SEQUENCE_BUFFER_H_
 
-#include "score_matrix.h"
-#include "utils/include/cigar.h"
+#include "mm_allocator.h"
+
+typedef struct {
+  uint64_t pattern_offset;
+  uint64_t pattern_length;
+  uint64_t text_offset;
+  uint64_t text_length;
+} sequence_offset_t;
+typedef struct {
+  // ID
+  uint64_t sequence_id;
+  // Sequences
+  sequence_offset_t* offsets;
+  uint64_t offsets_used;
+  uint64_t offsets_allocated;
+  // Buffer
+  char* buffer;
+  uint64_t buffer_used;
+  uint64_t buffer_allocated;
+  // Stats
+  int max_pattern_length;
+  int max_text_length;
+} sequence_buffer_t;
 
 /*
- * Edit distance computation using dynamic-programming matrix
+ * Setup
  */
-void edit_dp_align(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    cigar_t* const cigar);
-/*
- * Edit distance computation using dynamic-programming matrix (banded)
- */
-void edit_dp_align_banded(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int bandwidth,
-    cigar_t* const cigar);
+sequence_buffer_t* sequence_buffer_new(
+    const uint64_t num_sequences_hint,
+    const uint64_t sequence_length_hint);
+void sequence_buffer_clear(
+    sequence_buffer_t* const sequence_buffer);
+void sequence_buffer_delete(
+    sequence_buffer_t* const sequence_buffer);
 
-#endif /* EDIT_DP_H_ */
+/*
+ * Accessors
+ */
+void sequence_buffer_add_pair(
+    sequence_buffer_t* const sequence_buffer,
+    char* const pattern,
+    const uint64_t pattern_length,
+    char* const text,
+    const uint64_t text_length);
+
+#endif /* SEQUENCE_BUFFER_H_ */

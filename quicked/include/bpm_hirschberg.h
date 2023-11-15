@@ -22,32 +22,22 @@
  * SOFTWARE.
  */
 
-#ifndef EDIT_DP_H_
-#define EDIT_DP_H_
+#ifndef BPM_HIRSCHBERG_H_
+#define BPM_HIRSCHBERG_H_
 
-#include "score_matrix.h"
+#include "utils/include/commons.h"
+#include "utils/include/mm_allocator.h"
 #include "utils/include/cigar.h"
 
-/*
- * Edit distance computation using dynamic-programming matrix
- */
-void edit_dp_align(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    cigar_t* const cigar);
-/*
- * Edit distance computation using dynamic-programming matrix (banded)
- */
-void edit_dp_align_banded(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int bandwidth,
-    cigar_t* const cigar);
+void bpm_compute_matrix_hirschberg(
+    char* const text,
+    char* const text_r,
+    const int64_t text_length,
+    char* const pattern,
+    char* const pattern_r,
+    const int64_t pattern_length,
+    const uint64_t cutoff_score,
+    cigar_t* cigar_out,
+    mm_allocator_t* const mm_allocator);
 
-#endif /* EDIT_DP_H_ */
+#endif /* BPM_HIRSCHBERG_H_ */

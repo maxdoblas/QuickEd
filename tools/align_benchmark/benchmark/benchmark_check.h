@@ -26,8 +26,8 @@
 #define BENCHMARK_CHECK_H_
 
 #include "benchmark_utils.h"
-#include "utils/commons.h"
-#include "system/mm_allocator.h"
+#include "utils/include/commons.h"
+#include "utils/include/mm_allocator.h"
 
 /*
  * Check

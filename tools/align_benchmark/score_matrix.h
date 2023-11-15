@@ -22,32 +22,46 @@
  * SOFTWARE.
  */
 
-#ifndef EDIT_DP_H_
-#define EDIT_DP_H_
+#ifndef SCORE_MATRIX_H_
+#define SCORE_MATRIX_H_
 
-#include "score_matrix.h"
-#include "utils/include/cigar.h"
+#include "utils/include/mm_allocator.h"
 
 /*
- * Edit distance computation using dynamic-programming matrix
+ * Constants
  */
-void edit_dp_align(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    cigar_t* const cigar);
-/*
- * Edit distance computation using dynamic-programming matrix (banded)
- */
-void edit_dp_align_banded(
-    score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int bandwidth,
-    cigar_t* const cigar);
+#define SCORE_MAX (10000000)
 
-#endif /* EDIT_DP_H_ */
+/*
+ * Score Matrix
+ */
+typedef struct {
+  // Score Columns
+  int** columns;
+  int num_rows;
+  int num_columns;
+  // MM
+  mm_allocator_t* mm_allocator;
+} score_matrix_t;
+
+/*
+ * Setup
+ */
+void score_matrix_allocate(
+    score_matrix_t* const score_matrix,
+    const int num_rows,
+    const int num_columns,
+    mm_allocator_t* const mm_allocator);
+void score_matrix_free(
+    score_matrix_t* const score_matrix);
+
+/*
+ * Display
+ */
+void score_matrix_print(
+    FILE* const stream,
+    const score_matrix_t* const score_matrix,
+    const char* const pattern,
+    const char* const text);
+
+#endif /* SCORE_MATRIX_H_ */

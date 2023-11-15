@@ -26,11 +26,11 @@
 
 #include "align_benchmark_params.h"
 
-#include "utils/commons.h"
-#include "utils/sequence_buffer.h"
-#include "system/profiler_timer.h"
+#include "utils/include/commons.h"
+#include "utils/include/sequence_buffer.h"
+#include "utils/include/profiler_timer.h"
 
-#include "alignment/score_matrix.h"
+#include "score_matrix.h"
 #include "edit/edit_dp.h"
 
 #include "benchmark/benchmark_edit.h"

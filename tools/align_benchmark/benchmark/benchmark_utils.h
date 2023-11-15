@@ -32,10 +32,11 @@
 #ifndef BENCHMARK_UTILS_H_
 #define BENCHMARK_UTILS_H_
 
-#include "utils/commons.h"
-#include "system/mm_allocator.h"
-#include "system/profiler_timer.h"
-#include "alignment/score_matrix.h"
+#include "utils/include/commons.h"
+#include "utils/include/mm_allocator.h"
+#include "utils/include/profiler_timer.h"
+#include "utils/include/cigar.h"
+#include "score_matrix.h"
 
 /*
  * Constants
@@ -95,23 +96,11 @@ typedef struct {
   float diff_scores;
 } align_input_t;
 
-typedef enum{
-    WINDOW_ALIGNED,
-    WINDOW_UNALIGNED,
-    WINDOW_SSE,
-    WINDOW_QUICKED,
-    WINDOW_SCORE
-} window_config_t;
-
 /*
  * Setup
  */
 void benchmark_align_input_clear(
     align_input_t* const align_input);
-
-void cigar_insert(
-    cigar_t* const cigar_in,
-    cigar_t* const cigar_out);
 
 void reverse_string(char* in_string, char* out_string, uint64_t lenght);
 

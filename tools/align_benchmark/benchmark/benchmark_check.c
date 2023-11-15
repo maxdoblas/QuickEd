@@ -23,7 +23,7 @@
  */
 
 #include "benchmark_check.h"
-#include "alignment/score_matrix.h"
+#include "score_matrix.h"
 #include "edit/edit_dp.h"
 
 /*

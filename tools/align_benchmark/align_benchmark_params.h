@@ -25,7 +25,7 @@
 #ifndef ALIGN_BENCHMARK_PARAMS_H_
 #define ALIGN_BENCHMARK_PARAMS_H_
 
-#include "utils/commons.h"
+#include "utils/include/commons.h"
 #include "benchmark/benchmark_utils.h"
 
 /*
