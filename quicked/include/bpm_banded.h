@@ -46,7 +46,7 @@ typedef struct {
     // Bit-encoded Matrix
     uint64_t *Pv;
     uint64_t *Mv;
-    uint64_t *scores;
+    int64_t *scores;
     // Lower and upper bounds
     uint64_t effective_bandwidth_blocks;
     uint64_t effective_bandwidth;
@@ -65,42 +65,31 @@ typedef struct {
 void banded_pattern_compile(
     banded_pattern_t *const banded_pattern,
     char *const pattern,
-    const int pattern_length,
+    const uint64_t pattern_length,
     mm_allocator_t *const mm_allocator);
 
 void banded_pattern_free(
     banded_pattern_t *const banded_pattern,
     mm_allocator_t *const mm_allocator);
 
-void banded_matrix_free_cutoff(
-    banded_matrix_t *const banded_matrix,
-    mm_allocator_t *const mm_allocator);
-
-void banded_matrix_allocate_cutoff(
+void banded_matrix_allocate(
     banded_matrix_t *const banded_matrix,
     const int64_t pattern_length,
     const int64_t text_length,
     const int64_t cutoff_score,
+    bool only_score,
     mm_allocator_t *const mm_allocator);
 
-void banded_matrix_allocate_cutoff_score(
+void banded_matrix_free(
     banded_matrix_t *const banded_matrix,
-    const int64_t pattern_length,
-    const int64_t text_length,
-    const int64_t cutoff_score,
     mm_allocator_t *const mm_allocator);
 
-void banded_compute_cutoff(
-    banded_matrix_t *const banded_matrix,
-    banded_pattern_t *const banded_pattern,
-    char *const text,
-    const int text_length);
-
-void banded_compute_cutoff_score(
+void banded_compute(
     banded_matrix_t *const banded_matrix,
     banded_pattern_t *const banded_pattern,
     char *const text,
     const int64_t text_length,
-    const int64_t text_finish_pos);
+    const int64_t text_finish_pos,
+    const bool only_score);
 
 #endif /* BPM_BANDED_H_ */

@@ -32,14 +32,16 @@ typedef enum {
     QUICKED,
     WINDOWED,
     BANDED,
-    ERA,
-    H_ERA
+    HIRSCHBERG,
 } quicked_algo_t;
 
 typedef struct quicked_params_t {
     quicked_algo_t algo;
     bool only_score;
     int bandwidth;
+    int window_size;
+    int overlap_size;
+    bool force_scalar;
 } quicked_params_t;
 
 typedef struct quicked_aligner_t {
@@ -59,7 +61,7 @@ typedef enum {
     QUICKED_WIP,            // function implementation in progress
 } quicked_status_t;
 
-quicked_params_t quicked_default_params();
+quicked_params_t quicked_default_params(void);
 quicked_status_t quicked_new(
     quicked_aligner_t *aligner,
     quicked_params_t params
@@ -69,8 +71,8 @@ quicked_status_t quicked_free(
 );
 quicked_status_t quicked_align(
     quicked_aligner_t *aligner,
-    char* const pattern, const int pattern_len,
-    char* const text, const int text_len
+    const char* pattern, const int pattern_len,
+    const char* text, const int text_len
 );
 
 #endif // QUICKED_H

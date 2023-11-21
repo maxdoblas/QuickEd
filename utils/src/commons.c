@@ -29,36 +29,60 @@
  */
 uint64_t rand_iid(
     const uint64_t min,
-    const uint64_t max) {
-  const int n_rand = rand(); // [0, RAND_MAX]
-  const uint64_t range = max - min;
-  const uint64_t rem = RAND_MAX % range;
-  const uint64_t sample = RAND_MAX / range;
-  // Consider the small interval within remainder of RAND_MAX
-  if (n_rand < RAND_MAX - rem) {
-    return min + n_rand/sample;
-  } else {
-    return rand_iid(min,max);
-  }
+    const uint64_t max)
+{
+    const uint64_t n_rand = (uint64_t) rand(); // [0, RAND_MAX]
+    const uint64_t range = max - min;
+    const uint64_t rem = RAND_MAX % range;
+    const uint64_t sample = RAND_MAX / range;
+    // Consider the small interval within remainder of RAND_MAX
+    if (n_rand < RAND_MAX - rem)
+    {
+        return min + n_rand / sample;
+    }
+    else
+    {
+        return rand_iid(min, max);
+    }
 }
 /*
  * Math
  */
 uint32_t nominal_prop_u32(
     const uint32_t base,
-    const double factor) {
-  if (0.0 <= factor && factor <= 1.0) {
-    return (uint32_t)((double)base*factor);
-  } else {
-    return (uint32_t)factor;
-  }
+    const double factor)
+{
+    if (0.0 <= factor && factor <= 1.0)
+    {
+        return (uint32_t)((double)base * factor);
+    }
+    else
+    {
+        return (uint32_t)factor;
+    }
 }
 uint64_t nominal_prop_u64(
     const uint64_t base,
-    const double factor) {
-  if (0.0 <= factor && factor <= 1.0) {
-    return (uint64_t)((double)base*factor);
-  } else {
-    return (uint64_t)factor;
-  }
+    const double factor)
+{
+    if (0.0 <= factor && factor <= 1.0)
+    {
+        return (uint64_t)((double)base * factor);
+    }
+    else
+    {
+        return (uint64_t)factor;
+    }
+}
+
+/*
+ * String
+ */
+
+void reverse_string(char *in_string, char *out_string, uint64_t lenght)
+{
+    for (uint64_t i = 0; i < lenght; i++)
+    {
+        out_string[lenght - 1 - i] = in_string[i];
+    }
 }

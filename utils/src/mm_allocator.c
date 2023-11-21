@@ -441,7 +441,8 @@ void mm_allocator_get_occupation(
   *bytes_free_fragmented = 0;
   // Check allocator memory
   const uint64_t num_segments = mm_allocator_get_num_segments(mm_allocator);
-  int64_t segment_idx, request_idx;
+  uint64_t segment_idx;
+  int64_t request_idx;
   for (segment_idx=0;segment_idx<num_segments;++segment_idx) {
     mm_allocator_segment_t* const segment = mm_allocator_get_segment(mm_allocator,segment_idx);
     const uint64_t num_requests = mm_allocator_segment_get_num_requests(segment);

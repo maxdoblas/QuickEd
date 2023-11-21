@@ -200,6 +200,12 @@
 uint64_t rand_iid(const uint64_t min,const uint64_t max);
 
 /*
+ * String
+ */
+
+void reverse_string(char* in_string, char* out_string, uint64_t lenght);
+
+/*
  * Parsing
  */
 #define IS_NUMBER(character) ('0' <= (character) && (character) <= '9')

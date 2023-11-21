@@ -31,7 +31,7 @@
 void banded_pattern_compile(
     banded_pattern_t *const banded_pattern,
     char *const pattern,
-    const int pattern_length,
+    const uint64_t pattern_length,
     mm_allocator_t *const mm_allocator)
 {
     // Calculate dimensions
@@ -100,11 +100,12 @@ void banded_pattern_free(
     mm_allocator_free(mm_allocator, banded_pattern->PEQ);
 }
 
-void banded_matrix_allocate_cutoff(
+void banded_matrix_allocate(
     banded_matrix_t *const banded_matrix,
     const int64_t pattern_length,
     const int64_t text_length,
     const int64_t cutoff_score,
+    bool only_score,
     mm_allocator_t *const mm_allocator)
 {
 
@@ -126,10 +127,11 @@ void banded_matrix_allocate_cutoff(
 
     const int64_t num_words64 = banded_matrix->effective_bandwidth_blocks;
     // Allocate auxiliary matrix
-    const int64_t aux_matrix_size = num_words64 * UINT64_SIZE * (text_length + 1); /* (+1 base-column) */
+    const int64_t num_cols = (only_score ? 1 : (text_length + 1)); // Only 1 column if only score, or text_length + 1 columns
+    const int64_t aux_matrix_size = num_words64 * UINT64_SIZE * num_cols;
     uint64_t *const Pv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
     uint64_t *const Mv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
-    uint64_t *const scores = (uint64_t *)mm_allocator_malloc(mm_allocator, (DIV_CEIL(pattern_length, BPM_W64_LENGTH) + num_words64 / 2) * UINT64_SIZE);
+    int64_t *const scores = (int64_t *)mm_allocator_malloc(mm_allocator, (DIV_CEIL(pattern_length, BPM_W64_LENGTH) + num_words64 / 2) * UINT64_SIZE);
     banded_matrix->Mv = Mv;
     banded_matrix->Pv = Pv;
     banded_matrix->scores = scores;
@@ -138,7 +140,7 @@ void banded_matrix_allocate_cutoff(
     banded_matrix->cigar->end_offset = pattern_length + text_length;
 }
 
-void banded_matrix_free_cutoff(
+void banded_matrix_free(
     banded_matrix_t *const banded_matrix,
     mm_allocator_t *const mm_allocator)
 {
@@ -149,65 +151,11 @@ void banded_matrix_free_cutoff(
     cigar_free(banded_matrix->cigar);
 }
 
-void banded_matrix_allocate_cutoff_score(
-    banded_matrix_t *const banded_matrix,
-    const int64_t pattern_length,
-    const int64_t text_length,
-    const int64_t cutoff_score,
-    mm_allocator_t *const mm_allocator)
-{
-    // Parameters
-    const int64_t k_end = ABS(((int64_t)text_length) - (int64_t)(pattern_length)) + 1;
-    banded_matrix->cutoff_score = MAX(MAX(k_end, cutoff_score), 65);
-    banded_matrix->sequence_length_diff = pattern_length - text_length;
-    banded_matrix->relative_cutoff_score = DIV_CEIL((banded_matrix->cutoff_score - ABS(banded_matrix->sequence_length_diff)), 2);
-    if (banded_matrix->sequence_length_diff >= 0)
-    {
-        banded_matrix->prolog_column_blocks = DIV_CEIL(banded_matrix->relative_cutoff_score, BPM_W64_LENGTH);
-        banded_matrix->effective_bandwidth_blocks = DIV_CEIL(banded_matrix->relative_cutoff_score + banded_matrix->sequence_length_diff, BPM_W64_LENGTH) + 1 + banded_matrix->prolog_column_blocks;
-    }
-    else
-    {
-        banded_matrix->prolog_column_blocks = DIV_CEIL(banded_matrix->relative_cutoff_score - banded_matrix->sequence_length_diff, BPM_W64_LENGTH);
-        banded_matrix->effective_bandwidth_blocks = DIV_CEIL(banded_matrix->relative_cutoff_score, BPM_W64_LENGTH) + 1 + banded_matrix->prolog_column_blocks;
-    }
-    banded_matrix->effective_bandwidth = banded_matrix->cutoff_score;
-
-    const uint64_t num_words64 = banded_matrix->effective_bandwidth_blocks;
-    // Allocate auxiliary matrix
-    const uint64_t aux_matrix_size = num_words64 * UINT64_SIZE; /* (+1 base-column) */
-    uint64_t *const Pv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
-    uint64_t *const Mv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
-    uint64_t *const scores = (uint64_t *)mm_allocator_malloc(mm_allocator, (DIV_CEIL(pattern_length, BPM_W64_LENGTH) + num_words64 / 2) * UINT64_SIZE);
-    banded_matrix->Mv = Mv;
-    banded_matrix->Pv = Pv;
-    banded_matrix->scores = scores;
-    // CIGAR
-    banded_matrix->cigar = cigar_new(pattern_length + text_length);
-    banded_matrix->cigar->end_offset = pattern_length + text_length;
-}
-
 void bpm_reset_search(
     const uint64_t num_words,
     uint64_t *const P,
-    uint64_t *const M)
-{
-    // Reset P,M
-    uint64_t i;
-    P[0] = BPM_W64_ONES;
-    M[0] = 0;
-    for (i = 1; i < num_words; ++i)
-    {
-        P[i] = BPM_W64_ONES;
-        M[i] = 0;
-    }
-}
-
-void bpm_reset_search_banded_score(
-    const uint64_t num_words,
-    uint64_t *const P,
     uint64_t *const M,
-    uint64_t *const scores)
+    int64_t *const scores)
 {
     // Reset P,M
     uint64_t i;
@@ -237,7 +185,7 @@ void bpm_compute_matrix_banded_cutoff(
     const uint64_t *const level_mask = banded_pattern->level_mask;
     uint64_t *const Pv = banded_matrix->Pv;
     uint64_t *const Mv = banded_matrix->Mv;
-    uint64_t *const scores = banded_matrix->scores;
+    int64_t *const scores = banded_matrix->scores;
     const uint64_t num_words64 = effective_bandwidth_blocks;
 
     const int64_t sequence_length_diff = banded_matrix->sequence_length_diff;
@@ -250,7 +198,7 @@ void bpm_compute_matrix_banded_cutoff(
     int64_t first_block_v = prologue_columns;
     int64_t last_block_v = effective_bandwidth_blocks - 1;
 
-    bpm_reset_search_banded_score(effective_bandwidth_blocks, Pv, Mv, scores);
+    bpm_reset_search(effective_bandwidth_blocks, Pv, Mv, scores);
 
     // Advance in DP-bit_encoded matrix
     int64_t text_position;
@@ -358,7 +306,7 @@ void bpm_compute_matrix_banded_cutoff_score(
     const uint64_t *const level_mask = banded_pattern->level_mask;
     uint64_t *const Pv = banded_matrix->Pv;
     uint64_t *const Mv = banded_matrix->Mv;
-    uint64_t *const scores = banded_matrix->scores;
+    int64_t *const scores = banded_matrix->scores;
 
     const int64_t sequence_length_diff = banded_matrix->sequence_length_diff;
     const int64_t prologue_columns = banded_matrix->prolog_column_blocks;
@@ -370,7 +318,7 @@ void bpm_compute_matrix_banded_cutoff_score(
     int64_t first_block_v = prologue_columns;
     int64_t last_block_v = effective_bandwidth_blocks - 1;
 
-    bpm_reset_search_banded_score(effective_bandwidth_blocks, Pv, Mv, scores);
+    bpm_reset_search(effective_bandwidth_blocks, Pv, Mv, scores);
 
     // Advance in DP-bit_encoded matrix
     int64_t text_position;
@@ -529,29 +477,25 @@ void banded_backtrace_matrix_cutoff(
     banded_matrix->cigar->begin_offset = op_sentinel + 1;
 }
 
-void banded_compute_cutoff(
-    banded_matrix_t *const banded_matrix,
-    banded_pattern_t *const banded_pattern,
-    char *const text,
-    const int text_length)
-{
-    // Fill Matrix (Pv,Mv)
-    bpm_compute_matrix_banded_cutoff(
-        banded_matrix, banded_pattern,
-        text, text_length);
-    // Backtrace and generate CIGAR
-    banded_backtrace_matrix_cutoff(banded_matrix, banded_pattern, text, text_length);
-}
-
-void banded_compute_cutoff_score(
+void banded_compute(
     banded_matrix_t *const banded_matrix,
     banded_pattern_t *const banded_pattern,
     char *const text,
     const int64_t text_length,
-    const int64_t text_finish_pos)
+    const int64_t text_finish_pos,
+    const bool only_score)
 {
-    // Fill Matrix (Pv,Mv)
-    bpm_compute_matrix_banded_cutoff_score(
-        banded_matrix, banded_pattern,
-        text, text_length, text_finish_pos);
+    if (only_score)
+    {
+        // Fill Matrix (Pv,Mv)
+        bpm_compute_matrix_banded_cutoff_score(banded_matrix, banded_pattern, text, text_length, text_finish_pos);
+    }
+    else
+    {
+        // Fill Matrix (Pv,Mv)
+        bpm_compute_matrix_banded_cutoff(banded_matrix, banded_pattern, text, text_length);
+
+        // Backtrace and generate CIGAR
+        banded_backtrace_matrix_cutoff(banded_matrix, banded_pattern, text, text_length);
+    }
 }

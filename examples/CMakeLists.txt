@@ -7,7 +7,7 @@ file(GLOB FILE_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.c") # Get all .c files in thi
 foreach (FILE ${FILE_LIST})
     cmake_path(GET FILE STEM EXAMPLE) # Remove .c extension
 
-    add_executable(${EXAMPLE} EXCLUDE_FROM_ALL ${FILE}) # We don't want to build it by default
+    add_executable(${EXAMPLE} ${FILE})
     set_target_properties(${EXAMPLE} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/examples")
 
     # Add a test for each example. Although this is not proper testing, at least we can check that the example runs

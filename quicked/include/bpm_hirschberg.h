@@ -25,7 +25,6 @@
 #ifndef BPM_HIRSCHBERG_H_
 #define BPM_HIRSCHBERG_H_
 
-#include "utils/include/commons.h"
 #include "utils/include/mm_allocator.h"
 #include "utils/include/cigar.h"
 
@@ -36,7 +35,7 @@ void bpm_compute_matrix_hirschberg(
     char* const pattern,
     char* const pattern_r,
     const int64_t pattern_length,
-    const uint64_t cutoff_score,
+    const int64_t cutoff_score,
     cigar_t* cigar_out,
     mm_allocator_t* const mm_allocator);
 
