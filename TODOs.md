@@ -42,7 +42,3 @@
 - Minimal band check?
 
 ## Tools
-
-### generate_dataset
-
-- Use utils instead of local functions

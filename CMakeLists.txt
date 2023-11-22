@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(quicked C)
+project(quicked LANGUAGES C CXX)
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 
 include(CTest)
 enable_testing()
@@ -51,5 +52,6 @@ include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/utils/include) # To implcitly #include .h inside utils/src
 
 add_subdirectory(quicked)
+add_subdirectory(bindings)
 add_subdirectory(examples)
 add_subdirectory(tools)
