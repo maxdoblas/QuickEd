@@ -29,9 +29,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
                         -Wcast-qual -Wswitch-default -Wswitch-enum -Wduplicated-cond)
 
     # Enable address sanitizer
-    add_compile_options(-fsanitize=address -fsanitize=leak -fsanitize=undefined -fno-sanitize-recover -fno-omit-frame-pointer)
+    add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fno-omit-frame-pointer)
     add_compile_options(-fno-sanitize=shift) # Ignore shift sanitizer (false positives, as we do some 64-bit shifts)
-    add_link_options(-fsanitize=address -fsanitize=leak -fsanitize=undefined)
+    add_link_options(-fsanitize=address -fsanitize=undefined)
 
     add_compile_options(-fstack-protector) # Enable stack protection
 
