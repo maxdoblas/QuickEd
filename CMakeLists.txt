@@ -16,7 +16,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(WARNING "Build type: ${CMAKE_BUILD_TYPE}")
     add_compile_options(-g -Wall -Wextra)
     add_compile_options(-Wno-unknown-pragmas) # Ignore pragma region errors (for VSCode, code regions)
-    add_compile_options(-Wno-override-init -Wno-maybe-uninitialized) # Ignore known non-concerning warnings
+    add_compile_options(-Wno-override-init) # Ignore known non-concerning warnings
 
     # Enable code coverage (Doesn't work yet)
     # add_compile_options(-fprofile-arcs -ftest-coverage --coverage)
@@ -24,9 +24,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     # link_libraries(gcov)
 
     # Extra debug flags
-    add_compile_options(-Wfloat-equal -Wshadow -Wformat=2 -Wlogical-op -Wshift-overflow=2
+    add_compile_options(-Wfloat-equal -Wshadow -Wformat=2 -Wshift-overflow
                         -Wcast-align -Wstrict-prototypes -Wwrite-strings #-Wconversion
-                        -Wcast-qual -Wswitch-default -Wswitch-enum -Wduplicated-cond)
+                        -Wcast-qual -Wswitch-default -Wswitch-enum)
 
     # Enable address sanitizer
     add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fno-omit-frame-pointer)
