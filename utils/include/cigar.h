@@ -141,6 +141,7 @@ void cigar_print(
     mm_allocator_t *const mm_allocator);
 int cigar_sprint(
     char* const buffer,
+    const int buf_size,
     cigar_t* const cigar,
     const bool print_matches);
 
@@ -151,6 +152,7 @@ void cigar_print_SAM_CIGAR(
     mm_allocator_t *const mm_allocator);
 int cigar_sprint_SAM_CIGAR(
     char* const buffer,
+    const int buf_size,
     cigar_t* const cigar,
     const bool show_mismatches);
 

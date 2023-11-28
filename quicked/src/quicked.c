@@ -43,8 +43,9 @@ void extract_results(
         // CIGAR
         if (cigar->begin_offset < cigar->end_offset)
         {
-            aligner->cigar = (char*) mm_allocator_malloc(aligner->mm_allocator, (2 * (cigar->end_offset - cigar->begin_offset) + 10) * sizeof(char));
-            cigar_sprint(aligner->cigar, cigar, true);
+            int buf_size = (2 * (cigar->end_offset - cigar->begin_offset) + 10) * sizeof(char);
+            aligner->cigar = (char*) mm_allocator_malloc(aligner->mm_allocator, buf_size);
+            cigar_sprint(aligner->cigar, buf_size, cigar, true);
         }
 
         // Score from CIGAR

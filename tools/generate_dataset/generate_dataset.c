@@ -22,14 +22,6 @@
  * SOFTWARE.
  */
 
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <getopt.h>
-// #include <stddef.h>
-// #include <stdint.h>
-// #include <string.h>
-// #include <math.h>
-// #include <time.h>
 #include "utils/include/commons.h"
 
 /*
@@ -371,10 +363,10 @@ int main(int argc, char *argv[])
     }
     // Allocate sequences
     const int pattern_length = parameters.length;
-    const int text_length = ceil((float)pattern_length * parameters.length_diff);
+    const int text_length = ceilf((float)pattern_length * parameters.length_diff);
     const int seqlong_length = MAX(pattern_length, text_length);  // Long sequence
     const int seqshort_length = MIN(pattern_length, text_length); // Short sequence
-    const int num_errors = (parameters.error_degree >= 1.0f) ? (int)parameters.error_degree : ceil((float)pattern_length * parameters.error_degree);
+    const int num_errors = (parameters.error_degree >= 1.0f) ? (int)parameters.error_degree : ceilf((float)pattern_length * parameters.error_degree);
     char *const seqlong = malloc(seqlong_length + 1);
     char *const seqshort = malloc(seqshort_length + 1 + num_errors + parameters.indels_num * parameters.indels_length);
     seq_error_t *const errors_log = malloc((num_errors + parameters.indels_num + 1) * sizeof(seq_error_t));

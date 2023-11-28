@@ -12,23 +12,30 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
+# # Print message if compiler is Clang
+# if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+#     message(WARNING "Compiler: Clang")
+# endif()
+
 # Set compiler flags if Debug build
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(WARNING "Build type: ${CMAKE_BUILD_TYPE}")
-    add_compile_options(-O0 -g -Wall -Wextra)
+    add_compile_options(-O0 -g -Wall -Wextra -Werror)
 
     # Ignore known non-concerning warnings
-    add_compile_options(-Wno-override-init)
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-override-init>")
 
     # Enable code coverage
     add_compile_options(--coverage)
     add_link_options(--coverage)
 
     # Extra debug flags
-    add_compile_options(-Wfloat-equal -Wformat=2 -Wshift-overflow -Wdouble-promotion
-                        -Wcast-align -Wstrict-prototypes -Wwrite-strings
-                        -Wcast-qual -Wswitch-default -Wswitch-enum -Wduplicated-branches
-                        -Wduplicated-cond -Wlogical-op -Wunused-macros)
+    add_compile_options(-Wfloat-equal -Wformat=2 -Wshift-overflow -Wdouble-promotion -Wunused-macros
+                        -Wwrite-strings -Wcast-qual -Wswitch-default -Wswitch-enum)
+
+    add_compile_options("$<$<C_COMPILER_ID:GNU>:-Wduplicated-branches;-Wduplicated-cond;-Wlogical-op>")
+
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wstrict-prototypes>")
     #add_compile_options(-Wconversion) # TODO: We would like to enable this, but it's too noisy for now
 
     # Enable address sanitizer

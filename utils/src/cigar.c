@@ -424,14 +424,16 @@ void cigar_print(
   // Check null
   if (cigar_is_null(cigar)) return;
   // Generate and print operations
-  char* const buffer = mm_allocator_malloc(mm_allocator, 2*(cigar->end_offset-cigar->begin_offset)+10);
-  cigar_sprint(buffer,cigar,print_matches);
+  int buf_size = 2*(cigar->end_offset-cigar->begin_offset)+10;
+  char* const buffer = mm_allocator_malloc(mm_allocator, buf_size);
+  cigar_sprint(buffer,buf_size,cigar,print_matches);
   fprintf(stream,"%s",buffer); // Print
   // Free
   free(buffer);
 }
 int cigar_sprint(
     char* const buffer,
+    const int buf_size,
     cigar_t* const cigar,
     const bool print_matches) {
   // Check null
@@ -452,14 +454,14 @@ int cigar_sprint(
       ++last_op_length;
     } else {
       if (print_matches || last_op != 'M') {
-        cursor += sprintf(buffer+cursor,"%d%c",last_op_length,last_op);
+        cursor += snprintf(buffer+cursor,buf_size,"%d%c",last_op_length,last_op);
       }
       last_op = operations[i];
       last_op_length = 1;
     }
   }
   if (print_matches || last_op != 'M') {
-    cursor += sprintf(buffer+cursor,"%d%c",last_op_length,last_op);
+    cursor += snprintf(buffer+cursor,buf_size,"%d%c",last_op_length,last_op);
   }
   // Return
   buffer[cursor] = '\0';
@@ -473,14 +475,16 @@ void cigar_print_SAM_CIGAR(
   // Check null
   if (cigar_is_null(cigar)) return;
   // Generate and print operations
-  char* const buffer = mm_allocator_malloc(mm_allocator, 2*(cigar->end_offset-cigar->begin_offset));
-  cigar_sprint_SAM_CIGAR(buffer,cigar,show_mismatches);
+  int buf_size = 2*(cigar->end_offset-cigar->begin_offset);
+  char* const buffer = mm_allocator_malloc(mm_allocator,buf_size);
+  cigar_sprint_SAM_CIGAR(buffer,buf_size,cigar,show_mismatches);
   fprintf(stream,"%s",buffer); // Print
   // Free
   free(buffer);
 }
 int cigar_sprint_SAM_CIGAR(
     char* const buffer,
+    const int buf_size,
     cigar_t* const cigar,
     const bool show_mismatches) {
   // Get SAM CIGAR
@@ -492,11 +496,11 @@ int cigar_sprint_SAM_CIGAR(
   for (i=0;i<cigar_length;++i) {
     const int op_idx = cigar_buffer[i] & 0xf;
     if (op_idx <= 8) {
-      cursor += sprintf(buffer+cursor,"%d%c",
+      cursor += snprintf(buffer+cursor,buf_size,"%d%c",
           cigar_buffer[i]>>4,
           "MIDN---=X"[cigar_buffer[i]&0xf]);
     } else {
-      cursor += sprintf(buffer+cursor,"%d%c",
+      cursor += snprintf(buffer+cursor,buf_size,"%d%c",
           cigar_buffer[i]>>4,'?');
     }
   }
