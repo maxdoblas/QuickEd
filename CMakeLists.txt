@@ -21,7 +21,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-Wno-override-init)
 
     # Enable code coverage
-    add_compile_options(--coverage) #-fprofile-abs-path)
+    add_compile_options(--coverage)
     add_link_options(--coverage)
 
     # Extra debug flags
