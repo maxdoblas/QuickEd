@@ -33,6 +33,9 @@
 typedef struct {
   // Alignment operations
   char* operations;        // Raw alignment operations
+  // CIGAR (SAM compliant)
+  uint32_t* cigar_buffer;  // CIGAR-operations (max_operations length)
+  int cigar_length;        // Total CIGAR-operations
   int max_operations;      // Maximum buffer size
   int begin_offset;        // Begin offset
   int end_offset;          // End offset
@@ -40,23 +43,23 @@ typedef struct {
   int score;               // Computed scored
   int end_v;               // Alignment-end vertical coordinate (pattern characters aligned)
   int end_h;               // Alignment-end horizontal coordinate (text characters aligned)
-  // CIGAR (SAM compliant)
-  uint32_t* cigar_buffer;  // CIGAR-operations (max_operations length)
-  int cigar_length;        // Total CIGAR-operations
 } cigar_t;
 
 /*
  * Setup
  */
 cigar_t* cigar_new(
-    const int max_operations);
+    const int max_operations,
+    mm_allocator_t *const mm_allocator);
 void cigar_clear(
     cigar_t* const cigar);
 void cigar_resize(
     cigar_t* const cigar,
-    const int max_operations);
+    const int max_operations,
+    mm_allocator_t *const mm_allocator);
 void cigar_free(
-    cigar_t* const cigar);
+    cigar_t* const cigar,
+    mm_allocator_t *const mm_allocator);
 
 /*
  * Accessors
@@ -134,7 +137,8 @@ bool cigar_check_alignment(
 void cigar_print(
     FILE* const stream,
     cigar_t* const cigar,
-    const bool print_matches);
+    const bool print_matches,
+    mm_allocator_t *const mm_allocator);
 int cigar_sprint(
     char* const buffer,
     cigar_t* const cigar,
@@ -143,7 +147,8 @@ int cigar_sprint(
 void cigar_print_SAM_CIGAR(
     FILE* const stream,
     cigar_t* const cigar,
-    const bool show_mismatches);
+    const bool show_mismatches,
+    mm_allocator_t *const mm_allocator);
 int cigar_sprint_SAM_CIGAR(
     char* const buffer,
     cigar_t* const cigar,
@@ -155,6 +160,7 @@ void cigar_print_pretty(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length);
+    const int text_length,
+    mm_allocator_t *const mm_allocator);
 
 #endif /* CIGAR_H_ */

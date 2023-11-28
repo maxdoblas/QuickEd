@@ -28,21 +28,21 @@
 
 int main(void) {
     quicked_aligner_t aligner;                          // Aligner object
-    quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters1
+    quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters
 
     params.algo = WINDOWED;                             // Select the algorithm: Windowed
-    params.window_size = 2;                             // Windowed needs a window size
+    params.windowSize = 2;                             // Windowed needs a window size
                                                         //  2x2 (Default: 2x2)
-    params.overlap_size = 1;                            // Windowed needs an overlap size
+    params.overlapSize = 1;                            // Windowed needs an overlap size
                                                         //  1 (Default: 1)
 
     // This specific configuration (2x2, overlap 1) has an SSE4.1 implementation.
     // This is transparent to the user, and will be used if the CPU supports it.
 
-    params.force_scalar = true;                         // However, one can force the scalar implementation
+    params.forceScalar = true;                         // However, one can force the scalar implementation
                                                         //  This is useful for testing purposes
 
-    quicked_new(&aligner, params);                      // Initialize the aligner with the given parameters
+    quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
 
     const char* pattern = "ACGT";                       // Pattern sequence
     const char* text = "ACTT";                          // Text sequence
@@ -51,10 +51,10 @@ int main(void) {
     printf("Aligning '%s' and '%s' using Hirschberg\n", pattern, text);
     quicked_align(&aligner, pattern, strlen(pattern), text, strlen(text));
 
-    printf("Score: %d\n", aligner.score);               // Print the score
-    printf("CIGAR: %s\n", aligner.cigar);               // Print the CIGAR string
+    printf("Score: %d\n", aligner.score);   // Print the score
+    printf("CIGAR: %s\n", aligner.cigar);   // Print the CIGAR string
 
-    quicked_free(&aligner);                             // Free whatever memory the aligner allocated
+    quicked_free(&aligner);                 // Free whatever memory the aligner allocated
 
     return 0;
 }

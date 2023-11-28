@@ -49,8 +49,8 @@ align_bench_params_t parameters = {
   .text_end_free = 0.0,
   // Other algorithms parameters
   .bandwidth = -1,
-  .window_size = -1,
-  .overlap_size = -1,
+  .windowSize = -1,
+  .overlapSize = -1,
   .window_config = WINDOW_ALIGNED,
   // Misc
   .check_bandwidth = -1,
@@ -220,10 +220,10 @@ void parse_arguments(
       parameters.bandwidth = atoi(optarg);
       break;
     case 2001: // --window-size
-      parameters.window_size = atoi(optarg);
+      parameters.windowSize = atoi(optarg);
       break;
     case 2002: // --overlap-size
-      parameters.overlap_size = atoi(optarg);
+      parameters.overlapSize = atoi(optarg);
       break;
     case 2003: // --window-config
       if (strcmp(optarg,"aligned")==0) {
@@ -325,11 +325,11 @@ void parse_arguments(
         fprintf(stderr,"Parameter 'bandwidth' has to be > 0\n");
         exit(1);
       }
-      if (parameters.window_size != -1) {
+      if (parameters.windowSize != -1) {
         fprintf(stderr,"Parameter 'window-size' has no effect with the selected algorithm\n");
         exit(1);
       }
-      if (parameters.overlap_size != -1) {
+      if (parameters.overlapSize != -1) {
         fprintf(stderr,"Parameter 'overlap-size' has no effect with the selected algorithm\n");
         exit(1);
       }
@@ -340,18 +340,18 @@ void parse_arguments(
         exit(1);
       }
 
-      if (parameters.window_size == -1) {
+      if (parameters.windowSize == -1) {
         fprintf(stderr,"Parameter 'window-size' has to be provided for banded algorithms\n");
         exit(1);
-      } else if (parameters.window_size < 1) {
+      } else if (parameters.windowSize < 1) {
         fprintf(stderr,"Parameter 'window-size' has to be > 0\n");
         exit(1);
       }
 
-      if (parameters.overlap_size == -1) {
+      if (parameters.overlapSize == -1) {
         fprintf(stderr,"Parameter 'overlap-size' has to be provided for banded algorithms\n");
         exit(1);
-      } else if (parameters.overlap_size > parameters.window_size - 1 || parameters.overlap_size < 0) {
+      } else if (parameters.overlapSize > parameters.windowSize - 1 || parameters.overlapSize < 0) {
         fprintf(stderr,"Parameter 'overlap-size' has to be: 0 <= overlap-size < window-size \n");
         exit(1);
       }
@@ -361,11 +361,11 @@ void parse_arguments(
         fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
         exit(1);
       }
-      if (parameters.window_size != -1) {
+      if (parameters.windowSize != -1) {
         fprintf(stderr,"Parameter 'window-size' has no effect with the selected algorithm\n");
         exit(1);
       }
-      if (parameters.overlap_size != -1) {
+      if (parameters.overlapSize != -1) {
         fprintf(stderr,"Parameter 'overlap-size' has no effect with the selected algorithm\n");
         exit(1);
       }

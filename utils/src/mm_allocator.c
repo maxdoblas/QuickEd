@@ -37,7 +37,6 @@
 #define MM_ALLOCATOR_SEGMENT_INITIAL_REQUESTS   10000
 #define MM_ALLOCATOR_INITIAL_SEGMENTS              10
 #define MM_ALLOCATOR_INITIAL_MALLOC_REQUESTS       10
-#define MM_ALLOCATOR_INITIAL_STATES                10
 
 /*
  * Allocator Segments Freed Cond
@@ -590,13 +589,13 @@ void mm_allocator_print(
   const float bytes_total = num_segments * segment_size;
   const uint64_t bytes_free = bytes_free_available + bytes_free_fragmented;
   fprintf(stream,"    => Memory.used   %" PRIu64 " (%2.1f %%)\n",
-      bytes_used_allocator,100.0f*(float)bytes_used_allocator/bytes_total);
+      bytes_used_allocator,(double)(100.0f*(float)bytes_used_allocator/bytes_total));
   fprintf(stream,"    => Memory.free   %" PRIu64 " (%2.1f %%)\n",
-      bytes_free,100.0f*(float)bytes_free/bytes_total);
+      bytes_free,(double)(100.0f*(float)bytes_free/bytes_total));
   fprintf(stream,"      => Memory.free.available  %" PRIu64 " (%2.1f %%)\n",
-      bytes_free_available,100.0f*(float)bytes_free_available/bytes_total);
+      bytes_free_available,(double)(100.0f*(float)bytes_free_available/bytes_total));
   fprintf(stream,"      => Memory.free.fragmented %" PRIu64 " (%2.1f %%)\n",
-      bytes_free_fragmented,100.0f*(float)bytes_free_fragmented/bytes_total);
+      bytes_free_fragmented,(double)(100.0f*(float)bytes_free_fragmented/bytes_total));
   fprintf(stream,"    => Memory.malloc %" PRIu64 "\n",bytes_used_malloc);
   // Print memory requests
   if (display_requests) {

@@ -33,7 +33,7 @@ void extract_results(
     quicked_aligner_t *aligner,
     cigar_t *const cigar)
 {
-    if (aligner->params.only_score)
+    if (aligner->params->onlyScore)
     {
         // Precomputed score
         aligner->score = cigar->score;
@@ -43,7 +43,7 @@ void extract_results(
         // CIGAR
         if (cigar->begin_offset < cigar->end_offset)
         {
-            aligner->cigar = malloc((2 * (cigar->end_offset - cigar->begin_offset) + 10) * sizeof(char));
+            aligner->cigar = (char*) mm_allocator_malloc(aligner->mm_allocator, (2 * (cigar->end_offset - cigar->begin_offset) + 10) * sizeof(char));
             cigar_sprint(aligner->cigar, cigar, true);
         }
 
@@ -54,11 +54,11 @@ void extract_results(
 
 quicked_status_t run_banded(
     quicked_aligner_t *aligner,
-    char *const pattern, const int pattern_len,
-    char *const text, const int text_len)
+    const char* pattern, const int pattern_len,
+    const char* text, const int text_len)
 {
     // FIXME: What if cutoff_score becomes 0?
-    const int cutoff_score = (MAX(text_len, pattern_len) * (aligner->params.bandwidth)) / 100;
+    const int cutoff_score = (MAX(text_len, pattern_len) * (aligner->params->bandwidth)) / 100;
 
     // Allocate
     mm_allocator_t *const mm_allocator = aligner->mm_allocator;
@@ -67,11 +67,11 @@ quicked_status_t run_banded(
     banded_pattern_compile(&banded_pattern, pattern, pattern_len, mm_allocator);
 
     banded_matrix_t banded_matrix;
-    banded_matrix_allocate(&banded_matrix, pattern_len, text_len, cutoff_score, aligner->params.only_score, mm_allocator);
+    banded_matrix_allocate(&banded_matrix, pattern_len, text_len, cutoff_score, aligner->params->onlyScore, mm_allocator);
 
     // Align
     // timer_start(&timer);
-    banded_compute(&banded_matrix, &banded_pattern, text, text_len, text_len, aligner->params.only_score);
+    banded_compute(&banded_matrix, &banded_pattern, text, text_len, text_len, aligner->params->onlyScore);
     // timer_stop(&timer);
 
     // Retrieve results
@@ -87,11 +87,11 @@ quicked_status_t run_banded(
 
 quicked_status_t run_windowed(
     quicked_aligner_t *aligner,
-    char *const pattern, const int pattern_len,
-    char *const text, const int text_len)
+    const char* pattern, const int pattern_len,
+    const char* text, const int text_len)
 {
-    const int window_size = aligner->params.window_size;
-    const int overlap_size = aligner->params.overlap_size;
+    const int windowSize = aligner->params->windowSize;
+    const int overlapSize = aligner->params->overlapSize;
 
     // Allocate
     mm_allocator_t *const mm_allocator = aligner->mm_allocator;
@@ -100,12 +100,12 @@ quicked_status_t run_windowed(
     windowed_pattern_compile(&windowed_pattern, pattern, pattern_len, mm_allocator);
 
     windowed_matrix_t windowed_matrix;
-    windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, window_size);
+    windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, windowSize);
 
     // Align
     // timer_start(&timer);
-    windowed_compute(&windowed_matrix, &windowed_pattern, text, window_size, overlap_size,
-                     aligner->params.only_score, aligner->params.force_scalar);
+    windowed_compute(&windowed_matrix, &windowed_pattern, text, windowSize, overlapSize,
+                     aligner->params->onlyScore, aligner->params->forceScalar);
     // timer_stop(&timer);
 
     // Retrieve results
@@ -120,11 +120,11 @@ quicked_status_t run_windowed(
 
 quicked_status_t run_hirschberg(
     quicked_aligner_t *aligner,
-    char *const pattern, const int pattern_len,
-    char *const text, const int text_len)
+    const char* pattern, const int pattern_len,
+    const char* text, const int text_len)
 {
     // FIXME: What if cutoff_score becomes 0?
-    const int cutoff_score = (MAX(text_len, pattern_len) * (aligner->params.bandwidth)) / 100;
+    const int cutoff_score = (MAX(text_len, pattern_len) * (aligner->params->bandwidth)) / 100;
 
     // Allocate
     mm_allocator_t *const mm_allocator = aligner->mm_allocator;
@@ -136,7 +136,7 @@ quicked_status_t run_hirschberg(
     reverse_string(pattern, pattern_r, pattern_len);
 
     cigar_t cigar_out;
-    cigar_out.operations = (char *)malloc((pattern_len + text_len) * sizeof(char));
+    cigar_out.operations = (char *)  mm_allocator_malloc(aligner->mm_allocator, (pattern_len + text_len) * sizeof(char));
     cigar_out.begin_offset = pattern_len + text_len;
     cigar_out.end_offset = pattern_len + text_len;
 
@@ -150,14 +150,14 @@ quicked_status_t run_hirschberg(
     extract_results(aligner, &cigar_out);
 
     // Free
-    free(cigar_out.operations);
+    mm_allocator_free(mm_allocator, cigar_out.operations);
     return QUICKED_WIP;
 }
 
 quicked_status_t run_quicked(
     quicked_aligner_t *aligner,
-    char *const pattern, const int pattern_len,
-    char *const text, const int text_len)
+    const char* pattern, const int pattern_len,
+    const char* text, const int text_len)
 {
     // TODO: Comment phases of the algorithm
 
@@ -180,7 +180,7 @@ quicked_status_t run_quicked(
 
     // Align
     windowed_compute(&windowed_matrix, &windowed_pattern, text, 2, 1,
-                     aligner->params.only_score, aligner->params.force_scalar);
+                     aligner->params->onlyScore, aligner->params->forceScalar);
 
     // timer_stop(&align_input->timer_window_sse);
 
@@ -198,7 +198,7 @@ quicked_status_t run_quicked(
         windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, 6);
 
         windowed_compute(&windowed_matrix, &windowed_pattern, text, 6, 1,
-                         aligner->params.only_score, aligner->params.force_scalar);
+                         aligner->params->onlyScore, aligner->params->forceScalar);
 
         // align_input->seq_with_6x2 = true; // TODO: Remove if unused
 
@@ -210,7 +210,7 @@ quicked_status_t run_quicked(
         windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, 6);
 
         windowed_compute(&windowed_matrix, &windowed_pattern, text, 6, 1,
-                         aligner->params.only_score, aligner->params.force_scalar);
+                         aligner->params->onlyScore, aligner->params->forceScalar);
 
         // align_input->seq_with_6x2_r = true; // TODO: Remove if unused
 
@@ -268,7 +268,7 @@ quicked_status_t run_quicked(
     // timer_start(&align_input->timer_banded_hirschberg);
 
     cigar_t cigar_out;
-    cigar_out.operations = (char *)malloc((pattern_len + text_len) * sizeof(char));
+    cigar_out.operations = (char *)  mm_allocator_malloc(aligner->mm_allocator, (pattern_len + text_len) * sizeof(char));
     cigar_out.begin_offset = pattern_len + text_len;
     cigar_out.end_offset = pattern_len + text_len;
 
@@ -283,28 +283,26 @@ quicked_status_t run_quicked(
 
     extract_results(aligner, &cigar_out);
 
-    free(cigar_out.operations);
+    mm_allocator_free(mm_allocator, cigar_out.operations);
 
     return QUICKED_WIP;
 }
-
-#pragma region API
 
 quicked_params_t quicked_default_params()
 {
     return (quicked_params_t){
         .algo = QUICKED,
-        .only_score = false,
+        .onlyScore = false,
         .bandwidth = 15,
-        .window_size = 2,
-        .overlap_size = 1,
-        .force_scalar = false,
+        .windowSize = 2,
+        .overlapSize = 1,
+        .forceScalar = false,
     };
 }
 
 quicked_status_t quicked_new(
     quicked_aligner_t *aligner,
-    quicked_params_t params)
+    quicked_params_t *params)
 {
     aligner->params = params;
     aligner->score = -1;
@@ -317,16 +315,16 @@ quicked_status_t quicked_new(
 quicked_status_t quicked_free(
     quicked_aligner_t *aligner)
 {
+    if (aligner->cigar != NULL)
+    {
+        mm_allocator_free(aligner->mm_allocator, aligner->cigar);
+        aligner->cigar = NULL;
+    }
+
     if (aligner->mm_allocator != NULL)
     {
         mm_allocator_delete(aligner->mm_allocator);
         aligner->mm_allocator = NULL;
-    }
-
-    if (aligner->cigar != NULL)
-    {
-        free(aligner->cigar);
-        aligner->cigar = NULL;
     }
 
     return QUICKED_WIP;
@@ -334,21 +332,21 @@ quicked_status_t quicked_free(
 
 quicked_status_t quicked_align(
     quicked_aligner_t *aligner,
-    const char *pattern, const int pattern_len,
-    const char *text, const int text_len)
+    const char* pattern, const int pattern_len,
+    const char* text, const int text_len)
 {
     quicked_status_t status = QUICKED_ERROR;
 
-    switch (aligner->params.algo)
+    switch (aligner->params->algo)
     {
     case QUICKED:
         status = run_quicked(aligner, pattern, pattern_len, text, text_len);
         break;
-    case WINDOWED:
-        status = run_windowed(aligner, pattern, pattern_len, text, text_len);
-        break;
     case BANDED:
         status = run_banded(aligner, pattern, pattern_len, text, text_len);
+        break;
+    case WINDOWED:
+        status = run_windowed(aligner, pattern, pattern_len, text, text_len);
         break;
     case HIRSCHBERG:
         status = run_hirschberg(aligner, pattern, pattern_len, text, text_len);
@@ -359,5 +357,3 @@ quicked_status_t quicked_align(
 
     return status;
 }
-
-#pragma endregion API

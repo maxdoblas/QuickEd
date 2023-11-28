@@ -24,6 +24,7 @@
 
 #include "commons.h"
 #include "cigar.h"
+#include "utils/include/mm_allocator.h"
 
 /*
  * SAM CIGAR Operations
@@ -52,12 +53,13 @@ const uint8_t sam_cigar_lut[256] =
  * Setup
  */
 cigar_t* cigar_new(
-    const int max_operations) {
+    const int max_operations,
+    mm_allocator_t *const mm_allocator) {
   // Allocate
-  cigar_t* const cigar = malloc(sizeof(cigar_t));
+  cigar_t* const cigar = mm_allocator_malloc(mm_allocator, sizeof(cigar_t));
   // Allocate alignment-operations buffer
   cigar->max_operations = max_operations;
-  cigar->operations = malloc(cigar->max_operations);
+  cigar->operations = mm_allocator_malloc(mm_allocator, cigar->max_operations);
   cigar->begin_offset = 0;
   cigar->end_offset = 0;
   cigar->score = INT32_MIN;
@@ -65,7 +67,8 @@ cigar_t* cigar_new(
   cigar->end_h = -1;
   // CIGAR
   cigar->cigar_length = 0;
-  cigar->cigar_buffer = calloc(max_operations,sizeof(uint32_t));
+  //cigar->cigar_buffer = calloc(max_operations,sizeof(uint32_t));
+  cigar->cigar_buffer = mm_allocator_calloc(mm_allocator, max_operations, uint32_t, true);
   // Return
   return cigar;
 }
@@ -83,22 +86,24 @@ void cigar_clear(
 }
 void cigar_resize(
     cigar_t* const cigar,
-    const int max_operations) {
+    const int max_operations,
+    mm_allocator_t *const mm_allocator) {
   // Check maximum operations
   if (max_operations > cigar->max_operations) {
     cigar->max_operations = max_operations;
     free(cigar->operations); // Free
     free(cigar->cigar_buffer); // Free
-    cigar->operations = malloc(max_operations); // Allocate
-    cigar->cigar_buffer = calloc(max_operations,sizeof(uint32_t)); // Allocate
+    cigar->operations = mm_allocator_malloc(mm_allocator, max_operations); // Allocate
+    cigar->cigar_buffer = mm_allocator_calloc(mm_allocator, max_operations, uint32_t, true); // Allocate
   }
   cigar_clear(cigar);
 }
 void cigar_free(
-    cigar_t* const cigar) {
-  free(cigar->operations);
-  free(cigar->cigar_buffer);
-  free(cigar);
+    cigar_t* const cigar,
+    mm_allocator_t *const mm_allocator) {
+  mm_allocator_free(mm_allocator, cigar->operations);
+  mm_allocator_free(mm_allocator, cigar->cigar_buffer);
+  mm_allocator_free(mm_allocator, cigar);
 }
 /*
  * Accessors
@@ -414,11 +419,12 @@ bool cigar_check_alignment(
 void cigar_print(
     FILE* const stream,
     cigar_t* const cigar,
-    const bool print_matches) {
+    const bool print_matches,
+    mm_allocator_t *const mm_allocator) {
   // Check null
   if (cigar_is_null(cigar)) return;
   // Generate and print operations
-  char* const buffer = malloc(2*(cigar->end_offset-cigar->begin_offset)+10);
+  char* const buffer = mm_allocator_malloc(mm_allocator, 2*(cigar->end_offset-cigar->begin_offset)+10);
   cigar_sprint(buffer,cigar,print_matches);
   fprintf(stream,"%s",buffer); // Print
   // Free
@@ -462,11 +468,12 @@ int cigar_sprint(
 void cigar_print_SAM_CIGAR(
     FILE* const stream,
     cigar_t* const cigar,
-    const bool show_mismatches) {
+    const bool show_mismatches,
+    mm_allocator_t *const mm_allocator) {
   // Check null
   if (cigar_is_null(cigar)) return;
   // Generate and print operations
-  char* const buffer = malloc(2*(cigar->end_offset-cigar->begin_offset));
+  char* const buffer = mm_allocator_malloc(mm_allocator, 2*(cigar->end_offset-cigar->begin_offset));
   cigar_sprint_SAM_CIGAR(buffer,cigar,show_mismatches);
   fprintf(stream,"%s",buffer); // Print
   // Free
@@ -503,7 +510,8 @@ void cigar_print_pretty(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length) {
+    const int text_length,
+    mm_allocator_t *const mm_allocator) {
   // Parameters
   char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
@@ -569,13 +577,13 @@ void cigar_print_pretty(
   }
   // Print string
   fprintf(stream,"      ALIGNMENT ");
-  cigar_print(stream,cigar,true);
+  cigar_print(stream,cigar,true,mm_allocator);
   fprintf(stream,"\n");
   fprintf(stream,"      ETRACE    ");
-  cigar_print(stream,cigar,false);
+  cigar_print(stream,cigar,false,mm_allocator);
   fprintf(stream,"\n");
   fprintf(stream,"      CIGAR     ");
-  cigar_print_SAM_CIGAR(stream,cigar,false);
+  cigar_print_SAM_CIGAR(stream,cigar,false,mm_allocator);
   fprintf(stream,"\n");
   fprintf(stream,"      PATTERN    %s\n",pattern_alg);
   fprintf(stream,"                 %s\n",ops_alg);

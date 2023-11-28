@@ -22,22 +22,25 @@
  * SOFTWARE.
  */
 
-#include "quicked.hpp"
+#include <quicked.hpp>
+#include <stdio.h>
+#include <iostream>
 
-quicked::QuickedAligner::QuickedAligner()
-{
-    this->params = quicked_default_params();
-    quicked_new(&this->aligner, &this->params);
-}
+using namespace std;
 
-quicked::QuickedAligner::~QuickedAligner()
-{
-    quicked_free(&this->aligner);
-}
+int main(void) {
+    quicked::QuickedAligner aligner;    // Aligner object, with sensible default parameters
+    // Without any extra configuration, the aligner will use the Quicked algorithm
 
-quicked::quicked_status_t quicked::QuickedAligner::align(
-    std::string *pattern, const int pattern_len,
-    std::string *text, const int text_len)
-{
-    return quicked_align(&this->aligner, pattern->c_str(), pattern_len, text->c_str(), text_len);
+    string pattern = "ACGT";            // Pattern sequence
+    string text = "ACTT";               // Text sequence
+
+    // Align the sequences!
+    cout << "Aligning " << pattern << " and " << text << " using Quicked" << endl;
+    aligner.align(&pattern, pattern.length(), &text, text.length());
+
+    cout << "Score: " << aligner.getScore() << endl; // Print the score
+    cout << "Cigar: " << aligner.getCigar() << endl; // Print the CIGAR string
+
+    return 0;
 }

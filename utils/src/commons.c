@@ -79,7 +79,7 @@ uint64_t nominal_prop_u64(
  * String
  */
 
-void reverse_string(char *in_string, char *out_string, uint64_t lenght)
+void reverse_string(const char* in_string, char *out_string, uint64_t lenght)
 {
     for (uint64_t i = 0; i < lenght; i++)
     {

@@ -30,7 +30,7 @@
 
 void banded_pattern_compile(
     banded_pattern_t *const banded_pattern,
-    char *const pattern,
+    const char* pattern,
     const uint64_t pattern_length,
     mm_allocator_t *const mm_allocator)
 {
@@ -105,7 +105,7 @@ void banded_matrix_allocate(
     const int64_t pattern_length,
     const int64_t text_length,
     const int64_t cutoff_score,
-    bool only_score,
+    bool onlyScore,
     mm_allocator_t *const mm_allocator)
 {
 
@@ -127,7 +127,7 @@ void banded_matrix_allocate(
 
     const int64_t num_words64 = banded_matrix->effective_bandwidth_blocks;
     // Allocate auxiliary matrix
-    const int64_t num_cols = (only_score ? 1 : (text_length + 1)); // Only 1 column if only score, or text_length + 1 columns
+    const int64_t num_cols = (onlyScore ? 1 : (text_length + 1)); // Only 1 column if only score, or text_length + 1 columns
     const int64_t aux_matrix_size = num_words64 * UINT64_SIZE * num_cols;
     uint64_t *const Pv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
     uint64_t *const Mv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
@@ -136,7 +136,7 @@ void banded_matrix_allocate(
     banded_matrix->Pv = Pv;
     banded_matrix->scores = scores;
     // CIGAR
-    banded_matrix->cigar = cigar_new(pattern_length + text_length);
+    banded_matrix->cigar = cigar_new(pattern_length + text_length,mm_allocator);
     banded_matrix->cigar->end_offset = pattern_length + text_length;
 }
 
@@ -148,7 +148,7 @@ void banded_matrix_free(
     mm_allocator_free(mm_allocator, banded_matrix->Pv);
     mm_allocator_free(mm_allocator, banded_matrix->scores);
     // CIGAR
-    cigar_free(banded_matrix->cigar);
+    cigar_free(banded_matrix->cigar,mm_allocator);
 }
 
 void bpm_reset_search(
@@ -173,7 +173,7 @@ void bpm_reset_search(
 void bpm_compute_matrix_banded_cutoff(
     banded_matrix_t *const banded_matrix,
     banded_pattern_t *const banded_pattern,
-    char *const text,
+    const char* text,
     const int64_t text_length)
 {
     // Pattern variables
@@ -291,7 +291,7 @@ void bpm_compute_matrix_banded_cutoff(
 void bpm_compute_matrix_banded_cutoff_score(
     banded_matrix_t *const banded_matrix,
     banded_pattern_t *const banded_pattern,
-    char *const text,
+    const char* text,
     const int64_t text_length,
     const int64_t text_finish_pos)
 {
@@ -409,11 +409,11 @@ void bpm_compute_matrix_banded_cutoff_score(
 void banded_backtrace_matrix_cutoff(
     banded_matrix_t *const banded_matrix,
     const banded_pattern_t *const banded_pattern,
-    char *const text,
+    const char* text,
     const int64_t text_length)
 {
     // Parameters
-    char *const pattern = banded_pattern->pattern;
+    const char* pattern = banded_pattern->pattern;
     const uint64_t pattern_length = banded_pattern->pattern_length;
     const uint64_t *const Pv = banded_matrix->Pv;
     const uint64_t *const Mv = banded_matrix->Mv;
@@ -480,12 +480,12 @@ void banded_backtrace_matrix_cutoff(
 void banded_compute(
     banded_matrix_t *const banded_matrix,
     banded_pattern_t *const banded_pattern,
-    char *const text,
+    const char* text,
     const int64_t text_length,
     const int64_t text_finish_pos,
-    const bool only_score)
+    const bool onlyScore)
 {
-    if (only_score)
+    if (onlyScore)
     {
         // Fill Matrix (Pv,Mv)
         bpm_compute_matrix_banded_cutoff_score(banded_matrix, banded_pattern, text, text_length, text_finish_pos);

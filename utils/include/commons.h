@@ -203,7 +203,7 @@ uint64_t rand_iid(const uint64_t min,const uint64_t max);
  * String
  */
 
-void reverse_string(char* in_string, char* out_string, uint64_t lenght);
+void reverse_string(const char* in_string, char* out_string, uint64_t lenght);
 
 /*
  * Parsing

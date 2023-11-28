@@ -15,19 +15,21 @@ endif()
 # Set compiler flags if Debug build
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(WARNING "Build type: ${CMAKE_BUILD_TYPE}")
-    add_compile_options(-g -Wall -Wextra)
-    add_compile_options(-Wno-unknown-pragmas) # Ignore pragma region errors (for VSCode, code regions)
-    add_compile_options(-Wno-override-init) # Ignore known non-concerning warnings
+    add_compile_options(-O0 -g -Wall -Wextra)
 
-    # Enable code coverage (Doesn't work yet)
-    # add_compile_options(-fprofile-arcs -ftest-coverage --coverage)
-    # add_link_options(--coverage)
-    # link_libraries(gcov)
+    # Ignore known non-concerning warnings
+    add_compile_options(-Wno-override-init)
+
+    # Enable code coverage
+    add_compile_options(--coverage -fprofile-abs-path)
+    add_link_options(--coverage)
 
     # Extra debug flags
-    add_compile_options(-Wfloat-equal -Wshadow -Wformat=2 -Wshift-overflow
-                        -Wcast-align -Wstrict-prototypes -Wwrite-strings #-Wconversion
-                        -Wcast-qual -Wswitch-default -Wswitch-enum)
+    add_compile_options(-Wfloat-equal -Wformat=2 -Wshift-overflow -Wdouble-promotion
+                        -Wcast-align -Wstrict-prototypes -Wwrite-strings
+                        -Wcast-qual -Wswitch-default -Wswitch-enum -Wduplicated-branches
+                        -Wduplicated-cond -Wlogical-op -Wunused-macros)
+    #add_compile_options(-Wconversion) # TODO: We would like to enable this, but it's too noisy for now
 
     # Enable address sanitizer
     add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fno-omit-frame-pointer)
@@ -37,18 +39,18 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-fstack-protector) # Enable stack protection
 
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3 -flto)
+    add_compile_options(-O3 -flto -fPIC)
 endif()
 
 # Set architecture to local machine architecture
 add_compile_options(-march=native)
 
 # Output directories
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/utils/include) # To implcitly #include .h inside utils/src
 
 add_subdirectory(quicked)

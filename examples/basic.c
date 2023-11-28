@@ -32,7 +32,7 @@ int main(void) {
 
     // Without any extra configuration, the aligner will use the Quicked algorithm
 
-    quicked_new(&aligner, params);                      // Initialize the aligner with the given parameters
+    quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
 
     const char* pattern = "ACGT";                       // Pattern sequence
     const char* text = "ACTT";                          // Text sequence
@@ -41,10 +41,10 @@ int main(void) {
     printf("Aligning '%s' and '%s' using Quicked\n", pattern, text);
     quicked_align(&aligner, pattern, strlen(pattern), text, strlen(text));
 
-    printf("Score: %d\n", aligner.score);               // Print the score
-    printf("CIGAR: %s\n", aligner.cigar);               // Print the CIGAR string
+    printf("Score: %d\n", aligner.score);   // Print the score
+    printf("CIGAR: %s\n", aligner.cigar);   // Print the CIGAR string
 
-    quicked_free(&aligner);                             // Free whatever memory the aligner allocated
+    quicked_free(&aligner);                 // Free whatever memory the aligner allocated
 
     return 0;
 }

@@ -74,8 +74,8 @@ typedef struct {
   double text_end_free;
   // Other algorithms parameters
   int bandwidth;
-  int window_size;
-  int overlap_size;
+  int windowSize;
+  int overlapSize;
   window_config_t window_config;
   // Misc
   bool check_display;

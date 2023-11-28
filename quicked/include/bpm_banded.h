@@ -31,7 +31,7 @@
 
 typedef struct {
     /* BMP Pattern */
-    char *pattern;                // Raw pattern
+    const char *pattern;           // Raw pattern
     uint64_t *PEQ;                // Pattern equalities (Bit vector for Myers-DP)
     uint64_t pattern_length;      // Length
     uint64_t pattern_num_words64; // ceil(Length / |w|)
@@ -64,7 +64,7 @@ typedef struct {
 
 void banded_pattern_compile(
     banded_pattern_t *const banded_pattern,
-    char *const pattern,
+    const char* pattern,
     const uint64_t pattern_length,
     mm_allocator_t *const mm_allocator);
 
@@ -77,7 +77,7 @@ void banded_matrix_allocate(
     const int64_t pattern_length,
     const int64_t text_length,
     const int64_t cutoff_score,
-    bool only_score,
+    bool onlyScore,
     mm_allocator_t *const mm_allocator);
 
 void banded_matrix_free(
@@ -87,9 +87,9 @@ void banded_matrix_free(
 void banded_compute(
     banded_matrix_t *const banded_matrix,
     banded_pattern_t *const banded_pattern,
-    char *const text,
+    const char* text,
     const int64_t text_length,
     const int64_t text_finish_pos,
-    const bool only_score);
+    const bool onlyScore);
 
 #endif /* BPM_BANDED_H_ */

@@ -37,21 +37,21 @@ typedef enum {
 
 typedef struct quicked_params_t {
     quicked_algo_t algo;
-    bool only_score;
-    int bandwidth;
-    int window_size;
-    int overlap_size;
-    bool force_scalar;
+    unsigned int bandwidth;
+    unsigned int windowSize;
+    unsigned int overlapSize;
+    bool onlyScore;
+    bool forceScalar;
 } quicked_params_t;
 
 typedef struct quicked_aligner_t {
-    quicked_params_t params;
+    quicked_params_t* params;
     mm_allocator_t *mm_allocator;
-    int score;
     char* cigar;
+    int score;
 } quicked_aligner_t;
 
-typedef enum {
+typedef enum quicked_status_t {
     QUICKED_OK = 0,
     QUICKED_ERROR,          // Default error code
     QUICKED_UNKNOWN_ALGO,   // Provided algorithm is not supported
@@ -64,7 +64,7 @@ typedef enum {
 quicked_params_t quicked_default_params(void);
 quicked_status_t quicked_new(
     quicked_aligner_t *aligner,
-    quicked_params_t params
+    quicked_params_t *params
 );
 quicked_status_t quicked_free(
     quicked_aligner_t *aligner

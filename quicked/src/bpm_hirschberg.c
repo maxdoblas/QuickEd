@@ -29,11 +29,11 @@
 #include "bpm_commons.h"
 
 void bpm_compute_matrix_hirschberg(
-    char *const text,
-    char *const text_r,
+    const char* text,
+    const char* text_r,
     const int64_t text_length,
-    char *const pattern,
-    char *const pattern_r,
+    const char* pattern,
+    const char* pattern_r,
     const int64_t pattern_length,
     const int64_t cutoff_score,
     cigar_t *cigar_out,
@@ -171,12 +171,12 @@ void bpm_compute_matrix_hirschberg(
         int64_t pattern_length_left = starting_pos + smaller_pos;
         int64_t pattern_length_right = pattern_length - pattern_length_left;
 
-        char *pattern_r_left = pattern_r + pattern_length_right;
-        char *pattern_right = pattern + pattern_length_left;
+        const char* pattern_r_left = pattern_r + pattern_length_right;
+        const char* pattern_right = pattern + pattern_length_left;
 
         int64_t text_length_right = text_length - text_len;
-        char *text_right = text + text_len;
-        char *text_r_left = text_r + text_length_right;
+        const char* text_right = text + text_len;
+        const char* text_r_left = text_r + text_length_right;
 
         // Obtain the score of rach sub aligmnet
         int64_t block_reference = DIV_CEIL(pattern_length_left, BPM_W64_LENGTH) - (number_of_cells < smaller_pos + BPM_W64_LENGTH);

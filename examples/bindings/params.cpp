@@ -29,18 +29,23 @@
 using namespace std;
 
 int main(void) {
-    quicked::QuickedAligner aligner;                    // Aligner object, with sensible default parameters
-    // Without any extra configuration, the aligner will use the Quicked algorithm
+    quicked::QuickedAligner aligner;        // Aligner object, with sensible default parameters
 
-    string pattern = "ACGT";                            // Pattern sequence
-    string text = "ACTT";                               // Text sequence
+    aligner.setAlgorithm(quicked::BANDED);  // Select the algorithm: Banded
+    aligner.setBandwidth(10);               // Banded needs a bandwidth
+                                            //  10% of the seq. length (Default: 15%)
+    aligner.setOnlyScore(true);             // Only score, don't compute CIGAR.
+                                            //  This saves memory and time.
+
+    string pattern = "ACGT";                // Pattern sequence
+    string text = "ACTT";                   // Text sequence
 
     // Align the sequences!
-    cout << "Aligning " << pattern << " and " << text << " using Quicked" << endl;
+    cout << "Aligning " << pattern << " and " << text << " using Banded" << endl;
     aligner.align(&pattern, pattern.length(), &text, text.length());
 
-    cout << "Score: " << aligner.get_score() << endl;   // Print the score
-    cout << "Cigar: " << aligner.get_cigar() << endl;   // Print the CIGAR string
+    cout << "Score: " << aligner.getScore() << endl;                    // Print the score
+    cout << "Cigar <Expecting NULL>: " << aligner.getCigar() << endl;   // We didn't compute the CIGAR, so it's NULL
 
     return 0;
 }

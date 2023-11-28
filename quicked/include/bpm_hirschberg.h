@@ -29,11 +29,11 @@
 #include "utils/include/cigar.h"
 
 void bpm_compute_matrix_hirschberg(
-    char* const text,
-    char* const text_r,
+    const char* text,
+    const char* text_r,
     const int64_t text_length,
-    char* const pattern,
-    char* const pattern_r,
+    const char* pattern,
+    const char* pattern_r,
     const int64_t pattern_length,
     const int64_t cutoff_score,
     cigar_t* cigar_out,

@@ -32,7 +32,7 @@
 typedef struct
 {
     /* BMP Pattern */
-    char *pattern;                // Raw pattern
+    const char* pattern;          // Raw pattern
     uint64_t *PEQ;                // Pattern equalities (Bit vector for Myers-DP)
     uint64_t pattern_length;      // Length
     uint64_t pattern_num_words64; // ceil(Length / |w|)
@@ -68,7 +68,7 @@ typedef struct
  */
 void windowed_pattern_compile(
     windowed_pattern_t *const windowed_pattern,
-    char *const pattern,
+    const char* pattern,
     const uint64_t pattern_length,
     mm_allocator_t *const mm_allocator);
 void windowed_pattern_free(
@@ -80,7 +80,7 @@ void windowed_matrix_allocate(
     const uint64_t pattern_length,
     const uint64_t text_length,
     mm_allocator_t *const mm_allocator,
-    const int window_size);
+    const int windowSize);
 void windowed_matrix_free(
     windowed_matrix_t *const windowed_matrix,
     mm_allocator_t *const mm_allocator);
@@ -91,10 +91,10 @@ void windowed_matrix_free(
 void windowed_compute(
     windowed_matrix_t *const windowed_matrix,
     windowed_pattern_t *const windowed_pattern,
-    char *const text,
-    const int window_size,
-    const int overlap_size,
+    const char* text,
+    const int windowSize,
+    const int overlapSize,
     const bool score_only,
-    const bool force_scalar);
+    const bool forceScalar);
 
 #endif /* BPM_WINDOWED_H_ */

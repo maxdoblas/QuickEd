@@ -27,19 +27,19 @@
 #include <string.h>
 
 int main(void) {
-    quicked_aligner_t aligner;                              // Aligner object
-    quicked_params_t params = quicked_default_params();     // Get a set of sensible default parameters
+    quicked_aligner_t aligner;                          // Aligner object
+    quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters
 
-    params.algo = BANDED;                                   // Select the algorithm: Banded
-    params.bandwidth = 10;                                  // Banded needs a bandwidth
-                                                            //  10% of the seq. length (Default: 15%)
-    params.only_score = true;                               // Only score, don't compute CIGAR.
-                                                            //  This saves memory and time.
+    params.algo = BANDED;                               // Select the algorithm: Banded
+    params.bandwidth = 10;                              // Banded needs a bandwidth
+                                                        //  10% of the seq. length (Default: 15%)
+    params.onlyScore = true;                           // Only score, don't compute CIGAR.
+                                                        //  This saves memory and time.
 
-    quicked_new(&aligner, params);                          // Initialize the aligner with the given parameters
+    quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
 
-    const char* pattern = "ACGT";                           // Pattern sequence
-    const char* text = "ACTT";                              // Text sequence
+    const char* pattern = "ACGT";                       // Pattern sequence
+    const char* text = "ACTT";                          // Text sequence
 
     // Align the sequences!
     printf("Aligning '%s' and '%s' using Banded (Only Score)\n", pattern, text);

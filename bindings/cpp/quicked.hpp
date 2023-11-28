@@ -27,26 +27,35 @@
 
 #include <string>
 
-extern "C" {
-    #include "quicked/quicked.h"
-}
-
 namespace quicked {
+
+    extern "C" {
+    #include "quicked/quicked.h"
+    }
+
+
     class QuickedAligner {
     public:
         QuickedAligner();
-        QuickedAligner(quicked_params_t params);
         ~QuickedAligner();
 
         quicked_status_t align(
             std::string *pattern, const int pattern_len,
             std::string *text, const int text_len);
 
-        int get_score() { return this->aligner.score; }
-        std::string get_cigar() { return std::string(this->aligner.cigar); }
+        void setAlgorithm(quicked_algo_t algo)          { this->aligner.params->algo = algo; };
+        void setOnlyScore(bool onlyScore)              { this->aligner.params->onlyScore = onlyScore; };
+        void setBandwidth(unsigned int bandwidth)       { this->aligner.params->bandwidth = bandwidth; };
+        void setWindowSize(unsigned int windowSize)    { this->aligner.params->windowSize = windowSize; };
+        void setOverlapSize(unsigned int overlapSize)  { this->aligner.params->overlapSize = overlapSize; };
+        void setForceScalar(bool forceScalar)          { this->aligner.params->forceScalar = forceScalar; };
+
+        int getScore()          { return this->aligner.score; }
+        std::string getCigar()  { return std::string((this->aligner.cigar) ? this->aligner.cigar : "NULL"); }
 
     private:
         quicked_aligner_t aligner;
+        quicked_params_t params;
     };
 }
 

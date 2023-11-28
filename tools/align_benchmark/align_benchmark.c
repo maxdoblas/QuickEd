@@ -204,7 +204,7 @@ void align_benchmark_run_algorithm(
       benchmark_edit_bpm_quicked(align_input);
       break;
     case alignment_edit_bpm_windowed:
-      benchmark_edit_bpm_windowed(align_input,parameters.window_size,parameters.overlap_size,parameters.window_config);
+      benchmark_edit_bpm_windowed(align_input,parameters.windowSize,parameters.overlapSize,parameters.window_config);
       break;
     case alignment_edit_dp:
       benchmark_edit_dp(align_input);

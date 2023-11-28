@@ -45,9 +45,9 @@ char alphabet[] = {
  */
 typedef struct
 {
+    int position;
     // Error log
     char operation;
-    int position;
     // Mismatch detail
     char base_char;
     char replacement_char;
@@ -256,8 +256,8 @@ int sequence_generate_indels(
  */
 typedef struct
 {
-    int num_reads;
     char *output;
+    int num_reads;
     int length;
     float length_diff;
     float error_degree;

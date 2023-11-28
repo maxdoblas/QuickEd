@@ -10,10 +10,10 @@ file(GLOB QUICKED_SRCS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 file(GLOB UTILS_SRCS
-    "${CMAKE_SOURCE_DIR}/utils/src/commons.c"
-    "${CMAKE_SOURCE_DIR}/utils/src/mm_allocator.c"
-    "${CMAKE_SOURCE_DIR}/utils/src/vector.c"
-    "${CMAKE_SOURCE_DIR}/utils/src/dna_text.c"
-    "${CMAKE_SOURCE_DIR}/utils/src/cigar.c"
+    "${PROJECT_SOURCE_DIR}/utils/src/commons.c"
+    "${PROJECT_SOURCE_DIR}/utils/src/mm_allocator.c"
+    "${PROJECT_SOURCE_DIR}/utils/src/vector.c"
+    "${PROJECT_SOURCE_DIR}/utils/src/dna_text.c"
+    "${PROJECT_SOURCE_DIR}/utils/src/cigar.c"
 )
 target_sources(quicked PRIVATE ${QUICKED_SRCS} ${UTILS_SRCS}) # Add sources to target

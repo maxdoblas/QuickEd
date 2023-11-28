@@ -437,8 +437,8 @@ void benchmark_edit_bpm_quicked(
 
 void benchmark_edit_bpm_windowed(
     align_input_t* const align_input,
-    const int window_size,
-    const int overlap_size,
+    const int windowSize,
+    const int overlapSize,
     const window_config_t window_config) {
   // Allocate
   windowed_pattern_t windowed_pattern;
@@ -449,13 +449,13 @@ void benchmark_edit_bpm_windowed(
   windowed_matrix_allocate(
       &windowed_matrix,align_input->pattern_length,
       align_input->text_length,align_input->mm_allocator,
-      window_size);
+      windowSize);
   // Align
   timer_start(&align_input->timer);
   windowed_compute(
       &windowed_matrix,&windowed_pattern,align_input->text,
       align_input->text_length,align_input->pattern_length,
-      window_size, overlap_size, window_config);
+      windowSize, overlapSize, window_config);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {

@@ -28,7 +28,7 @@
 /*
  * Constants
  */
-#define VECTOR_EXPAND_FACTOR (3.0/2.0)
+#define VECTOR_EXPAND_FACTOR (3.0f/2.0f)
 
 /*
  * Setup

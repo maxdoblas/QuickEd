@@ -27,21 +27,21 @@
 #include <string.h>
 
 int main(void) {
-    quicked_aligner_t aligner;                              // Aligner object
-    quicked_params_t params = quicked_default_params();     // Get a set of sensible default parameters1
+    quicked_aligner_t aligner;                          // Aligner object
+    quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters1
 
-    params.algo = WINDOWED;                                 // Select the algorithm: Windowed
+    params.algo = WINDOWED;                             // Select the algorithm: Windowed
 
     // Default Windowed configuration (2x2, overlap 1) has an SSE4.1 implementation.
     // This is transparent to the user, and will be used if the CPU supports it.
 
-    params.only_score = true;                               // Only score, don't compute CIGAR.
-                                                            //  This saves memory and time.
+    params.onlyScore = true;                           // Only score, don't compute CIGAR.
+                                                        //  This saves memory and time.
 
-    quicked_new(&aligner, params);                          // Initialize the aligner with the given parameters
+    quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
 
-    const char* pattern = "ACGT";                           // Pattern sequence
-    const char* text = "ACTT";                              // Text sequence
+    const char* pattern = "ACGT";                       // Pattern sequence
+    const char* text = "ACTT";                          // Text sequence
 
     // Align the sequences!
     printf("Aligning '%s' and '%s' using Windowed (Only Score)\n", pattern, text);
@@ -50,7 +50,7 @@ int main(void) {
     printf("Score: %d\n", aligner.score);                   // Print the score
     printf("CIGAR <Expecting NULL>: %s\n", aligner.cigar);  // We didn't compute the CIGAR, so it's NULL
 
-    quicked_free(&aligner);                             // Free whatever memory the aligner allocated
+    quicked_free(&aligner);                                 // Free whatever memory the aligner allocated
 
     return 0;
 }
