@@ -39,18 +39,22 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     #add_compile_options(-Wconversion) # TODO: We would like to enable this, but it's too noisy for now
 
     # Enable address sanitizer
-    add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fno-omit-frame-pointer)
-    add_compile_options(-fno-sanitize=shift) # Ignore shift sanitizer (false positives, as we do some 64-bit shifts)
-    add_link_options(-fsanitize=address -fsanitize=undefined)
+    # add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fno-omit-frame-pointer)
+    # add_compile_options(-fno-sanitize=shift) # Ignore shift sanitizer (false positives, as we do some 64-bit shifts)
+    # add_link_options(fsanitize=address -fsanitize=undefined)
 
-    add_compile_options(-fstack-protector) # Enable stack protection
+    # Enable stack protection
+    add_compile_options(-fstack-protector)
+
+    # Add runtime checkers
+    add_compile_definitions(_FORTIFY_SOURCE=1)
 
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3 -flto -fPIC)
+    add_compile_options(-O3 -flto)
 endif()
 
-# Set architecture to local machine architecture
-add_compile_options(-march=native)
+# Set global compiler flags
+add_compile_options(-fPIC -march=native)
 
 # Output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)

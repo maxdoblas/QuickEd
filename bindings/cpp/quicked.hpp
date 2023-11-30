@@ -39,9 +39,7 @@ namespace quicked {
         QuickedAligner();
         ~QuickedAligner();
 
-        quicked_status_t align(
-            std::string *pattern, const int pattern_len,
-            std::string *text, const int text_len);
+        quicked_status_t align(std::string *pattern, std::string *text);
 
         void setAlgorithm(quicked_algo_t algo)          { this->aligner.params->algo = algo; };
         void setOnlyScore(bool onlyScore)              { this->aligner.params->onlyScore = onlyScore; };

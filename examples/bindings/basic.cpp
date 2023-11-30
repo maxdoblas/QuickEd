@@ -37,7 +37,7 @@ int main(void) {
 
     // Align the sequences!
     cout << "Aligning " << pattern << " and " << text << " using Quicked" << endl;
-    aligner.align(&pattern, pattern.length(), &text, text.length());
+    aligner.align(&pattern, &text);
 
     cout << "Score: " << aligner.getScore() << endl; // Print the score
     cout << "Cigar: " << aligner.getCigar() << endl; // Print the CIGAR string

@@ -42,7 +42,7 @@ int main(void) {
 
     // Align the sequences!
     cout << "Aligning " << pattern << " and " << text << " using Banded" << endl;
-    aligner.align(&pattern, pattern.length(), &text, text.length());
+    aligner.align(&pattern, &text);
 
     cout << "Score: " << aligner.getScore() << endl;                    // Print the score
     cout << "Cigar <Expecting NULL>: " << aligner.getCigar() << endl;   // We didn't compute the CIGAR, so it's NULL

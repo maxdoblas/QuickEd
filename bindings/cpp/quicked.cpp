@@ -35,9 +35,7 @@ quicked::QuickedAligner::~QuickedAligner()
     quicked_free(&this->aligner);
 }
 
-quicked::quicked_status_t quicked::QuickedAligner::align(
-    std::string *pattern, const int pattern_len,
-    std::string *text, const int text_len)
+quicked::quicked_status_t quicked::QuickedAligner::align(std::string *pattern, std::string *text)
 {
-    return quicked_align(&this->aligner, pattern->c_str(), pattern_len, text->c_str(), text_len);
+    return quicked_align(&this->aligner, pattern->c_str(), pattern->length(), text->c_str(), text->length());
 }

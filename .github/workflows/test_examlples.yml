@@ -23,6 +23,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        # Shallow clone skips fetching commits and data that existed prior to the commit that triggered the workflow. Recommended for a better workflow performance.
+        fetch-depth: 1
+        # Checkout submodules
+        submodules: recursive
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
