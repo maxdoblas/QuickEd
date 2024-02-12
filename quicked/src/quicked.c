@@ -105,7 +105,7 @@ quicked_status_t run_windowed(
 
     // Align
     // timer_start(&timer);
-    windowed_compute(&windowed_matrix, &windowed_pattern, text, windowSize, overlapSize,
+    windowed_compute(&windowed_matrix, &windowed_pattern, text, 0, windowSize, overlapSize,
                      aligner->params->onlyScore, aligner->params->forceScalar);
     // timer_stop(&timer);
 
@@ -174,14 +174,16 @@ quicked_status_t run_quicked(
     windowed_pattern_compile(&windowed_pattern, pattern, pattern_len, mm_allocator);
 
     windowed_matrix_t windowed_matrix;
-    windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, 2);
+    windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, QUICKED_FAST_WINDOW_SIZE);
 
     // timer_start(&align_input->timer);
     // timer_start(&align_input->timer_window_sse);
 
     // Align
-    windowed_compute(&windowed_matrix, &windowed_pattern, text, 2, 1,
-                     aligner->params->onlyScore, aligner->params->forceScalar);
+    windowed_compute(&windowed_matrix, &windowed_pattern, text,
+                    QUICKED_FAST_WINDOW_SIZE, QUICKED_FAST_WINDOW_OVERLAP,
+                    aligner->params->hewThreshold[0],
+                    aligner->params->onlyScore, aligner->params->forceScalar);
 
     // timer_stop(&align_input->timer_window_sse);
 
@@ -191,38 +193,44 @@ quicked_status_t run_quicked(
     windowed_pattern_free(&windowed_pattern, mm_allocator);
     windowed_matrix_free(&windowed_matrix, mm_allocator);
 
-    if (score > MAX(text_len, pattern_len) / 4)
+    if((windowed_matrix.high_error_window * 64) >
+        (MAX(text_len, pattern_len) * aligner->params->hewPercentage[0] / 100))
     {
         // timer_start(&align_input->timer_window_6x2);
 
         windowed_pattern_compile(&windowed_pattern, pattern, pattern_len, mm_allocator);
-        windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, 6);
+        windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, aligner->params->windowSize);
 
-        windowed_compute(&windowed_matrix, &windowed_pattern, text, 6, 1,
-                         aligner->params->onlyScore, aligner->params->forceScalar);
-
-        // align_input->seq_with_6x2 = true; // TODO: Remove if unused
+        windowed_compute(&windowed_matrix, &windowed_pattern, text,
+                aligner->params->windowSize, aligner->params->overlapSize,
+                aligner->params->hewThreshold[1],
+                aligner->params->onlyScore, aligner->params->forceScalar);
 
         score = windowed_matrix.cigar->score;
+        uint64_t high_error_window = windowed_matrix.high_error_window;
+
+        // TODO: This free/alloc could be avoided
         windowed_pattern_free(&windowed_pattern, mm_allocator);
         windowed_matrix_free(&windowed_matrix, mm_allocator);
 
         windowed_pattern_compile(&windowed_pattern, pattern_r, pattern_len, mm_allocator);
-        windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, 6);
+        windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, aligner->params->windowSize);
 
-        windowed_compute(&windowed_matrix, &windowed_pattern, text, 6, 1,
-                         aligner->params->onlyScore, aligner->params->forceScalar);
-
-        // align_input->seq_with_6x2_r = true; // TODO: Remove if unused
+        windowed_compute(&windowed_matrix, &windowed_pattern, text,
+                aligner->params->windowSize, aligner->params->overlapSize,
+                aligner->params->hewThreshold[1],
+                aligner->params->onlyScore, aligner->params->forceScalar);
 
         score = MIN(score, windowed_matrix.cigar->score);
+        if (score >= windowed_matrix.cigar->score) high_error_window = windowed_matrix.high_error_window;
 
         windowed_pattern_free(&windowed_pattern, mm_allocator);
         windowed_matrix_free(&windowed_matrix, mm_allocator);
 
         // timer_stop(&align_input->timer_window_6x2);
 
-        if (score > MAX(text_len, pattern_len) / 4)
+        if((high_error_window * 64 * (aligner->params->windowSize - aligner->params->overlapSize)) >
+            (MAX(text_len, pattern_len) * aligner->params->hewPercentage[1] / 100))
         {
             // timer_start(&align_input->timer_banded_15);
 
@@ -244,7 +252,7 @@ quicked_status_t run_quicked(
 
             // timer_stop(&align_input->timer_banded_15);
 
-            while ((new_score > MAX(text_len, pattern_len) / 4 && score < new_score) || new_score < 0)
+            while((new_score > MAX(text_len, pattern_len) / 4 && score * 3/2 < new_score) || new_score < 0)
             {
                 score *= 2;
                 // timer_start(&align_input->timer_banded_30);
@@ -260,9 +268,10 @@ quicked_status_t run_quicked(
                 banded_matrix_free(&banded_matrix_score, mm_allocator);
 
                 // timer_stop(&align_input->timer_banded_30);
-            }
+                            }
 
             score = new_score;
+            banded_pattern_free(&banded_pattern, mm_allocator);
         }
     }
 
@@ -295,7 +304,9 @@ quicked_params_t quicked_default_params()
         .algo = QUICKED,
         .onlyScore = false,
         .bandwidth = 15,
-        .windowSize = 2,
+        .windowSize = 9,
+        .hewThreshold = {40, 40},
+        .hewPercentage = {15, 15},
         .overlapSize = 1,
         .forceScalar = false,
     };

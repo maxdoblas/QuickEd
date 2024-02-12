@@ -58,6 +58,7 @@ typedef struct
     uint64_t min_score_column;
     int64_t pos_v;
     int64_t pos_h;
+    int64_t high_error_window;
     // CIGAR
     cigar_t *cigar;
     uint64_t *PEQ_window;
@@ -92,6 +93,7 @@ void windowed_compute(
     windowed_matrix_t *const windowed_matrix,
     windowed_pattern_t *const windowed_pattern,
     const char* text,
+    const int hew_threshold,
     const int windowSize,
     const int overlapSize,
     const bool score_only,

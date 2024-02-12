@@ -28,6 +28,10 @@
 #include "utils/include/mm_allocator.h"
 #include <stdbool.h>
 
+#define QUICKED_WINDOW_STAGES 2 // Number of window sizes to go through before doing banded
+#define QUICKED_FAST_WINDOW_SIZE 2
+#define QUICKED_FAST_WINDOW_OVERLAP 1
+
 typedef enum {
     QUICKED,
     WINDOWED,
@@ -40,6 +44,8 @@ typedef struct quicked_params_t {
     unsigned int bandwidth;
     unsigned int windowSize;
     unsigned int overlapSize;
+    unsigned int hewThreshold[QUICKED_WINDOW_STAGES];
+    unsigned int hewPercentage[QUICKED_WINDOW_STAGES];
     bool onlyScore;
     bool forceScalar;
 } quicked_params_t;

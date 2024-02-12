@@ -484,6 +484,7 @@ void windowed_backtrace_window_score_only(
     windowed_matrix_t *const windowed_matrix,
     const windowed_pattern_t *const windowed_pattern,
     const char* text,
+    const int hew_threshold,
     const int windowSize,
     const int overlapSize)
 {
@@ -529,6 +530,10 @@ void windowed_backtrace_window_score_only(
             --v;
         }
     }
+
+    if (score > ((windowSize - overlapSize) * UINT64_LENGTH * hew_threshold / 100))
+        windowed_matrix->high_error_window++;
+
     windowed_matrix->pos_h = h;
     windowed_matrix->pos_v = v;
     windowed_matrix->cigar->score += score;
@@ -538,6 +543,7 @@ void windowed_compute(
     windowed_matrix_t *const windowed_matrix,
     windowed_pattern_t *const windowed_pattern,
     const char* text,
+    const int hew_threshold,
     const int windowSize,
     const int overlapSize,
     const bool score_only,
@@ -560,7 +566,7 @@ void windowed_compute(
         // Compute window backtrace
         if (score_only)
         {
-            windowed_backtrace_window_score_only(windowed_matrix, windowed_pattern, text, windowSize, overlapSize);
+            windowed_backtrace_window_score_only(windowed_matrix, windowed_pattern, text, hew_threshold, windowSize, overlapSize);
         }
         else
         {
