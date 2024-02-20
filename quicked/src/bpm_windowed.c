@@ -213,16 +213,19 @@ void windowed_compute_window_unaligned(
     uint64_t *const Mv = windowed_matrix->Mv;
     uint64_t *const PEQ_window = windowed_matrix->PEQ_window;
     // const uint64_t max_distance__1 = max_distance+1;
-    windowed_reset_differences_zero(Pv, Mv, BPM_W64_LENGTH * windowSize);
     // Advance in DP-bit_encoded matrix
     int64_t text_position;
     int64_t pos_v_fi = windowed_matrix->pos_v;
     int64_t pos_h_fi = windowed_matrix->pos_h;
 
     int64_t pos_v = (pos_v_fi - UINT64_LENGTH * (windowSize) + 1 >= 0) ? pos_v_fi - UINT64_LENGTH * (windowSize) + 1 : 0;
-    // if (pos_v < 0) pos_v = 0;
     int64_t pos_h = (pos_h_fi - UINT64_LENGTH * (windowSize) + 1 >= 0) ? pos_h_fi - UINT64_LENGTH * (windowSize) + 1 : 0;
-    // if (pos_h < 0) pos_h = 0;
+
+    if (pos_h == 0) {
+        windowed_reset_differences(Pv, Mv, windowSize);
+    } else {
+        windowed_reset_differences_zero(Pv, Mv, windowSize);
+    }
 
     int64_t steps_v = (pos_v_fi - pos_v) / UINT64_LENGTH + 1;
     int64_t steps_h = pos_h_fi - pos_h;
@@ -235,9 +238,16 @@ void windowed_compute_window_unaligned(
         for (uint64_t enc_char = 0; enc_char < BPM_ALPHABET_LENGTH; enc_char++)
         {
             const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX(i + pos_v_block, enc_char)] >> shift | ((PEQ[BPM_PATTERN_PEQ_IDX(i + pos_v_block + 1, enc_char)] << (BPM_W64_LENGTH - shift)) & shift_mask);
-            ;
             PEQ_window[BPM_PATTERN_PEQ_IDX(i, enc_char)] = Eq;
         }
+    }
+
+    // First cell
+    uint64_t Ph_first;
+    if (pos_v == 0) {
+        Ph_first = 1;
+    } else {
+        Ph_first = 0;
     }
 
     for (text_position = 0; text_position <= steps_h; ++text_position)
@@ -246,7 +256,7 @@ void windowed_compute_window_unaligned(
         const uint8_t enc_char = dna_encode(text[text_position + pos_h]);
         // Advance all blocks
         int64_t i;
-        uint64_t PHin = 0, MHin = 0, PHout, MHout;
+        uint64_t PHin = Ph_first, MHin = 0, PHout, MHout;
         for (i = 0; i < steps_v; ++i)
         {
             /* Calculate Step Data */
@@ -281,7 +291,6 @@ void windowed_compute_window_sse(
     uint64_t *const Pv = windowed_matrix->Pv;
     uint64_t *const Mv = windowed_matrix->Mv;
     uint64_t *const PEQ_window = windowed_matrix->PEQ_window;
-    windowed_reset_differences_zero(Pv, Mv, windowSize);
     // Advance in DP-bit_encoded matrix
     int64_t text_position;
     int64_t pos_v_fi = windowed_matrix->pos_v;
@@ -289,6 +298,12 @@ void windowed_compute_window_sse(
 
     int64_t pos_v = (pos_v_fi - UINT64_LENGTH * (windowSize) + 1 >= 0) ? pos_v_fi - UINT64_LENGTH * (windowSize) + 1 : 0;
     int64_t pos_h = (pos_h_fi - UINT64_LENGTH * (windowSize) + 1 >= 0) ? pos_h_fi - UINT64_LENGTH * (windowSize) + 1 : 0;
+
+    if (pos_h == 0) {
+        windowed_reset_differences(Pv, Mv, windowSize);
+    } else {
+        windowed_reset_differences_zero(Pv, Mv, windowSize);
+    }
 
     int64_t steps_v = (pos_v_fi - pos_v) / UINT64_LENGTH + 1;
     int64_t steps_h = pos_h_fi - pos_h;
@@ -307,7 +322,13 @@ void windowed_compute_window_sse(
     }
 
     // First cell
-    uint64_t Ph_firts = 0, Mh_firts = 0;
+    uint64_t Ph_first, Mh_first = 0;
+    if (pos_v == 0) {
+        Ph_first = 1;
+    } else {
+        Ph_first = 0;
+    }
+
     {
         const uint8_t enc_char = dna_encode(text[0 + pos_h]);
         const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(0, num_words64, 0);
@@ -316,15 +337,15 @@ void windowed_compute_window_sse(
         uint64_t Mv_in = Mv[bdp_idx];
         uint64_t PHout, MHout;
         const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(0, enc_char)];
-        BPM_ADVANCE_BLOCK_NO_MASK(Eq, Pv_in, Mv_in, Ph_firts, Mh_firts, PHout, MHout);
+        BPM_ADVANCE_BLOCK_NO_MASK(Eq, Pv_in, Mv_in, Ph_first, Mh_first, PHout, MHout);
         Pv[next_bdp_idx] = Pv_in;
         Mv[next_bdp_idx] = Mv_in;
-        Ph_firts = PHout;
-        Mh_firts = MHout;
+        Ph_first = PHout;
+        Mh_first = MHout;
     }
     __m128i PHout, MHout, PHin, MHin;
-    PHin = _mm_set_epi64x(1, Ph_firts);
-    MHin = _mm_set_epi64x(0, Mh_firts);
+    PHin = _mm_set_epi64x(1, Ph_first);
+    MHin = _mm_set_epi64x(0, Mh_first);
 
     const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(0, num_words64, 1);
     uint64_t next_bdp_idx = bdp_idx + num_words64;
@@ -404,8 +425,8 @@ void windowed_compute_window_sse(
         next_bdp_idx += num_words64;
     }
     // Last cell
-    Ph_firts = _mm_extract_epi64(PHout, 1);
-    Mh_firts = _mm_extract_epi64(MHout, 1);
+    Ph_first = _mm_extract_epi64(PHout, 1);
+    Mh_first = _mm_extract_epi64(MHout, 1);
     {
         const uint8_t enc_char = dna_encode(text[steps_h + pos_h]);
         const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX(steps_h, num_words64, 1);
@@ -414,11 +435,11 @@ void windowed_compute_window_sse(
         uint64_t Mv_in = Mv[bdp_idx];
         uint64_t PHout, MHout;
         const uint64_t Eq = PEQ_window[BPM_PATTERN_PEQ_IDX(1, enc_char)];
-        BPM_ADVANCE_BLOCK_NO_MASK(Eq, Pv_in, Mv_in, Ph_firts, Mh_firts, PHout, MHout);
+        BPM_ADVANCE_BLOCK_NO_MASK(Eq, Pv_in, Mv_in, Ph_first, Mh_first, PHout, MHout);
         Pv[next_bdp_idx] = Pv_in;
         Mv[next_bdp_idx] = Mv_in;
-        Ph_firts = PHout;
-        Mh_firts = MHout;
+        Ph_first = PHout;
+        Mh_first = MHout;
     }
 }
 #endif
@@ -451,7 +472,12 @@ void windowed_backtrace_window_unaligned(
         const uint64_t bdp_idx = BPM_PATTERN_BDP_IDX((h - h_min + 1), num_words64, block);
         const uint64_t mask = 1L << (v - v_min % UINT64_LENGTH);
 
-        if (Pv[bdp_idx] & mask)
+        if (text[h] == pattern[v])
+        {
+            operations[op_sentinel--] = 'M';
+            --h;
+            --v;
+        } else if (Pv[bdp_idx] & mask)
         {
             operations[op_sentinel--] = 'D';
             --v;
@@ -460,12 +486,6 @@ void windowed_backtrace_window_unaligned(
         {
             operations[op_sentinel--] = 'I';
             --h;
-        }
-        else if ((text[h] == pattern[v]))
-        {
-            operations[op_sentinel--] = 'M';
-            --h;
-            --v;
         }
         else
         {
