@@ -147,6 +147,7 @@ void windowed_matrix_allocate(
     windowed_matrix->Pv = Pv;
     windowed_matrix->pos_v = pattern_length - 1;
     windowed_matrix->pos_h = text_length - 1;
+    windowed_matrix->high_error_window = 0;
     // CIGAR
     windowed_matrix->cigar = cigar_new(pattern_length + text_length,mm_allocator);
     windowed_matrix->cigar->end_offset = pattern_length + text_length;
