@@ -12,10 +12,7 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-# # Print message if compiler is Clang
-# if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-#     message(WARNING "Compiler: Clang")
-# endif()
+option(ASAN "Enable ASAN and UBSAN" OFF)
 
 # Set compiler flags if Debug build
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -39,9 +36,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     #add_compile_options(-Wconversion) # TODO: We would like to enable this, but it's too noisy for now
 
     # Enable address sanitizer
-    # add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fno-omit-frame-pointer)
-    # add_compile_options(-fno-sanitize=shift) # Ignore shift sanitizer (false positives, as we do some 64-bit shifts)
-    # add_link_options(fsanitize=address -fsanitize=undefined)
+    if (ASAN)
+        add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fno-omit-frame-pointer)
+        add_compile_options(-fno-sanitize=shift) # Ignore shift sanitizer (false positives, as we do some 64-bit shifts)
+        add_link_options(-fsanitize=address -fsanitize=undefined)
+    endif()
 
     # Enable stack protection
     add_compile_options(-fstack-protector)
