@@ -33,7 +33,7 @@ int main(void) {
     params.algo = BANDED;                               // Select the algorithm: Banded
     params.bandwidth = 10;                              // Banded needs a bandwidth
                                                         //  10% of the seq. length (Default: 15%)
-    params.onlyScore = true;                           // Only score, don't compute CIGAR.
+    params.onlyScore = true;                            // Only score, don't compute CIGAR.
                                                         //  This saves memory and time.
 
     quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters

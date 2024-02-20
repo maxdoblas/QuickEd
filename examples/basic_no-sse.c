@@ -28,10 +28,11 @@
 
 int main(void) {
     quicked_aligner_t aligner;                          // Aligner object
-    quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters
+    quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
 
-    params.algo = HIRSCHBERG;                           // Select the algorithm: Hirschberg
-    //params.onlyScore = true;                          // This parameter is ignored when using Hirschberg.
+    params.forceScalar = true;                          // Force the aligner to use scalar code instead of SSE4.1
+
+    // Without any extra configuration, the aligner will use the Quicked algorithm
 
     quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
 
@@ -39,7 +40,7 @@ int main(void) {
     const char* text = "ACTT";                          // Text sequence
 
     // Align the sequences!
-    printf("Aligning '%s' and '%s' using Hirschberg\n", pattern, text);
+    printf("Aligning '%s' and '%s' using Quicked\n", pattern, text);
     quicked_align(&aligner, pattern, strlen(pattern), text, strlen(text));
 
     printf("Score: %d\n", aligner.score);   // Print the score

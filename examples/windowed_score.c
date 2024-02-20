@@ -35,7 +35,7 @@ int main(void) {
     // Default Windowed configuration (2x2, overlap 1) has an SSE4.1 implementation.
     // This is transparent to the user, and will be used if the CPU supports it.
 
-    params.onlyScore = true;                           // Only score, don't compute CIGAR.
+    params.onlyScore = true;                            // Only score, don't compute CIGAR.
                                                         //  This saves memory and time.
 
     quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
