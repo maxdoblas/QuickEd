@@ -14,6 +14,10 @@
 - Add documentation
 - Timers
 - Remove magic numbers
+- Licensing in all files
+- Add tests
+- Clean up the commit history
+  - Add Author (Max) to patches main -> dev
 
 ## Quicked Library
 
@@ -26,3 +30,5 @@
 - Minimal band check?
 
 ## Tools
+
+- align_benchmark
