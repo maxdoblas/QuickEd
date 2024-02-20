@@ -181,8 +181,8 @@ quicked_status_t run_quicked(
 
     // Align
     windowed_compute(&windowed_matrix, &windowed_pattern, text,
-                    QUICKED_FAST_WINDOW_SIZE, QUICKED_FAST_WINDOW_OVERLAP,
                     aligner->params->hewThreshold[0],
+                    QUICKED_FAST_WINDOW_SIZE, QUICKED_FAST_WINDOW_OVERLAP,
                     aligner->params->onlyScore, aligner->params->forceScalar);
 
     // timer_stop(&align_input->timer_window_sse);
@@ -202,8 +202,8 @@ quicked_status_t run_quicked(
         windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, aligner->params->windowSize);
 
         windowed_compute(&windowed_matrix, &windowed_pattern, text,
-                aligner->params->windowSize, aligner->params->overlapSize,
                 aligner->params->hewThreshold[1],
+                aligner->params->windowSize, aligner->params->overlapSize,
                 aligner->params->onlyScore, aligner->params->forceScalar);
 
         score = windowed_matrix.cigar->score;
@@ -217,8 +217,8 @@ quicked_status_t run_quicked(
         windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, aligner->params->windowSize);
 
         windowed_compute(&windowed_matrix, &windowed_pattern, text,
-                aligner->params->windowSize, aligner->params->overlapSize,
                 aligner->params->hewThreshold[1],
+                aligner->params->windowSize, aligner->params->overlapSize,
                 aligner->params->onlyScore, aligner->params->forceScalar);
 
         score = MIN(score, windowed_matrix.cigar->score);
