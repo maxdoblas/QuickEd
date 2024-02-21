@@ -32,21 +32,16 @@
  * Algorithms
  */
 typedef enum {
-  // Test
-  alignment_test,
   // Edit
   alignment_edit_dp,
   alignment_edit_dp_banded,
-  //
   alignment_edit_bpm,
-  alignment_edit_bpm_banded,
-  alignment_edit_bpm_banded_unaligned,
-  alignment_edit_bpm_banded_blocking,
-  alignment_edit_bpm_banded_cutoff,
-  alignment_edit_bpm_band_hirschberg,
-  alignment_edit_bpm_banded_cutoff_score,
-  alignment_edit_bpm_windowed,
-  alignment_edit_bpm_quicked,
+  // QuickEd lib
+  alignment_edit_banded,
+  alignment_edit_banded_hirschberg,
+  alignment_edit_banded_score,
+  alignment_edit_windowed,
+  alignment_edit_quicked,
 } alignment_algorithm_type;
 
 /*
@@ -74,9 +69,8 @@ typedef struct {
   double text_end_free;
   // Other algorithms parameters
   int bandwidth;
-  int windowSize;
-  int overlapSize;
-  window_config_t window_config;
+  int window_size;
+  int overlap_size;
   // Misc
   bool check_display;
   bool check_correct;

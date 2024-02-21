@@ -58,11 +58,10 @@ void align_input_configure_global(
   align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);
   // PROFILE/STATS
   timer_reset(&align_input->timer);
-  timer_reset(&align_input->timer_window_sse);
-  timer_reset(&align_input->timer_window_6x2);
-  timer_reset(&align_input->timer_banded_15);
-  timer_reset(&align_input->timer_banded_30);
-  timer_reset(&align_input->timer_banded_hirschberg);
+  timer_reset(&align_input->timer_windowed_s);
+  timer_reset(&align_input->timer_windowed_l);
+  timer_reset(&align_input->timer_banded);
+  timer_reset(&align_input->timer_align);
   // DEBUG
   align_input->debug_flags = 0;
   if (parameters.check_display) align_input->debug_flags |= ALIGN_DEBUG_DISPLAY_INFO;
@@ -71,10 +70,6 @@ void align_input_configure_global(
   if (parameters.check_alignments) align_input->debug_flags |= ALIGN_DEBUG_CHECK_ALIGNMENT;
   align_input->check_bandwidth = parameters.check_bandwidth;
   align_input->verbose = parameters.verbose;
-  align_input->seq_with_6x2 = false;
-  align_input->seq_with_6x2_r = false;
-  align_input->seqs_with_15 = false;
-  align_input->seqs_with_30 = false;
 }
 void align_input_configure_local(
     align_input_t* const align_input) {
@@ -137,27 +132,25 @@ void align_benchmark_print_results(
     const bool print_stats) {
   // Print benchmark results
   fprintf(stderr,"[Benchmark]\n");
-  fprintf(stderr,"=> Total.reads             %d\n",seqs_processed);
-  fprintf(stderr,"=> Time.Benchmark       ");
+  fprintf(stderr,"=> Total.reads              %d\n",seqs_processed);
+  fprintf(stderr,"=> Time.Benchmark        ");
   timer_print(stderr,&parameters.timer_global,NULL);
   if (parameters.num_threads == 1) {
-    fprintf(stderr,"  => Time.Alignment     ");
+    fprintf(stderr,"  => Time.Alignment      ");
     timer_print(stderr,&align_input->timer,&parameters.timer_global);
-    if (parameters.algorithm == alignment_edit_bpm_quicked && parameters.verbose){
-      fprintf(stderr,"  => Time.Windowed.SSE  ");
-      timer_print(stderr,&align_input->timer_window_sse,&parameters.timer_global);
-      fprintf(stderr,"  => Time.Windowed(6,2) ");
-      timer_print(stderr,&align_input->timer_window_6x2,&parameters.timer_global);
-      fprintf(stderr,"  => Time.Banded(15)    ");
-      timer_print(stderr,&align_input->timer_banded_15,&parameters.timer_global);
-      fprintf(stderr,"  => Time.Banded(30)    ");
-      timer_print(stderr,&align_input->timer_banded_30,&parameters.timer_global);
-      fprintf(stderr,"  => Time.Hirschberg    ");
-      timer_print(stderr,&align_input->timer_banded_hirschberg,&parameters.timer_global);
+    if (parameters.algorithm == alignment_edit_quicked && parameters.verbose){
+      fprintf(stderr,"  => Time.Windowed Small ");
+      timer_print(stderr,&align_input->timer_windowed_s,&parameters.timer_global);
+      fprintf(stderr,"  => Time.Windowed Large ");
+      timer_print(stderr,&align_input->timer_windowed_l,&parameters.timer_global);
+      fprintf(stderr,"  => Time.Banded         ");
+      timer_print(stderr,&align_input->timer_banded,&parameters.timer_global);
+      fprintf(stderr,"  => Time.Align          ");
+      timer_print(stderr,&align_input->timer_align,&parameters.timer_global);
     }
   } else {
     for (int i=0;i<parameters.num_threads;++i) {
-      fprintf(stderr,"  => Time.Alignment.Thread.%0d    ",i);
+      fprintf(stderr,"  => Time.Alignment.Thread.%0d     ",i);
       timer_print(stderr,&align_input[i].timer,&parameters.timer_global);
     }
   }
@@ -179,38 +172,29 @@ void align_benchmark_run_algorithm(
   // Select algorithm
   switch (parameters.algorithm) {
     // Edit
+//    case alignment_edit_dp:
+//      benchmark_edit_dp(align_input);
+//      break;
+//    case alignment_edit_dp_banded:
+//      benchmark_edit_dp_banded(align_input,parameters.bandwidth);
+//      break;
     case alignment_edit_bpm:
-      benchmark_edit_bpm(align_input);
+      benchmark_quicked(align_input);
       break;
-    case alignment_edit_bpm_banded:
-      benchmark_edit_bpm_banded(align_input,parameters.bandwidth);
+    case alignment_edit_windowed:
+      benchmark_quicked(align_input);
       break;
-    case alignment_edit_bpm_banded_unaligned:
-      benchmark_edit_bpm_banded_unaligned(align_input,parameters.bandwidth);
+    case alignment_edit_banded:
+      benchmark_quicked(align_input);
       break;
-    case alignment_edit_bpm_banded_blocking:
-      benchmark_edit_bpm_banded_blocking(align_input,parameters.bandwidth);
+    case alignment_edit_banded_hirschberg:
+      benchmark_quicked(align_input);
       break;
-    case alignment_edit_bpm_banded_cutoff:
-      benchmark_edit_bpm_banded_cutoff(align_input,parameters.bandwidth);
+    case alignment_edit_banded_score:
+      benchmark_quicked(align_input);
       break;
-    case alignment_edit_bpm_band_hirschberg:
-      benchmark_edit_bpm_band_hirschberg(align_input,parameters.bandwidth);
-      break;
-    case alignment_edit_bpm_banded_cutoff_score:
-      benchmark_edit_bpm_banded_cutoff_score(align_input,parameters.bandwidth);
-      break;
-    case alignment_edit_bpm_quicked:
-      benchmark_edit_bpm_quicked(align_input);
-      break;
-    case alignment_edit_bpm_windowed:
-      benchmark_edit_bpm_windowed(align_input,parameters.windowSize,parameters.overlapSize,parameters.window_config);
-      break;
-    case alignment_edit_dp:
-      benchmark_edit_dp(align_input);
-      break;
-    case alignment_edit_dp_banded:
-      benchmark_edit_dp_banded(align_input,parameters.bandwidth);
+    case alignment_edit_quicked:
+      benchmark_quicked(align_input);
       break;
     default:
       fprintf(stderr,"Algorithm not implemented\n");
@@ -236,36 +220,17 @@ void align_benchmark_sequential() {
   align_input_configure_global(&align_input);
   // Read-align loop
   int seqs_processed = 0, progress = 0;
-  int seqs_with_6x2 = 0;
-  int seqs_with_6x2_r = 0;
-  int seqs_with_15 = 0;
-  int seqs_with_30 = 0;
-  float diff_scores = 0.0;
   while (true) {
     // Read input sequence-pair
     const bool input_read = align_benchmark_read_input(
         parameters.input_file,&parameters.line1,&parameters.line2,
         &parameters.line1_allocated,&parameters.line2_allocated,
         seqs_processed,&align_input);
-    align_input.seq_with_6x2 = false;
-    align_input.seq_with_6x2_r = false;
-    align_input.seqs_with_15 = false;
-    align_input.seqs_with_30 = false;
-    align_input.diff_scores = 0.0;
     if (!input_read) break;
     // Execute the selected algorithm
     align_benchmark_run_algorithm(&align_input);
     // Update progress
-
     ++seqs_processed;
-    if (parameters.algorithm == alignment_edit_bpm_quicked && parameters.verbose){
-      seqs_with_6x2+=align_input.seq_with_6x2;
-      seqs_with_6x2_r+=align_input.seq_with_6x2_r;
-      seqs_with_15+=align_input.seqs_with_15;
-      seqs_with_30+=align_input.seqs_with_30;
-      diff_scores+=align_input.diff_scores;
-    }
-
     if (++progress == parameters.progress) {
       progress = 0;
       if (parameters.verbose >= 0) align_benchmark_print_progress(seqs_processed);
@@ -273,21 +238,6 @@ void align_benchmark_sequential() {
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);
-
-  if (parameters.algorithm == alignment_edit_bpm_quicked && parameters.verbose){
-    diff_scores = diff_scores/seqs_processed;
-    printf("------------------------------------------\n");
-    printf("-- Execution Distribution\n");
-    printf("------------------------------------------\n");
-    printf("seqs_processed  = %d\n", seqs_processed);
-    printf("seqs_with_6x2   = %d\n", seqs_with_6x2);
-    printf("seqs_with_6x2_r = %d\n", seqs_with_6x2_r);
-    printf("seqs_with_15    = %d\n", seqs_with_15);
-    printf("seqs_with_30    = %d\n", seqs_with_30);
-    printf("diff_scores     = %.03f\n", diff_scores);
-    printf("------------------------------------------\n");
-    printf("\n");
-  }
 
   if (parameters.verbose >= 0) align_benchmark_print_results(&align_input,seqs_processed,true);
   // Free
@@ -377,15 +327,10 @@ void align_benchmark_parallel() {
 int main(int argc,char* argv[]) {
   // Parsing command-line options
   parse_arguments(argc,argv);
-  // Select option
-  if (parameters.algorithm == alignment_test) {
-    align_pairwise_test();
+  // Execute benchmark
+  if (parameters.num_threads == 1) {
+    align_benchmark_sequential();
   } else {
-    // Execute benchmark
-    if (parameters.num_threads == 1) {
-      align_benchmark_sequential();
-    } else {
-      align_benchmark_parallel();
-    }
+    align_benchmark_parallel();
   }
 }

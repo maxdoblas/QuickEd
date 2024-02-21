@@ -69,11 +69,10 @@ typedef struct {
   mm_allocator_t* mm_allocator;
   // PROFILE/STATS
   profiler_timer_t timer;
-  profiler_timer_t timer_window_sse;
-  profiler_timer_t timer_window_6x2;
-  profiler_timer_t timer_banded_15;
-  profiler_timer_t timer_banded_30;
-  profiler_timer_t timer_banded_hirschberg;
+  profiler_timer_t timer_windowed_s;
+  profiler_timer_t timer_windowed_l;
+  profiler_timer_t timer_banded;
+  profiler_timer_t timer_align;
   profiler_counter_t align;
   profiler_counter_t align_correct;
   profiler_counter_t align_score;
@@ -89,10 +88,6 @@ typedef struct {
   int debug_flags;
   int check_bandwidth;
   bool verbose;
-  bool seq_with_6x2;
-  bool seq_with_6x2_r;
-  bool seqs_with_15;
-  bool seqs_with_30;
   float diff_scores;
 } align_input_t;
 
@@ -101,8 +96,6 @@ typedef struct {
  */
 void benchmark_align_input_clear(
     align_input_t* const align_input);
-
-void reverse_string(char* in_string, char* out_string, uint64_t lenght);
 
 /*
  * Display
@@ -118,6 +111,11 @@ void benchmark_print_output(
     align_input_t* const align_input,
     const bool score_only,
     cigar_t* const cigar);
+void quicked_print_output(
+    align_input_t* const align_input,
+    const bool score_only,
+    char* const cigar,
+    int score);
 
 /*
  * Stats

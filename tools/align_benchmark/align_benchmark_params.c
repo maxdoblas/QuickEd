@@ -29,7 +29,7 @@
  */
 align_bench_params_t parameters = {
   // Algorithm
-  .algorithm = alignment_edit_dp,
+  .algorithm = alignment_edit_quicked,
   // I/O
   .input_filename = NULL,
   .output_filename = NULL,
@@ -49,9 +49,8 @@ align_bench_params_t parameters = {
   .text_end_free = 0.0,
   // Other algorithms parameters
   .bandwidth = -1,
-  .windowSize = -1,
-  .overlapSize = -1,
-  .window_config = WINDOW_ALIGNED,
+  .window_size = -1,
+  .overlap_size = -1,
   // Misc
   .check_bandwidth = -1,
   .check_display = false,
@@ -77,9 +76,6 @@ void usage() {
       "            [Edit (Levenshtein)]                                        \n"
       "              quicked                                                   \n"
       "              edit-bpm                                                  \n"
-      "              edit-bpm-banded                                           \n"
-      "              edit-bpm-banded-unaligned                                 \n"
-      "              edit-bpm-banded-blocking                                  \n"
       "              edit-bpm-banded-cutoff                                    \n"
       "              edit-bpm-banded-cutoff-score                              \n"
       "              edit-bpm-windowed                                         \n"
@@ -153,28 +149,19 @@ void parse_arguments(
      * Algorithm
      */
     case 'a': {
-      /* Test bench */
-      if (strcmp(optarg,"test")==0) {
-        parameters.algorithm = alignment_test;
       // Edit
-      } else if (strcmp(optarg,"edit-bpm")==0) {
+      if (strcmp(optarg,"edit-bpm")==0) {
         parameters.algorithm = alignment_edit_bpm;
-      } else if (strcmp(optarg,"edit-bpm-banded")==0) {
-        parameters.algorithm = alignment_edit_bpm_banded;
-      } else if (strcmp(optarg,"edit-bpm-banded-unaligned")==0) {
-        parameters.algorithm = alignment_edit_bpm_banded_unaligned;
-      } else if (strcmp(optarg,"edit-bpm-banded-blocking")==0) {
-        parameters.algorithm = alignment_edit_bpm_banded_blocking;
-      } else if (strcmp(optarg,"edit-bpm-banded-cutoff")==0) {
-        parameters.algorithm = alignment_edit_bpm_banded_cutoff;
-      } else if (strcmp(optarg,"edit-bpm-banded-hirschberg")==0) {
-        parameters.algorithm = alignment_edit_bpm_band_hirschberg;
-      } else if (strcmp(optarg,"edit-bpm-banded-cutoff-score")==0) {
-        parameters.algorithm = alignment_edit_bpm_banded_cutoff_score;
+      } else if (strcmp(optarg,"edit-banded")==0) {
+        parameters.algorithm = alignment_edit_banded;
+      } else if (strcmp(optarg,"edit-banded-score")==0) {
+        parameters.algorithm = alignment_edit_banded_score;
+      } else if (strcmp(optarg,"edit-banded-hirschberg")==0) {
+        parameters.algorithm = alignment_edit_banded_hirschberg;
       } else if (strcmp(optarg,"quicked")==0) {
-        parameters.algorithm = alignment_edit_bpm_quicked;
-      } else if (strcmp(optarg,"edit-bpm-windowed")==0) {
-        parameters.algorithm = alignment_edit_bpm_windowed;
+        parameters.algorithm = alignment_edit_quicked;
+      } else if (strcmp(optarg,"edit-windowed")==0) {
+        parameters.algorithm = alignment_edit_windowed;
       } else if (strcmp(optarg,"edit-dp")==0) {
         parameters.algorithm = alignment_edit_dp;
       } else if (strcmp(optarg,"edit-dp-banded")==0) {
@@ -220,22 +207,12 @@ void parse_arguments(
       parameters.bandwidth = atoi(optarg);
       break;
     case 2001: // --window-size
-      parameters.windowSize = atoi(optarg);
+      parameters.window_size = atoi(optarg);
       break;
     case 2002: // --overlap-size
-      parameters.overlapSize = atoi(optarg);
+      parameters.overlap_size = atoi(optarg);
       break;
-    case 2003: // --window-config
-      if (strcmp(optarg,"aligned")==0) {
-        parameters.window_config = WINDOW_ALIGNED;
-      } else if (strcmp(optarg,"unaligned")==0) {
-        parameters.window_config = WINDOW_UNALIGNED;
-      } else if (strcmp(optarg,"sse")==0) {
-        parameters.window_config = WINDOW_SSE;
-      } else {
-        fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);
-        exit(1);
-      }
+    case 2003: // --window-force-scalar
       break;
     /*
      * Misc
@@ -305,19 +282,16 @@ void parse_arguments(
     }
   }
   // Checks general
-  if (parameters.algorithm!=alignment_test && parameters.input_filename==NULL) {
+  if (parameters.input_filename==NULL) {
     fprintf(stderr,"Option --input is required \n");
     exit(1);
   }
   // Check 'bandwidth' parameter
   switch (parameters.algorithm) {
-    case alignment_edit_bpm_banded:
-    case alignment_edit_bpm_banded_unaligned:
-    case alignment_edit_bpm_banded_blocking:
-    case alignment_edit_bpm_banded_cutoff:
-    case alignment_edit_bpm_band_hirschberg:
-    case alignment_edit_bpm_banded_cutoff_score:
     case alignment_edit_dp_banded:
+    case alignment_edit_banded:
+    case alignment_edit_banded_score:
+    case alignment_edit_banded_hirschberg:
       if (parameters.bandwidth == -1) {
         fprintf(stderr,"Parameter 'bandwidth' has to be provided for banded algorithms\n");
         exit(1);
@@ -325,33 +299,33 @@ void parse_arguments(
         fprintf(stderr,"Parameter 'bandwidth' has to be > 0\n");
         exit(1);
       }
-      if (parameters.windowSize != -1) {
+      if (parameters.window_size != -1) {
         fprintf(stderr,"Parameter 'window-size' has no effect with the selected algorithm\n");
         exit(1);
       }
-      if (parameters.overlapSize != -1) {
+      if (parameters.overlap_size != -1) {
         fprintf(stderr,"Parameter 'overlap-size' has no effect with the selected algorithm\n");
         exit(1);
       }
       break;
-    case alignment_edit_bpm_windowed:
+    case alignment_edit_windowed:
       if (parameters.bandwidth != -1) {
         fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
         exit(1);
       }
 
-      if (parameters.windowSize == -1) {
+      if (parameters.window_size == -1) {
         fprintf(stderr,"Parameter 'window-size' has to be provided for banded algorithms\n");
         exit(1);
-      } else if (parameters.windowSize < 1) {
+      } else if (parameters.window_size < 1) {
         fprintf(stderr,"Parameter 'window-size' has to be > 0\n");
         exit(1);
       }
 
-      if (parameters.overlapSize == -1) {
+      if (parameters.overlap_size == -1) {
         fprintf(stderr,"Parameter 'overlap-size' has to be provided for banded algorithms\n");
         exit(1);
-      } else if (parameters.overlapSize > parameters.windowSize - 1 || parameters.overlapSize < 0) {
+      } else if (parameters.overlap_size > parameters.window_size - 1 || parameters.overlap_size < 0) {
         fprintf(stderr,"Parameter 'overlap-size' has to be: 0 <= overlap-size < window-size \n");
         exit(1);
       }
@@ -361,11 +335,11 @@ void parse_arguments(
         fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
         exit(1);
       }
-      if (parameters.windowSize != -1) {
+      if (parameters.window_size != -1) {
         fprintf(stderr,"Parameter 'window-size' has no effect with the selected algorithm\n");
         exit(1);
       }
-      if (parameters.overlapSize != -1) {
+      if (parameters.overlap_size != -1) {
         fprintf(stderr,"Parameter 'overlap-size' has no effect with the selected algorithm\n");
         exit(1);
       }

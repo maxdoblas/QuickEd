@@ -121,7 +121,7 @@ void benchmark_check_alignment_edit(
       &score_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      align_input->pattern_length+align_input->text_length);
+      align_input->pattern_length+align_input->text_length,align_input->mm_allocator);
   if (align_input->check_bandwidth <= 0) {
     edit_dp_align(&score_matrix,
         align_input->pattern,align_input->pattern_length,
@@ -140,7 +140,7 @@ void benchmark_check_alignment_edit(
       cigar,score_correct);
   // Free
   score_matrix_free(&score_matrix);
-  cigar_free(cigar);
+  cigar_free(cigar,align_input->mm_allocator);
 }
 /*
  * Check

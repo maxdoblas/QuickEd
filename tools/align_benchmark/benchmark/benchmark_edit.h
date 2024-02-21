@@ -30,37 +30,32 @@
 /*
  * Benchmark Edit
  */
-void benchmark_edit_bpm(
+//void benchmark_edit_bpm(
+//    align_input_t* const align_input);
+//void benchmark_edit_bpm_banded(
+//    align_input_t* const align_input,
+//    const int bandwidth);
+//void benchmark_edit_bpm_banded_unaligned(
+//    align_input_t* const align_input,
+//    const int bandwidth);
+//void benchmark_edit_bpm_banded_blocking(
+//    align_input_t* const align_input,
+//    const int bandwidth);
+//void benchmark_edit_bpm_banded_cutoff(
+//    align_input_t* const align_input,
+//    const int bandwidth);
+//void benchmark_edit_bpm_banded_cutoff_score(
+//    align_input_t* const align_input,
+//    const int bandwidth);
+void benchmark_quicked(
     align_input_t* const align_input);
-void benchmark_edit_bpm_banded(
-    align_input_t* const align_input,
-    const int bandwidth);
-void benchmark_edit_bpm_banded_unaligned(
-    align_input_t* const align_input,
-    const int bandwidth);
-void benchmark_edit_bpm_banded_blocking(
-    align_input_t* const align_input,
-    const int bandwidth);
-void benchmark_edit_bpm_banded_cutoff(
-    align_input_t* const align_input,
-    const int bandwidth);
-void benchmark_edit_bpm_banded_cutoff_score(
-    align_input_t* const align_input,
-    const int bandwidth);
-void benchmark_edit_bpm_quicked(
-    align_input_t* const align_input);
-void benchmark_edit_bpm_windowed(
-    align_input_t* const align_input,
-    const int windowSize,
-    const int overlapSize,
-    const window_config_t window_config);
-void benchmark_edit_bpm_band_hirschberg(
-    align_input_t* const align_input,
-    const int bandwidth);
-void benchmark_edit_dp(
-    align_input_t* const align_input);
-void benchmark_edit_dp_banded(
-    align_input_t* const align_input,
-    const int bandwidth);
+//void benchmark_edit_bpm_band_hirschberg(
+//    align_input_t* const align_input,
+//    const int bandwidth);
+//void benchmark_edit_dp(
+//    align_input_t* const align_input);
+//void benchmark_edit_dp_banded(
+//    align_input_t* const align_input,
+//    const int bandwidth);
 
 #endif /* BENCHMARK_EDIT_H_ */

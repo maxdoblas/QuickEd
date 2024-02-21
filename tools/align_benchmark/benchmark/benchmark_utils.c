@@ -61,12 +61,6 @@ void benchmark_align_input_clear(
   counter_reset(&(align_input->align_ins));
 }
 
-void reverse_string(char* in_string, char* out_string, uint64_t lenght){
-  for(uint64_t i = 0; i<lenght; i++){
-    out_string[lenght-1-i] = in_string[i];
-  }
-}
-
 
 /*
  * Display
@@ -85,23 +79,23 @@ void benchmark_print_alignment(
   // Print CIGARS
   if (cigar_computed != NULL && score_computed != -1) {
     fprintf(stream,"    COMPUTED\tscore=%d\t",score_computed);
-    cigar_print(stream,cigar_computed,true);
+    cigar_print(stream,cigar_computed,true,align_input->mm_allocator);
     fprintf(stream,"\n");
   }
   if (cigar_computed != NULL) {
     cigar_print_pretty(stream,cigar_computed,
         align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length);
+        align_input->text,align_input->text_length,align_input->mm_allocator);
   }
   if (cigar_correct != NULL && score_correct != -1) {
     fprintf(stream,"    CORRECT \tscore=%d\t",score_correct);
-    cigar_print(stream,cigar_correct,true);
+    cigar_print(stream,cigar_correct,true,align_input->mm_allocator);
     fprintf(stream,"\n");
   }
   if (cigar_correct != NULL) {
     cigar_print_pretty(stream,cigar_correct,
         align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length);
+        align_input->text,align_input->text_length,align_input->mm_allocator);
   }
 }
 void benchmark_print_output_lite(
@@ -113,8 +107,9 @@ void benchmark_print_output_lite(
   const bool cigar_null = (cigar->begin_offset >= cigar->end_offset);
   char* cigar_str = NULL;
   if (!cigar_null) {
-    cigar_str = malloc(2*(cigar->end_offset-cigar->begin_offset)+10);
-    cigar_sprint(cigar_str,cigar,true);
+    int cigar_length = 2*(cigar->end_offset-cigar->begin_offset)+10;
+    cigar_str = malloc(cigar_length);
+    cigar_sprint(cigar_str,cigar_length,cigar,true);
   }
   // Print
   fprintf(stream,"%d\t%s\n",score,(cigar_null) ? "-" : cigar_str);
@@ -130,8 +125,9 @@ void benchmark_print_output_full(
   const bool cigar_null = (cigar->begin_offset >= cigar->end_offset);
   char* cigar_str = NULL;
   if (!cigar_null) {
+    int cigar_length = 2*(cigar->end_offset-cigar->begin_offset);
     cigar_str = malloc(2*(cigar->end_offset-cigar->begin_offset));
-    cigar_sprint(cigar_str,cigar,true);
+    cigar_sprint(cigar_str,cigar_length,cigar,true);
   }
   // Print
   fprintf(stream,"%d\t%d\t%d\t%s\t%s\t%s\n",
@@ -162,6 +158,26 @@ void benchmark_print_output(
       benchmark_print_output_full(align_input->output_file,align_input,score,cigar);
     } else {
       benchmark_print_output_lite(align_input->output_file,align_input,score,cigar);
+    }
+  }
+}
+void quicked_print_output(
+    align_input_t* const align_input,
+    const bool score_only,
+    char* const cigar,
+    int score) {
+  if (align_input->output_file) {
+    // Print summary
+    if (align_input->output_full) {
+      fprintf(align_input->output_file,"%d\t%d\t%d\t%s\t%s\t%s\n",
+              align_input->pattern_length,     // Pattern length
+              align_input->text_length,        // Text length
+              score,                           // Alignment score
+              align_input->pattern,            // Pattern sequence
+              align_input->text,               // Text sequence
+              (score_only) ? "-" : cigar); // CIGAR
+    } else {
+      fprintf(align_input->output_file,"%d\t%s\n",score,(score_only) ? "-" : cigar);
     }
   }
 }
