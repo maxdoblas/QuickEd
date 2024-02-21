@@ -105,7 +105,7 @@ void banded_matrix_allocate(
     const int64_t pattern_length,
     const int64_t text_length,
     const int64_t cutoff_score,
-    bool onlyScore,
+    bool only_score,
     mm_allocator_t *const mm_allocator)
 {
 
@@ -127,7 +127,7 @@ void banded_matrix_allocate(
 
     const int64_t num_words64 = banded_matrix->effective_bandwidth_blocks;
     // Allocate auxiliary matrix
-    const int64_t num_cols = (onlyScore ? 1 : (text_length + 1)); // Only 1 column if only score, or text_length + 1 columns
+    const int64_t num_cols = (only_score ? 1 : (text_length + 1)); // Only 1 column if only score, or text_length + 1 columns
     const int64_t aux_matrix_size = num_words64 * UINT64_SIZE * num_cols;
     uint64_t *const Pv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
     uint64_t *const Mv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
@@ -483,9 +483,9 @@ void banded_compute(
     const char* text,
     const int64_t text_length,
     const int64_t text_finish_pos,
-    const bool onlyScore)
+    const bool only_score)
 {
-    if (onlyScore)
+    if (only_score)
     {
         // Fill Matrix (Pv,Mv)
         bpm_compute_matrix_banded_cutoff_score(banded_matrix, banded_pattern, text, text_length, text_finish_pos);

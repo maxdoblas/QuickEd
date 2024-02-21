@@ -77,7 +77,7 @@ void banded_matrix_allocate(
     const int64_t pattern_length,
     const int64_t text_length,
     const int64_t cutoff_score,
-    bool onlyScore,
+    bool only_score,
     mm_allocator_t *const mm_allocator);
 
 void banded_matrix_free(
@@ -90,6 +90,6 @@ void banded_compute(
     const char* text,
     const int64_t text_length,
     const int64_t text_finish_pos,
-    const bool onlyScore);
+    const bool only_score);
 
 #endif /* BPM_BANDED_H_ */

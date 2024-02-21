@@ -94,9 +94,9 @@ void windowed_compute(
     windowed_pattern_t *const windowed_pattern,
     const char* text,
     const int hew_threshold,
-    const int windowSize,
-    const int overlapSize,
+    const int window_size,
+    const int overlap_size,
     const bool score_only,
-    const bool forceScalar);
+    const bool force_scalar);
 
 #endif /* BPM_WINDOWED_H_ */
