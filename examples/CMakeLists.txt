@@ -12,6 +12,7 @@ foreach (FILE ${FILE_LIST})
 
     # Add a test for each example. Although this is not proper testing, at least we can check that the example runs
     add_test(NAME test_example_${EXAMPLE} COMMAND $<TARGET_FILE:${EXAMPLE}>)
+    set_tests_properties(test_example_${EXAMPLE} PROPERTIES LABELS "examples")
     add_dependencies(examples ${EXAMPLE}) # 'examples' target depends from that executable
 endforeach ()
 
@@ -27,6 +28,7 @@ foreach (FILE ${FILE_LIST})
 
     # Add a test for each example. Although this is not proper testing, at least we can check that the example runs
     add_test(NAME test_binding_${EXAMPLE}_cpp COMMAND $<TARGET_FILE:binding_${EXAMPLE}_cpp>)
+    set_tests_properties(test_binding_${EXAMPLE}_cpp PROPERTIES LABELS "examples")
     add_dependencies(examples binding_${EXAMPLE}_cpp) # 'examples' target depends from that executable
 endforeach ()
 
@@ -37,5 +39,5 @@ foreach (FILE ${FILE_LIST})
 
     add_test(NAME test_binding_${EXAMPLE}_py COMMAND ${PYTHON_EXECUTABLE} ${FILE})
     set_tests_properties(test_binding_${EXAMPLE}_py PROPERTIES ENVIRONMENT PYTHONPATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-
+    set_tests_properties(test_binding_${EXAMPLE}_py PROPERTIES LABELS "examples")
 endforeach ()

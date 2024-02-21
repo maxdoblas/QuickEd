@@ -66,5 +66,5 @@ include_directories(${PROJECT_SOURCE_DIR}/utils/include) # To implcitly #include
 add_subdirectory(quicked)
 add_subdirectory(bindings)
 add_subdirectory(examples)
+add_subdirectory(tests)
 add_subdirectory(tools)
-#add_subdirectory(tools/align_benchmark/external/edlib EXCLUDE_FROM_ALL true)
