@@ -12,6 +12,8 @@ file(GLOB QUICKED_SRCS
 file(GLOB UTILS_SRCS
     "${PROJECT_SOURCE_DIR}/utils/src/commons.c"
     "${PROJECT_SOURCE_DIR}/utils/src/mm_allocator.c"
+    "${PROJECT_SOURCE_DIR}/utils/src/profiler_timer.c"
+    "${PROJECT_SOURCE_DIR}/utils/src/profiler_counter.c"
     "${PROJECT_SOURCE_DIR}/utils/src/vector.c"
     "${PROJECT_SOURCE_DIR}/utils/src/dna_text.c"
     "${PROJECT_SOURCE_DIR}/utils/src/cigar.c"

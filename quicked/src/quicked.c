@@ -27,6 +27,7 @@
 #include "bpm_windowed.h"
 #include "bpm_hirschberg.h"
 #include "utils/include/commons.h"
+#include "utils/include/profiler_timer.h"
 #include <stddef.h>
 
 void extract_results(
@@ -176,8 +177,8 @@ quicked_status_t run_quicked(
     windowed_matrix_t windowed_matrix;
     windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, QUICKED_FAST_WINDOW_SIZE);
 
-    // timer_start(&align_input->timer);
-    // timer_start(&align_input->timer_window_sse);
+    timer_start(aligner->timer);
+    timer_start(aligner->timer_windowed_s);
 
     // Align
     windowed_compute(&windowed_matrix, &windowed_pattern, text,
@@ -185,7 +186,7 @@ quicked_status_t run_quicked(
                     QUICKED_FAST_WINDOW_SIZE, QUICKED_FAST_WINDOW_OVERLAP,
                     SCORE_ONLY, aligner->params->forceScalar);
 
-    // timer_stop(&align_input->timer_window_sse);
+    timer_stop(aligner->timer_windowed_s);
 
     int64_t score = windowed_matrix.cigar->score;
 
@@ -196,7 +197,7 @@ quicked_status_t run_quicked(
     if((windowed_matrix.high_error_window * 64) >
         (MAX(text_len, pattern_len) * aligner->params->hewPercentage[0] / 100))
     {
-        // timer_start(&align_input->timer_window_6x2);
+        timer_start(aligner->timer_windowed_l);
 
         windowed_pattern_compile(&windowed_pattern, pattern, pattern_len, mm_allocator);
         windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, aligner->params->windowSize);
@@ -227,12 +228,12 @@ quicked_status_t run_quicked(
         windowed_pattern_free(&windowed_pattern, mm_allocator);
         windowed_matrix_free(&windowed_matrix, mm_allocator);
 
-        // timer_stop(&align_input->timer_window_6x2);
+        timer_stop(aligner->timer_windowed_l);
 
         if((high_error_window * 64 * (aligner->params->windowSize - aligner->params->overlapSize)) >
             (MAX(text_len, pattern_len) * aligner->params->hewPercentage[1] / 100))
         {
-            // timer_start(&align_input->timer_banded_15);
+            timer_start(aligner->timer_banded);
 
             banded_pattern_t banded_pattern;
             banded_matrix_t banded_matrix_score;
@@ -250,12 +251,12 @@ quicked_status_t run_quicked(
 
             banded_matrix_free(&banded_matrix_score, mm_allocator);
 
-            // timer_stop(&align_input->timer_banded_15);
+            timer_stop(aligner->timer_banded);
 
             while((new_score > MAX(text_len, pattern_len) / 4 && score * 3/2 < new_score) || new_score < 0)
             {
                 score *= 2;
-                // timer_start(&align_input->timer_banded_30);
+                timer_start(aligner->timer_banded);
 
                 banded_matrix_allocate(&banded_matrix_score, pattern_len, text_len, score, SCORE_ONLY, mm_allocator);
 
@@ -267,7 +268,7 @@ quicked_status_t run_quicked(
 
                 banded_matrix_free(&banded_matrix_score, mm_allocator);
 
-                // timer_stop(&align_input->timer_banded_30);
+                timer_stop(aligner->timer_banded);
                             }
 
             score = new_score;
@@ -275,7 +276,7 @@ quicked_status_t run_quicked(
         }
     }
 
-    // timer_start(&align_input->timer_banded_hirschberg);
+    timer_start(aligner->timer_align);
 
     cigar_t cigar_out;
     cigar_out.operations = (char *)  mm_allocator_malloc(aligner->mm_allocator, (pattern_len + text_len) * sizeof(char));
@@ -285,8 +286,8 @@ quicked_status_t run_quicked(
     bpm_compute_matrix_hirschberg(text, text_r, text_len, pattern, pattern_r, pattern_len,
                                   score, &cigar_out, mm_allocator);
 
-    // timer_stop(&align_input->timer_banded_hirschberg);
-    // timer_stop(&align_input->timer);
+    timer_stop(aligner->timer_align);
+    timer_stop(aligner->timer);
 
     // benchmark_print_output(align_input, false, &cigar_out);
     // align_input->diff_scores = (float)(score - cigar_out.score) / (float)(MAX(align_input->text_length, align_input->pattern_length));
@@ -309,6 +310,7 @@ quicked_params_t quicked_default_params()
         .hewPercentage = {15, 15},
         .overlapSize = 1,
         .forceScalar = false,
+        .external_timer = false,
     };
 }
 
@@ -321,6 +323,21 @@ quicked_status_t quicked_new(
     aligner->cigar = NULL;
     aligner->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);
 
+    if(!params->external_timer){
+        aligner->timer = mm_allocator_malloc(aligner->mm_allocator, sizeof(profiler_timer_t));
+        aligner->timer_windowed_s = mm_allocator_malloc(aligner->mm_allocator, sizeof(profiler_timer_t));
+        aligner->timer_windowed_l = mm_allocator_malloc(aligner->mm_allocator, sizeof(profiler_timer_t));
+        aligner->timer_banded = mm_allocator_malloc(aligner->mm_allocator, sizeof(profiler_timer_t));
+        aligner->timer_align = mm_allocator_malloc(aligner->mm_allocator, sizeof(profiler_timer_t));
+
+        timer_reset(aligner->timer);
+        timer_reset(aligner->timer_windowed_s);
+        timer_reset(aligner->timer_windowed_l);
+        timer_reset(aligner->timer_banded);
+        timer_reset(aligner->timer_align);
+    }
+
+
     return QUICKED_WIP;
 }
 
@@ -331,6 +348,14 @@ quicked_status_t quicked_free(
     {
         mm_allocator_free(aligner->mm_allocator, aligner->cigar);
         aligner->cigar = NULL;
+    }
+
+    if(!aligner->params->external_timer){
+        mm_allocator_free(aligner->mm_allocator, aligner->timer);
+        mm_allocator_free(aligner->mm_allocator, aligner->timer_windowed_s);
+        mm_allocator_free(aligner->mm_allocator, aligner->timer_windowed_l);
+        mm_allocator_free(aligner->mm_allocator, aligner->timer_banded);
+        mm_allocator_free(aligner->mm_allocator, aligner->timer_align);
     }
 
     if (aligner->mm_allocator != NULL)

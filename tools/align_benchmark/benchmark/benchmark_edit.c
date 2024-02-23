@@ -118,10 +118,17 @@ void benchmark_quicked(
   
   quicked_aligner_t aligner;                          // Aligner object
   quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
+  params.external_timer = true;
 
   quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
   const int max_cigar_length = align_input->pattern_length + align_input->text_length;
   cigar_t* const cigar = cigar_new(2*max_cigar_length,align_input->mm_allocator);
+
+  aligner.timer = &align_input->timer;
+  aligner.timer_windowed_s = &align_input->timer_windowed_s;
+  aligner.timer_windowed_l = &align_input->timer_windowed_l;
+  aligner.timer_banded = &align_input->timer_banded;
+  aligner.timer_align = &align_input->timer_align;
   
   // Align
   timer_start(&align_input->timer);

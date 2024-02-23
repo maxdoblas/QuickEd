@@ -26,6 +26,7 @@
 #define QUICKED_H
 
 #include "utils/include/mm_allocator.h"
+#include "utils/include/profiler_timer.h"
 #include <stdbool.h>
 
 #define QUICKED_WINDOW_STAGES 2 // Number of window sizes to go through before doing banded
@@ -49,6 +50,7 @@ typedef struct quicked_params_t {
     unsigned int hewPercentage[QUICKED_WINDOW_STAGES];
     bool onlyScore;
     bool forceScalar;
+    bool external_timer;
 } quicked_params_t;
 
 typedef struct quicked_aligner_t {
@@ -56,6 +58,12 @@ typedef struct quicked_aligner_t {
     mm_allocator_t *mm_allocator;
     char* cigar;
     int score;
+    // Profiling
+    profiler_timer_t *timer;
+    profiler_timer_t *timer_windowed_s;
+    profiler_timer_t *timer_windowed_l;
+    profiler_timer_t *timer_banded;
+    profiler_timer_t *timer_align;
 } quicked_aligner_t;
 
 typedef enum quicked_status_t {
