@@ -23,17 +23,30 @@
  */
 
 #include <quicked.h>
+#include <stdlib.h>
+#include <string.h>
 
-int main(void) {
-    // TODO: Enable when error handling for this case is implemented
-    // quicked_aligner_t aligner;
-    // quicked_params_t params = quicked_default_params();
+int main(int argc, char *argv[]) { // Usage: ./quicked_harness <text> <pattern> <expected score>
 
-    // quicked_new(&aligner, &params);
+    quicked_aligner_t aligner;
+    quicked_params_t params = quicked_default_params();
 
-    // quicked_align(&aligner, "", 0, "", 0);
+    quicked_new(&aligner, &params);
 
-    // quicked_free(&aligner);
+    quicked_align(&aligner, argv[1], strlen(argv[1]), argv[2], strlen(argv[2]));
+
+    int score = aligner.score;
+    printf("Got score: %d\n", score);
+
+    quicked_free(&aligner);
+
+    if (argc == 4) { // If expected score is provided, check if it matches
+        printf("Expected score: %d", atoi(argv[3]));
+        if (score != atoi(argv[3])) {
+            printf("<FAIL>\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     return 0;
 }

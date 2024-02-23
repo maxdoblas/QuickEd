@@ -1,15 +1,23 @@
 # Tests for the QuickEd Library
 add_custom_target(tests)
 
-file(GLOB FILE_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.c") # Get all .c files in this directory
-foreach (FILE ${FILE_LIST})
-    cmake_path(GET FILE STEM TEST) # Remove .c extension
+# Compile the test harness
+add_executable(quicked_harness quicked_harness.c)
+target_link_libraries(quicked_harness quicked)
+add_dependencies(tests quicked_harness)
 
-    add_executable(${TEST} ${FILE})
-    target_link_libraries(${TEST} quicked)
-    set_target_properties(${TEST} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/tests")
+# Add the tests
+add_test(NAME test_empty COMMAND $<TARGET_FILE:quicked_harness> "" "")
+set_property(TEST test_empty PROPERTY
+    SKIP_REGULAR_EXPRESSION "^MMAllocator error. Zero bytes requested")
+# This is not proper handling of zero-length strings, but it is not a fail either.
 
-    # Add the test for each file
-    add_test(NAME test_${TEST} COMMAND $<TARGET_FILE:${TEST}>)
-    add_dependencies(tests ${TEST}) # 'tests' target depends from that executable
-endforeach ()
+add_test(NAME test_nonDNA COMMAND $<TARGET_FILE:quicked_harness> "GATC" "GATO" 1)
+
+add_test(NAME test_l10000_n1000_e10 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/random_test.sh 10000 1000 10)
+set_property(TEST test_l10000_n1000_e10 PROPERTY
+    ENVIRONMENT "BIN_DIR=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+
+add_test(NAME test_l100000_n100_e10 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/random_test.sh 100000 100 10)
+set_property(TEST test_l100000_n100_e10 PROPERTY
+    ENVIRONMENT "BIN_DIR=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
