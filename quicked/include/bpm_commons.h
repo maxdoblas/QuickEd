@@ -33,6 +33,7 @@
 #define BPM_W64_SIZE UINT64_SIZE
 #define BPM_W64_ONES UINT64_MAX
 #define BPM_W64_MASK (1ull << 63)
+#define SCORE_ONLY true
 
 /*
  * Pattern Accessors

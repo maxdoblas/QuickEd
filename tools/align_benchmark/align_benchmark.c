@@ -185,12 +185,12 @@ void align_benchmark_run_algorithm(
       benchmark_quicked(align_input);
       break;
     case alignment_edit_banded:
-      benchmark_quicked(align_input);
-      break;
-    case alignment_edit_banded_hirschberg:
-      benchmark_quicked(align_input);
+      benchmark_banded(align_input,parameters.bandwidth,false);
       break;
     case alignment_edit_banded_score:
+      benchmark_banded(align_input,parameters.bandwidth,true);
+      break;
+    case alignment_edit_banded_hirschberg:
       benchmark_quicked(align_input);
       break;
     case alignment_edit_quicked:

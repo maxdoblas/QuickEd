@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include "vector.h"
+#include <sys/mman.h>
 
 /*
  * Configuration

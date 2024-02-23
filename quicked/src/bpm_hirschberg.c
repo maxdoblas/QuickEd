@@ -82,20 +82,20 @@ void bpm_compute_matrix_hirschberg(
         // Compute left side (for getting the central column)
         banded_matrix_allocate(
             &banded_matrix, pattern_length,
-            text_length, cutoff_score, true, mm_allocator);
+            text_length, cutoff_score, SCORE_ONLY, mm_allocator);
 
         banded_compute(
             &banded_matrix, &banded_pattern, text,
-            text_length, text_len, true);
+            text_length, text_len, SCORE_ONLY);
 
         // Compute right side (for getting the central column)
         banded_matrix_allocate(
             &banded_matrix_r, pattern_length,
-            text_length, cutoff_score, true, mm_allocator);
+            text_length, cutoff_score, SCORE_ONLY, mm_allocator);
 
         banded_compute(
             &banded_matrix_r, &banded_pattern_r, text_r,
-            text_length, text_len_r, true);
+            text_length, text_len_r, SCORE_ONLY);
 
         // vertival position of the first blocks computed on each aligments
         int64_t first_block_band_pos_v = text_len < prolog_column_blocks * BPM_W64_LENGTH ? 0 : (text_len / BPM_W64_LENGTH) - (prolog_column_blocks);

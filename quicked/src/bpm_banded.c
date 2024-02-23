@@ -27,6 +27,7 @@
 #include "utils/include/dna_text.h"
 #include "bpm_banded.h"
 #include "bpm_commons.h"
+#include <sys/mman.h>
 
 void banded_pattern_compile(
     banded_pattern_t *const banded_pattern,
@@ -129,8 +130,23 @@ void banded_matrix_allocate(
     // Allocate auxiliary matrix
     const int64_t num_cols = (only_score ? 1 : (text_length + 1)); // Only 1 column if only score, or text_length + 1 columns
     const int64_t aux_matrix_size = num_words64 * UINT64_SIZE * num_cols;
-    uint64_t *const Pv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
-    uint64_t *const Mv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
+    uint64_t * Pv;
+    uint64_t * Mv;
+    if (aux_matrix_size > BUFFER_SIZE_256K){
+        Pv = (uint64_t *)mm_allocator_allocate(mm_allocator, aux_matrix_size,false,BUFFER_SIZE_2M);
+        Mv = (uint64_t *)mm_allocator_allocate(mm_allocator, aux_matrix_size,false,BUFFER_SIZE_2M);
+        if (madvise(Pv, aux_matrix_size, MADV_HUGEPAGE) == -1) {
+            perror("madvise");
+            exit(EXIT_FAILURE);
+        }
+        if (madvise(Mv, aux_matrix_size, MADV_HUGEPAGE) == -1) {
+            perror("madvise");
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        Pv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
+        Mv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
+    }
     int64_t *const scores = (int64_t *)mm_allocator_malloc(mm_allocator, (DIV_CEIL(pattern_length, BPM_W64_LENGTH) + num_words64 / 2) * UINT64_SIZE);
     banded_matrix->Mv = Mv;
     banded_matrix->Pv = Pv;

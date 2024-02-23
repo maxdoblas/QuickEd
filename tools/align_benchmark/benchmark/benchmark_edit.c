@@ -30,55 +30,6 @@
 
 #define BPM_W64_LENGTH UINT64_LENGTH
 
-/*
- * Adapt CIGAR
- */
-void adapt_cigar_quicked(
-    const int pattern_length,
-    const int text_length,
-    char* const scooge_cigar,
-    cigar_t* const cigar) {
-  // Init
-  int num_edit_operations = 0;
-  // Decode all CIGAR operations
-  const int cigar_length = strlen(scooge_cigar);
-  int chars_read = 0, plen = 0, tlen = 0;
-  int length, n, i;
-  char operation;
-  while (chars_read < cigar_length) {
-    // Read operation
-    sscanf(scooge_cigar+chars_read,"%d%c%n",&length,&operation,&n);
-    chars_read += n;
-    // Adapt operation encoding
-    if (operation=='=' || operation=='M') {
-      operation = 'M'; plen+=length; tlen+=length;
-    } else if (operation=='X') {
-      operation = 'X'; plen+=length; tlen+=length;
-    } else if (operation=='D') {
-      operation = 'I'; tlen+=length;
-    } else if (operation=='I') {
-      operation = 'D'; plen+=length;
-    } else {
-      fprintf(stderr,"[Scrooge] Computing CIGAR score: Unknown operation '%c'\n",operation);
-      exit(1);
-    }
-    // Dump operation
-    for (i=0;i<length;++i) {
-      cigar->operations[num_edit_operations++] = operation;
-    }
-  }
-  // Add final indel
-  if (plen < pattern_length) {
-    for (i=0;i<pattern_length-plen;++i) {
-      cigar->operations[num_edit_operations++] = 'D';
-    }
-  }
-  if (tlen < text_length) {
-    for (i=0;i<text_length-tlen;++i) {
-      cigar->operations[num_edit_operations++] = 'I';
-    }
-  }
-}
 
 /*
  * Benchmark Edit
@@ -119,10 +70,11 @@ void benchmark_quicked(
   quicked_aligner_t aligner;                          // Aligner object
   quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
   params.external_timer = true;
+  params.external_allocator = align_input->mm_allocator;
 
   quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
   const int max_cigar_length = align_input->pattern_length + align_input->text_length;
-  cigar_t* const cigar = cigar_new(2*max_cigar_length,align_input->mm_allocator);
+  //cigar_t* const cigar = cigar_new(2*max_cigar_length,align_input->mm_allocator);
 
   aligner.timer = &align_input->timer;
   aligner.timer_windowed_s = &align_input->timer_windowed_s;
@@ -131,14 +83,47 @@ void benchmark_quicked(
   aligner.timer_align = &align_input->timer_align;
   
   // Align
-  timer_start(&align_input->timer);
-
   quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
   
-  timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) { // TODO
-    benchmark_check_alignment(align_input,cigar);
+    //benchmark_check_alignment(align_input,cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    quicked_print_output(align_input,false,aligner.cigar,aligner.score);
+  }
+  // Free
+  quicked_free(&aligner);                 // Free whatever memory the aligner allocated
+
+}
+
+void benchmark_banded(
+    align_input_t* const align_input, const int bandwidth, const int only_score) {
+  
+  quicked_aligner_t aligner;                          // Aligner object
+  quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
+  params.external_timer = true;
+
+  params.algo = BANDED;                               // Select the algorithm: Banded
+  params.onlyScore = only_score;                       // Banded needs a bandwidth
+  params.bandwidth = bandwidth;                       // Banded needs a bandwidth
+  params.external_allocator = align_input->mm_allocator;
+
+  quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
+
+  aligner.timer = &align_input->timer;
+  aligner.timer_windowed_s = &align_input->timer_windowed_s;
+  aligner.timer_windowed_l = &align_input->timer_windowed_l;
+  aligner.timer_banded = &align_input->timer_banded;
+  aligner.timer_align = &align_input->timer_align;
+  
+  // Align
+  quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
+  
+  // DEBUG
+  if (align_input->debug_flags) { // TODO
+    // benchmark_check_alignment(align_input,cigar);
   }
   // Output
   if (align_input->output_file) {

@@ -32,7 +32,6 @@
 #define QUICKED_WINDOW_STAGES 2 // Number of window sizes to go through before doing banded
 #define QUICKED_FAST_WINDOW_SIZE 2
 #define QUICKED_FAST_WINDOW_OVERLAP 1
-#define SCORE_ONLY true
 
 typedef enum {
     QUICKED,
@@ -51,6 +50,7 @@ typedef struct quicked_params_t {
     bool onlyScore;
     bool force_scalar;
     bool external_timer;
+    mm_allocator_t *external_allocator;
 } quicked_params_t;
 
 typedef struct quicked_aligner_t {

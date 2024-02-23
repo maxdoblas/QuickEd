@@ -48,7 +48,7 @@ cd build
 ctest -T memcheck
 ```
 
-**Note:** Valgrind runs will fail for any test that uses SSE4.1 intrinsics (i.e. any test that uses either WINDOWED 2x1 or QUICKED, without forceScalar).
+**Note:** Valgrind runs will fail for any test that uses SSE4.1 intrinsics (i.e. any test that uses either WINDOWED 2x1 or QUICKED, without force_scalar).
 This is expected behaviour.
 
 ### AddressSanitizer and UndefinedBehaviorSanitizer
@@ -61,5 +61,5 @@ cmake -DCMAKE_BUILD_TYPE=Debug -DASAN=ON ..
 make
 ```
 
-**Note:** ASAN and UBSAN runs will fail for any test that uses SSE4.1 intrinsics (i.e. any test that uses either WINDOWED 2x1 or QUICKED, without forceScalar) or the Python binding.
+**Note:** ASAN and UBSAN runs will fail for any test that uses SSE4.1 intrinsics (i.e. any test that uses either WINDOWED 2x1 or QUICKED, without force_scalar) or the Python binding.
 This is expected behaviour.

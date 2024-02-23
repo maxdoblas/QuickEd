@@ -24,6 +24,7 @@
 
 #include "quicked.h"
 #include "bpm_banded.h"
+#include "bpm_commons.h"
 #include "bpm_windowed.h"
 #include "bpm_hirschberg.h"
 #include "utils/include/commons.h"
@@ -72,9 +73,9 @@ quicked_status_t run_banded(
     banded_matrix_allocate(&banded_matrix, pattern_len, text_len, cutoff_score, aligner->params->onlyScore, mm_allocator);
 
     // Align
-    // timer_start(&timer);
+    timer_start(aligner->timer);
     banded_compute(&banded_matrix, &banded_pattern, text, text_len, text_len, aligner->params->onlyScore);
-    // timer_stop(&timer);
+    timer_stop(aligner->timer);
 
     // Retrieve results
     extract_results(aligner, banded_matrix.cigar);
@@ -217,7 +218,7 @@ quicked_status_t run_quicked(
         windowed_pattern_compile(&windowed_pattern, pattern_r, pattern_len, mm_allocator);
         windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, aligner->params->window_size);
 
-        windowed_compute(&windowed_matrix, &windowed_pattern, text,
+        windowed_compute(&windowed_matrix, &windowed_pattern, text_r,
                 aligner->params->hewThreshold[1],
                 aligner->params->window_size, aligner->params->overlap_size,
                 SCORE_ONLY, aligner->params->force_scalar);
@@ -269,7 +270,7 @@ quicked_status_t run_quicked(
                 banded_matrix_free(&banded_matrix_score, mm_allocator);
 
                 timer_stop(aligner->timer_banded);
-                            }
+            }
 
             score = new_score;
             banded_pattern_free(&banded_pattern, mm_allocator);
@@ -295,6 +296,8 @@ quicked_status_t run_quicked(
     extract_results(aligner, &cigar_out);
 
     mm_allocator_free(mm_allocator, cigar_out.operations);
+    mm_allocator_free(mm_allocator,text_r);
+    mm_allocator_free(mm_allocator,pattern_r);
 
     return QUICKED_WIP;
 }
@@ -321,7 +324,11 @@ quicked_status_t quicked_new(
     aligner->params = params;
     aligner->score = -1;
     aligner->cigar = NULL;
-    aligner->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);
+    if(params->external_allocator == NULL){
+        aligner->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);
+    }else {
+        aligner->mm_allocator = params->external_allocator;
+    }
 
     if(!params->external_timer){
         aligner->timer = mm_allocator_malloc(aligner->mm_allocator, sizeof(profiler_timer_t));
@@ -358,7 +365,7 @@ quicked_status_t quicked_free(
         mm_allocator_free(aligner->mm_allocator, aligner->timer_align);
     }
 
-    if (aligner->mm_allocator != NULL)
+    if ((aligner->mm_allocator != NULL) && (aligner->params->external_allocator == NULL))
     {
         mm_allocator_delete(aligner->mm_allocator);
         aligner->mm_allocator = NULL;
