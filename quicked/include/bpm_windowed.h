@@ -81,7 +81,7 @@ void windowed_matrix_allocate(
     const uint64_t pattern_length,
     const uint64_t text_length,
     mm_allocator_t *const mm_allocator,
-    const int windowSize);
+    const int window_size);
 void windowed_matrix_free(
     windowed_matrix_t *const windowed_matrix,
     mm_allocator_t *const mm_allocator);

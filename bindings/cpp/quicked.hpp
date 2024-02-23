@@ -44,9 +44,9 @@ namespace quicked {
         void setAlgorithm(quicked_algo_t algo)          { this->aligner.params->algo = algo; };
         void setOnlyScore(bool onlyScore)              { this->aligner.params->onlyScore = onlyScore; };
         void setBandwidth(unsigned int bandwidth)       { this->aligner.params->bandwidth = bandwidth; };
-        void setWindowSize(unsigned int windowSize)    { this->aligner.params->windowSize = windowSize; };
-        void setOverlapSize(unsigned int overlapSize)  { this->aligner.params->overlapSize = overlapSize; };
-        void setForceScalar(bool forceScalar)          { this->aligner.params->forceScalar = forceScalar; };
+        void setWindowSize(unsigned int window_size)    { this->aligner.params->window_size = window_size; };
+        void setOverlapSize(unsigned int overlap_size)  { this->aligner.params->overlap_size = overlap_size; };
+        void setForceScalar(bool force_scalar)          { this->aligner.params->force_scalar = force_scalar; };
 
         int getScore()          { return this->aligner.score; }
         std::string getCigar()  { return std::string((this->aligner.cigar) ? this->aligner.cigar : "NULL"); }

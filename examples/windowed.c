@@ -31,15 +31,15 @@ int main(void) {
     quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters
 
     params.algo = WINDOWED;                             // Select the algorithm: Windowed
-    params.windowSize = 2;                              // Windowed needs a window size
+    params.window_size = 2;                              // Windowed needs a window size
                                                         //  2x2 (Default: 2x2)
-    params.overlapSize = 1;                             // Windowed needs an overlap size
+    params.overlap_size = 1;                             // Windowed needs an overlap size
                                                         //  1 (Default: 1)
 
     // This specific configuration (2x2, overlap 1) has an SSE4.1 implementation.
     // This is transparent to the user, and will be used if the CPU supports it.
 
-    params.forceScalar = true;                          // However, one can force the scalar implementation
+    params.force_scalar = true;                          // However, one can force the scalar implementation
                                                         //  This is useful for testing purposes
 
     quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters

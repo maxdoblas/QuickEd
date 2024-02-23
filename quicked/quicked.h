@@ -44,12 +44,12 @@ typedef enum {
 typedef struct quicked_params_t {
     quicked_algo_t algo;
     unsigned int bandwidth;
-    unsigned int windowSize;
-    unsigned int overlapSize;
+    unsigned int window_size;
+    unsigned int overlap_size;
     unsigned int hewThreshold[QUICKED_WINDOW_STAGES];
     unsigned int hewPercentage[QUICKED_WINDOW_STAGES];
     bool onlyScore;
-    bool forceScalar;
+    bool force_scalar;
     bool external_timer;
 } quicked_params_t;
 

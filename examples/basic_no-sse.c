@@ -30,7 +30,7 @@ int main(void) {
     quicked_aligner_t aligner;                          // Aligner object
     quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
 
-    params.forceScalar = true;                          // Force the aligner to use scalar code instead of SSE4.1
+    params.force_scalar = true;                          // Force the aligner to use scalar code instead of SSE4.1
 
     // Without any extra configuration, the aligner will use the Quicked algorithm
 
