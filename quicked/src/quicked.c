@@ -35,7 +35,7 @@ void extract_results(
     quicked_aligner_t *aligner,
     cigar_t *const cigar)
 {
-    if (aligner->params->onlyScore)
+    if (aligner->params->only_score)
     {
         // Precomputed score
         aligner->score = cigar->score;
@@ -70,11 +70,11 @@ quicked_status_t run_banded(
     banded_pattern_compile(&banded_pattern, pattern, pattern_len, mm_allocator);
 
     banded_matrix_t banded_matrix;
-    banded_matrix_allocate(&banded_matrix, pattern_len, text_len, cutoff_score, aligner->params->onlyScore, mm_allocator);
+    banded_matrix_allocate(&banded_matrix, pattern_len, text_len, cutoff_score, aligner->params->only_score, mm_allocator);
 
     // Align
     timer_start(aligner->timer);
-    banded_compute(&banded_matrix, &banded_pattern, text, text_len, text_len, aligner->params->onlyScore);
+    banded_compute(&banded_matrix, &banded_pattern, text, text_len, text_len, aligner->params->only_score);
     timer_stop(aligner->timer);
 
     // Retrieve results
@@ -106,10 +106,11 @@ quicked_status_t run_windowed(
     windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, window_size);
 
     // Align
-    // timer_start(&timer);
+    timer_start(aligner->timer);
     windowed_compute(&windowed_matrix, &windowed_pattern, text, 0, window_size, overlap_size,
-                     aligner->params->onlyScore, aligner->params->force_scalar);
-    // timer_stop(&timer);
+                     aligner->params->only_score, aligner->params->force_scalar);
+    timer_stop(aligner->timer);
+
 
     // Retrieve results
     extract_results(aligner, windowed_matrix.cigar);
@@ -144,16 +145,18 @@ quicked_status_t run_hirschberg(
     cigar_out.end_offset = pattern_len + text_len;
 
     // Align
-    // timer_start(&timer);
+    timer_start(aligner->timer);
     bpm_compute_matrix_hirschberg(text, text_r, text_len, pattern, pattern_r, pattern_len,
                                   cutoff_score, &cigar_out, mm_allocator);
-    // timer_stop(&timer);
+    timer_stop(aligner->timer);
 
     // Retrieve results
     extract_results(aligner, &cigar_out);
 
     // Free
     mm_allocator_free(mm_allocator, cigar_out.operations);
+    mm_allocator_free(mm_allocator, pattern_r);
+    mm_allocator_free(mm_allocator, text_r);
     return QUICKED_WIP;
 }
 
@@ -183,7 +186,7 @@ quicked_status_t run_quicked(
 
     // Align
     windowed_compute(&windowed_matrix, &windowed_pattern, text,
-                    aligner->params->hewThreshold[0],
+                    aligner->params->hew_threshold[0],
                     QUICKED_FAST_WINDOW_SIZE, QUICKED_FAST_WINDOW_OVERLAP,
                     SCORE_ONLY, aligner->params->force_scalar);
 
@@ -196,7 +199,7 @@ quicked_status_t run_quicked(
     windowed_matrix_free(&windowed_matrix, mm_allocator);
 
     if((windowed_matrix.high_error_window * 64) >
-        (MAX(text_len, pattern_len) * aligner->params->hewPercentage[0] / 100))
+        (MAX(text_len, pattern_len) * aligner->params->hew_percentage[0] / 100))
     {
         timer_start(aligner->timer_windowed_l);
 
@@ -204,7 +207,7 @@ quicked_status_t run_quicked(
         windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, aligner->params->window_size);
 
         windowed_compute(&windowed_matrix, &windowed_pattern, text,
-                aligner->params->hewThreshold[1],
+                aligner->params->hew_threshold[1],
                 aligner->params->window_size, aligner->params->overlap_size,
                 SCORE_ONLY, aligner->params->force_scalar);
 
@@ -219,7 +222,7 @@ quicked_status_t run_quicked(
         windowed_matrix_allocate(&windowed_matrix, pattern_len, text_len, mm_allocator, aligner->params->window_size);
 
         windowed_compute(&windowed_matrix, &windowed_pattern, text_r,
-                aligner->params->hewThreshold[1],
+                aligner->params->hew_threshold[1],
                 aligner->params->window_size, aligner->params->overlap_size,
                 SCORE_ONLY, aligner->params->force_scalar);
 
@@ -232,7 +235,7 @@ quicked_status_t run_quicked(
         timer_stop(aligner->timer_windowed_l);
 
         if((high_error_window * 64 * (aligner->params->window_size - aligner->params->overlap_size)) >
-            (MAX(text_len, pattern_len) * aligner->params->hewPercentage[1] / 100))
+            (MAX(text_len, pattern_len) * aligner->params->hew_percentage[1] / 100))
         {
             timer_start(aligner->timer_banded);
 
@@ -306,11 +309,11 @@ quicked_params_t quicked_default_params()
 {
     return (quicked_params_t){
         .algo = QUICKED,
-        .onlyScore = false,
+        .only_score = false,
         .bandwidth = 15,
         .window_size = 9,
-        .hewThreshold = {40, 40},
-        .hewPercentage = {15, 15},
+        .hew_threshold = {40, 40},
+        .hew_percentage = {15, 15},
         .overlap_size = 1,
         .force_scalar = false,
         .external_timer = false,

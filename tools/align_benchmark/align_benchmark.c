@@ -179,22 +179,22 @@ void align_benchmark_run_algorithm(
 //      benchmark_edit_dp_banded(align_input,parameters.bandwidth);
 //      break;
     case alignment_edit_bpm:
-      benchmark_quicked(align_input);
+      //benchmark_quicked(align_input);
       break;
     case alignment_edit_windowed:
-      benchmark_quicked(align_input);
+      benchmark_windowed(align_input,parameters.window_size, parameters.overlap_size,
+                          parameters.force_scalar, parameters.only_score);
       break;
     case alignment_edit_banded:
-      benchmark_banded(align_input,parameters.bandwidth,false);
-      break;
-    case alignment_edit_banded_score:
-      benchmark_banded(align_input,parameters.bandwidth,true);
+      benchmark_banded(align_input,parameters.bandwidth, parameters.only_score);
       break;
     case alignment_edit_banded_hirschberg:
-      benchmark_quicked(align_input);
+      benchmark_hirschberg(align_input,parameters.bandwidth);
       break;
     case alignment_edit_quicked:
-      benchmark_quicked(align_input);
+      benchmark_quicked(align_input,parameters.window_size,parameters.overlap_size,
+                        parameters.bandwidth, parameters.force_scalar, parameters.hew_threshold,
+                        parameters.hew_percentage);
       break;
     default:
       fprintf(stderr,"Algorithm not implemented\n");

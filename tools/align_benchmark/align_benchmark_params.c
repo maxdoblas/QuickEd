@@ -48,9 +48,13 @@ align_bench_params_t parameters = {
   .pattern_end_free = 0.0,
   .text_end_free = 0.0,
   // Other algorithms parameters
-  .bandwidth = -1,
-  .window_size = -1,
-  .overlap_size = -1,
+  .bandwidth = 15,
+  .window_size = 9,
+  .overlap_size = 1,
+  .hew_percentage = 15,
+  .hew_threshold = 40,
+  .force_scalar = false,
+  .only_score = false,
   // Misc
   .check_bandwidth = -1,
   .check_display = false,
@@ -76,9 +80,8 @@ void usage() {
       "            [Edit (Levenshtein)]                                        \n"
       "              quicked                                                   \n"
       "              edit-bpm                                                  \n"
-      "              edit-bpm-banded-cutoff                                    \n"
-      "              edit-bpm-banded-cutoff-score                              \n"
-      "              edit-bpm-windowed                                         \n"
+      "              edit-banded                                               \n"
+      "              edit-windowed                                             \n"
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
       "        [Input & Output]                                                \n"
@@ -91,7 +94,9 @@ void usage() {
       "          --bandwidth INT                                               \n"
       "          --window-size INT                                             \n"
       "          --overlap-size INT                                            \n"
-      "          --window-config 'aligned'|'unaligned'|'sse'                   \n"
+      "          --hew-threshold INT                                           \n"
+      "          --hew-prercentage INT                                         \n"
+      "          --force-scalar                                                \n"
       "        [Misc]                                                          \n"
       "          --check|c 'correct'|'score'|'alignment'                       \n"
       "          --check-bandwidth INT                                         \n"
@@ -122,7 +127,10 @@ void parse_arguments(
     { "bandwidth", required_argument, 0, 2000 },
     { "window-size", required_argument, 0, 2001 },
     { "overlap-size", required_argument, 0, 2002 },
-    { "window-config", required_argument, 0, 2003 },
+    { "hew-threshold", required_argument, 0, 2003 },
+    { "hew-percentage", required_argument, 0, 2004 },
+    { "force-scalar", no_argument, 0, 2005 },
+    { "only-score", no_argument, 0, 2006 },
     /* Misc */
     { "check", required_argument, 0, 'c' },
     { "check-bandwidth", required_argument, 0, 3002 },
@@ -212,7 +220,17 @@ void parse_arguments(
     case 2002: // --overlap-size
       parameters.overlap_size = atoi(optarg);
       break;
-    case 2003: // --window-force-scalar
+    case 2003: // --hew-threshold
+      parameters.hew_threshold = atoi(optarg);
+      break;
+    case 2004: // --hew-percentage
+      parameters.hew_percentage = atoi(optarg);
+      break;
+    case 2005: // --force-scalar
+      parameters.force_scalar = true;
+      break;
+    case 2006: // --only-score
+      parameters.only_score = true;
       break;
     /*
      * Misc
@@ -299,21 +317,8 @@ void parse_arguments(
         fprintf(stderr,"Parameter 'bandwidth' has to be > 0\n");
         exit(1);
       }
-      if (parameters.window_size != -1) {
-        fprintf(stderr,"Parameter 'window-size' has no effect with the selected algorithm\n");
-        exit(1);
-      }
-      if (parameters.overlap_size != -1) {
-        fprintf(stderr,"Parameter 'overlap-size' has no effect with the selected algorithm\n");
-        exit(1);
-      }
       break;
     case alignment_edit_windowed:
-      if (parameters.bandwidth != -1) {
-        fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
-        exit(1);
-      }
-
       if (parameters.window_size == -1) {
         fprintf(stderr,"Parameter 'window-size' has to be provided for banded algorithms\n");
         exit(1);
@@ -331,18 +336,6 @@ void parse_arguments(
       }
       break;
     default:
-      if (parameters.bandwidth != -1) {
-        fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
-        exit(1);
-      }
-      if (parameters.window_size != -1) {
-        fprintf(stderr,"Parameter 'window-size' has no effect with the selected algorithm\n");
-        exit(1);
-      }
-      if (parameters.overlap_size != -1) {
-        fprintf(stderr,"Parameter 'overlap-size' has no effect with the selected algorithm\n");
-        exit(1);
-      }
       break;
   }
   // Checks parallel

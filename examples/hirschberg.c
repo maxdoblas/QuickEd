@@ -31,7 +31,7 @@ int main(void) {
     quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters
 
     params.algo = HIRSCHBERG;                           // Select the algorithm: Hirschberg
-    //params.onlyScore = true;                          // This parameter is ignored when using Hirschberg.
+    //params.only_score = true;                          // This parameter is ignored when using Hirschberg.
 
     quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
 

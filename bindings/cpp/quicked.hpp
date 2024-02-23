@@ -42,7 +42,7 @@ namespace quicked {
         quicked_status_t align(std::string *pattern, std::string *text);
 
         void setAlgorithm(quicked_algo_t algo)          { this->aligner.params->algo = algo; };
-        void setOnlyScore(bool onlyScore)              { this->aligner.params->onlyScore = onlyScore; };
+        void setOnlyScore(bool only_score)              { this->aligner.params->only_score = only_score; };
         void setBandwidth(unsigned int bandwidth)       { this->aligner.params->bandwidth = bandwidth; };
         void setWindowSize(unsigned int window_size)    { this->aligner.params->window_size = window_size; };
         void setOverlapSize(unsigned int overlap_size)  { this->aligner.params->overlap_size = overlap_size; };

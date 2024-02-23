@@ -65,12 +65,27 @@
 //}
 
 void benchmark_quicked(
-    align_input_t* const align_input) {
+    align_input_t* const align_input, 
+    const int window_size, 
+    const int overlap_size, 
+    const int bandwidth, 
+    const int force_scalar, 
+    const int hew_threshold, 
+    const int hew_percentage) {
   
   quicked_aligner_t aligner;                          // Aligner object
   quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
   params.external_timer = true;
   params.external_allocator = align_input->mm_allocator;
+
+  params.window_size = window_size;                     
+  params.overlap_size = overlap_size;                     
+  params.force_scalar = force_scalar;
+  params.bandwidth = bandwidth;
+  params.hew_threshold[0] = hew_threshold;
+  params.hew_threshold[1] = hew_threshold;
+  params.hew_percentage[0] = hew_percentage;
+  params.hew_percentage[1] = hew_percentage;
 
   quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
   const int max_cigar_length = align_input->pattern_length + align_input->text_length;
@@ -99,15 +114,96 @@ void benchmark_quicked(
 }
 
 void benchmark_banded(
-    align_input_t* const align_input, const int bandwidth, const int only_score) {
+    align_input_t* const align_input, 
+    const int bandwidth, 
+    const int only_score) {
   
   quicked_aligner_t aligner;                          // Aligner object
   quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
   params.external_timer = true;
 
   params.algo = BANDED;                               // Select the algorithm: Banded
-  params.onlyScore = only_score;                       // Banded needs a bandwidth
+  params.only_score = only_score;                      
   params.bandwidth = bandwidth;                       // Banded needs a bandwidth
+  params.external_allocator = align_input->mm_allocator;
+
+  quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
+
+  aligner.timer = &align_input->timer;
+  aligner.timer_windowed_s = &align_input->timer_windowed_s;
+  aligner.timer_windowed_l = &align_input->timer_windowed_l;
+  aligner.timer_banded = &align_input->timer_banded;
+  aligner.timer_align = &align_input->timer_align;
+  
+  // Align
+  quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
+  
+  // DEBUG
+  if (align_input->debug_flags) { // TODO
+    // benchmark_check_alignment(align_input,cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    quicked_print_output(align_input,false,aligner.cigar,aligner.score);
+  }
+  // Free
+  quicked_free(&aligner);                 // Free whatever memory the aligner allocated
+
+}
+
+void benchmark_hirschberg(
+    align_input_t* const align_input, 
+    const int bandwidth) {
+  
+  quicked_aligner_t aligner;                          // Aligner object
+  quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
+  params.external_timer = true;
+
+  params.algo = HIRSCHBERG;                               // Select the algorithm: Banded
+  params.bandwidth = bandwidth;                       // Banded needs a bandwidth
+  params.external_allocator = align_input->mm_allocator;
+
+  quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
+
+  aligner.timer = &align_input->timer;
+  aligner.timer_windowed_s = &align_input->timer_windowed_s;
+  aligner.timer_windowed_l = &align_input->timer_windowed_l;
+  aligner.timer_banded = &align_input->timer_banded;
+  aligner.timer_align = &align_input->timer_align;
+  
+  // Align
+  quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
+  
+  // DEBUG
+  if (align_input->debug_flags) { // TODO
+    // benchmark_check_alignment(align_input,cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    quicked_print_output(align_input,false,aligner.cigar,aligner.score);
+  }
+  // Free
+  quicked_free(&aligner);                 // Free whatever memory the aligner allocated
+
+}
+
+
+void benchmark_windowed(
+    align_input_t* const align_input, 
+    const int window_size, 
+    const int overlap_size, 
+    const int force_scalar, 
+    const int only_score) {
+  
+  quicked_aligner_t aligner;                          // Aligner object
+  quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters.
+  params.external_timer = true;
+
+  params.algo = WINDOWED;                               // Select the algorithm: WindowEd
+  params.only_score = only_score;                      
+  params.window_size = window_size;                     
+  params.overlap_size = overlap_size; 
+  params.force_scalar = force_scalar;                     
   params.external_allocator = align_input->mm_allocator;
 
   quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters

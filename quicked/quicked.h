@@ -45,9 +45,9 @@ typedef struct quicked_params_t {
     unsigned int bandwidth;
     unsigned int window_size;
     unsigned int overlap_size;
-    unsigned int hewThreshold[QUICKED_WINDOW_STAGES];
-    unsigned int hewPercentage[QUICKED_WINDOW_STAGES];
-    bool onlyScore;
+    unsigned int hew_threshold[QUICKED_WINDOW_STAGES];
+    unsigned int hew_percentage[QUICKED_WINDOW_STAGES];
+    bool only_score;
     bool force_scalar;
     bool external_timer;
     mm_allocator_t *external_allocator;

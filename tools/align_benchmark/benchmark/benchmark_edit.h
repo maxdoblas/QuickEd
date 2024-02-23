@@ -32,23 +32,32 @@
  */
 //void benchmark_edit_bpm(
 //    align_input_t* const align_input);
-//void benchmark_edit_bpm_banded(
-//    align_input_t* const align_input,
-//    const int bandwidth);
-//void benchmark_edit_bpm_banded_unaligned(
-//    align_input_t* const align_input,
-//    const int bandwidth);
-//void benchmark_edit_bpm_banded_blocking(
-//    align_input_t* const align_input,
-//    const int bandwidth);
-//void benchmark_edit_bpm_banded_cutoff(
-//    align_input_t* const align_input,
-//    const int bandwidth);
-//void benchmark_edit_bpm_banded_cutoff_score(
-//    align_input_t* const align_input,
-//    const int bandwidth);
+
+void benchmark_banded(
+    align_input_t* const align_input, 
+    const int bandwidth, 
+    const int only_score);
+
+void benchmark_hirschberg(
+    align_input_t* const align_input, 
+    const int bandwidth);
+
+
 void benchmark_quicked(
-    align_input_t* const align_input);
+    align_input_t* const align_input, 
+    const int window_size, 
+    const int overlap_size, 
+    const int bandwidth, 
+    const int force_scalar, 
+    const int hew_threshold, 
+    const int hew_percentage);
+
+void benchmark_windowed(
+    align_input_t* const align_input, 
+    const int window_size, 
+    const int overlap_size, 
+    const int force_scalar, 
+    const int only_score);
 //void benchmark_edit_bpm_band_hirschberg(
 //    align_input_t* const align_input,
 //    const int bandwidth);

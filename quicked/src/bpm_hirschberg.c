@@ -110,6 +110,12 @@ void bpm_compute_matrix_hirschberg(
         const int64_t higher_pos = banded_matrix.higher_block * 64 + 63 + first_block_band_pos_v * 64;
         const int64_t higher_pos_r = (pattern_len - 1) - (banded_matrix_r.lower_block * 64 + 63 + first_block_band_pos_v_r * 64);
 
+        // TODO:: make it properly
+        if((bottom_pos > higher_pos_r) || (bottom_pos_r > higher_pos)){
+            printf("ERROR: Hirschberg algorithem can not find a middle point of division\n");
+            exit(1);
+        }
+
         // select lower cell between the two aligmnets
         if (bottom_pos > bottom_pos_r)
         {

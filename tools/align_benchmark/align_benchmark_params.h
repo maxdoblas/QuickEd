@@ -71,6 +71,10 @@ typedef struct {
   int bandwidth;
   int window_size;
   int overlap_size;
+  int hew_threshold;
+  int hew_percentage;
+  bool force_scalar;
+  bool only_score;
   // Misc
   bool check_display;
   bool check_correct;
