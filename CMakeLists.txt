@@ -49,7 +49,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(_FORTIFY_SOURCE=1)
 
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3 -flto)
+    add_compile_options(-O3 -flto=auto)
 endif()
 
 # Set global compiler flags
