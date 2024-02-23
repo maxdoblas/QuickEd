@@ -183,7 +183,7 @@ quicked_status_t run_quicked(
     windowed_compute(&windowed_matrix, &windowed_pattern, text,
                     aligner->params->hewThreshold[0],
                     QUICKED_FAST_WINDOW_SIZE, QUICKED_FAST_WINDOW_OVERLAP,
-                    aligner->params->onlyScore, aligner->params->forceScalar);
+                    SCORE_ONLY, aligner->params->forceScalar);
 
     // timer_stop(&align_input->timer_window_sse);
 
@@ -204,7 +204,7 @@ quicked_status_t run_quicked(
         windowed_compute(&windowed_matrix, &windowed_pattern, text,
                 aligner->params->hewThreshold[1],
                 aligner->params->windowSize, aligner->params->overlapSize,
-                aligner->params->onlyScore, aligner->params->forceScalar);
+                SCORE_ONLY, aligner->params->forceScalar);
 
         score = windowed_matrix.cigar->score;
         uint64_t high_error_window = windowed_matrix.high_error_window;
@@ -219,7 +219,7 @@ quicked_status_t run_quicked(
         windowed_compute(&windowed_matrix, &windowed_pattern, text,
                 aligner->params->hewThreshold[1],
                 aligner->params->windowSize, aligner->params->overlapSize,
-                aligner->params->onlyScore, aligner->params->forceScalar);
+                SCORE_ONLY, aligner->params->forceScalar);
 
         score = MIN(score, windowed_matrix.cigar->score);
         if (score >= windowed_matrix.cigar->score) high_error_window = windowed_matrix.high_error_window;
@@ -240,9 +240,9 @@ quicked_status_t run_quicked(
 
             score = MAX(text_len, pattern_len) * 3 / 20;
 
-            banded_matrix_allocate(&banded_matrix_score, pattern_len, text_len, score, true, mm_allocator);
+            banded_matrix_allocate(&banded_matrix_score, pattern_len, text_len, score, SCORE_ONLY, mm_allocator);
 
-            banded_compute(&banded_matrix_score, &banded_pattern, text, text_len, text_len, true);
+            banded_compute(&banded_matrix_score, &banded_pattern, text, text_len, text_len, SCORE_ONLY);
 
             // align_input->seqs_with_15 = true; // TODO: Remove if unused
 
@@ -257,9 +257,9 @@ quicked_status_t run_quicked(
                 score *= 2;
                 // timer_start(&align_input->timer_banded_30);
 
-                banded_matrix_allocate(&banded_matrix_score, pattern_len, text_len, score, true, mm_allocator);
+                banded_matrix_allocate(&banded_matrix_score, pattern_len, text_len, score, SCORE_ONLY, mm_allocator);
 
-                banded_compute(&banded_matrix_score, &banded_pattern, text, text_len, text_len, true);
+                banded_compute(&banded_matrix_score, &banded_pattern, text, text_len, text_len, SCORE_ONLY);
 
                 // align_input->seqs_with_30 = true; // TODO: Remove if unused
 
