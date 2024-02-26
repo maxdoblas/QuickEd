@@ -72,7 +72,7 @@
 void edit_bpm_pattern_compile(
     bpm_pattern_t* const bpm_pattern,
     char* const pattern,
-    const int pattern_length,
+    const uint64_t pattern_length,
     mm_allocator_t* const mm_allocator) {
   // Calculate dimensions
   const uint64_t pattern_num_words64 = DIV_CEIL(pattern_length,BPM_W64_LENGTH);
@@ -172,7 +172,7 @@ void edit_bpm_reset_search_cutoff(
     uint8_t* const top_level,
     uint64_t* const P,
     uint64_t* const M,
-    int64_t* const score,
+    uint64_t* const score,
     const int64_t* const init_score,
     const uint64_t max_distance) {
   // Calculate the top level (maximum bit-word for cut-off purposes)
@@ -199,7 +199,7 @@ void edit_bpm_compute_matrix(
   const uint64_t* PEQ = bpm_pattern->PEQ;
   const uint64_t num_words64 = bpm_pattern->pattern_num_words64;
   const uint64_t* const level_mask = bpm_pattern->level_mask;
-  int64_t* const score = bpm_pattern->score;
+  uint64_t* const score = bpm_pattern->score;
   const int64_t* const init_score = bpm_pattern->init_score;
   uint64_t* const Pv = bpm_matrix->Pv;
   uint64_t* const Mv = bpm_matrix->Mv;
@@ -266,7 +266,7 @@ void edit_bpm_compute_matrix(
   }
   // Return optimal column/distance
   // Check match
-  const int64_t current_score = score[top_level-1];
+  const uint64_t current_score = score[top_level-1];
   if (top_level==num_words64 && current_score<=max_distance) {
     bpm_matrix->min_score = score[top_level-1];
     bpm_matrix->min_score_column = text_length-1;
@@ -319,8 +319,8 @@ void edit_bpm_compute(
     bpm_matrix_t* const bpm_matrix,
     bpm_pattern_t* const bpm_pattern,
     char* const text,
-    const int text_length,
-    const int max_distance) {
+    const uint64_t text_length,
+    const uint64_t max_distance) {
   // Fill Matrix (Pv,Mv)
   edit_bpm_compute_matrix(
       bpm_matrix,bpm_pattern,

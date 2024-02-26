@@ -71,7 +71,7 @@ align_bench_params_t parameters = {
 /*
  * Menu
  */
-void usage() {
+void usage(void) {
   fprintf(stderr,
       "USE: ./align_benchmark -a ALGORITHM -i PATH                             \n"
       "      Options::                                                         \n"
@@ -79,11 +79,11 @@ void usage() {
       "          --algorithm|a ALGORITHM                                       \n"
       "            [Edit (Levenshtein)]                                        \n"
       "              quicked                                                   \n"
-      "              edit-bpm                                                  \n"
       "              edit-banded                                               \n"
       "              edit-windowed                                             \n"
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
+      "              edit-bpm                                                  \n"
       "        [Input & Output]                                                \n"
       "          --input|i PATH                                                \n"
       "          --output|o PATH                                               \n"
@@ -162,8 +162,6 @@ void parse_arguments(
         parameters.algorithm = alignment_edit_bpm;
       } else if (strcmp(optarg,"edit-banded")==0) {
         parameters.algorithm = alignment_edit_banded;
-      } else if (strcmp(optarg,"edit-banded-score")==0) {
-        parameters.algorithm = alignment_edit_banded_score;
       } else if (strcmp(optarg,"edit-banded-hirschberg")==0) {
         parameters.algorithm = alignment_edit_banded_hirschberg;
       } else if (strcmp(optarg,"quicked")==0) {
@@ -308,7 +306,6 @@ void parse_arguments(
   switch (parameters.algorithm) {
     case alignment_edit_dp_banded:
     case alignment_edit_banded:
-    case alignment_edit_banded_score:
     case alignment_edit_banded_hirschberg:
       if (parameters.bandwidth == -1) {
         fprintf(stderr,"Parameter 'bandwidth' has to be provided for banded algorithms\n");
@@ -335,6 +332,9 @@ void parse_arguments(
         exit(1);
       }
       break;
+    case alignment_edit_dp:
+    case alignment_edit_bpm:
+    case alignment_edit_quicked:
     default:
       break;
   }

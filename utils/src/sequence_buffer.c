@@ -75,7 +75,7 @@ void sequence_buffer_add_offsets(
     const uint64_t text_length) {
   // Check allocated memory
   if (sequence_buffer->offsets_used == sequence_buffer->offsets_allocated) {
-    const uint64_t num_offsets = (float)(sequence_buffer->offsets_used+1) * (3.0/2.0);
+    const uint64_t num_offsets = (uint64_t)((float)(sequence_buffer->offsets_used+1) * (3.0f/2.0f));
     sequence_buffer->offsets = realloc(sequence_buffer->offsets,num_offsets*sizeof(sequence_offset_t));
     sequence_buffer->offsets_allocated = num_offsets;
   }
@@ -122,6 +122,6 @@ void sequence_buffer_add_pair(
   // Update used
   sequence_buffer->buffer_used += bytes_required;
   // Update stats
-  sequence_buffer->max_pattern_length = MAX(sequence_buffer->max_pattern_length,pattern_length);
-  sequence_buffer->max_text_length = MAX(sequence_buffer->max_text_length,text_length);
+  sequence_buffer->max_pattern_length = MAX((uint64_t)sequence_buffer->max_pattern_length,pattern_length);
+  sequence_buffer->max_text_length = MAX((uint64_t)sequence_buffer->max_text_length,text_length);
 }

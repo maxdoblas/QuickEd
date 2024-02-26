@@ -28,9 +28,6 @@
 #include "../../../quicked/quicked.h"
 #include "utils/include/commons.h"
 
-#define BPM_W64_LENGTH UINT64_LENGTH
-
-
 /*
  * Benchmark Edit
  */
@@ -88,8 +85,6 @@ void benchmark_quicked(
   params.hew_percentage[1] = hew_percentage;
 
   quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
-  const int max_cigar_length = align_input->pattern_length + align_input->text_length;
-  //cigar_t* const cigar = cigar_new(2*max_cigar_length,align_input->mm_allocator);
 
   aligner.timer = &align_input->timer;
   aligner.timer_windowed_s = &align_input->timer_windowed_s;

@@ -36,13 +36,6 @@
 #include "benchmark/benchmark_edit.h"
 
 /*
- * Benchmark UTest
- */
-void align_pairwise_test() {
-
-
-}
-/*
  * Configuration
  */
 void align_input_configure_global(
@@ -123,13 +116,12 @@ bool align_benchmark_read_input(
 void align_benchmark_print_progress(
     const int seqs_processed) {
   const uint64_t time_elapsed_alg = timer_get_current_total_ns(&parameters.timer_global);
-  const float rate_alg = (float)seqs_processed/(float)TIMER_CONVERT_NS_TO_S(time_elapsed_alg);
+  const double rate_alg = (double)seqs_processed/(double)TIMER_CONVERT_NS_TO_S(time_elapsed_alg);
   fprintf(stderr,"...processed %d reads (alignment = %2.3f seq/s)\n",seqs_processed,rate_alg);
 }
 void align_benchmark_print_results(
     align_input_t* const align_input,
-    const int seqs_processed,
-    const bool print_stats) {
+    const int seqs_processed) {
   // Print benchmark results
   fprintf(stderr,"[Benchmark]\n");
   fprintf(stderr,"=> Total.reads              %d\n",seqs_processed);
@@ -196,13 +188,15 @@ void align_benchmark_run_algorithm(
                         parameters.bandwidth, parameters.force_scalar, parameters.hew_threshold,
                         parameters.hew_percentage);
       break;
+    case alignment_edit_dp:
+    case alignment_edit_dp_banded:
     default:
       fprintf(stderr,"Algorithm not implemented\n");
       exit(1);
       break;
   }
 }
-void align_benchmark_sequential() {
+void align_benchmark_sequential(void) {
   // PROFILE
   timer_reset(&parameters.timer_global);
   timer_start(&parameters.timer_global);
@@ -239,7 +233,7 @@ void align_benchmark_sequential() {
   // Print benchmark results
   timer_stop(&parameters.timer_global);
 
-  if (parameters.verbose >= 0) align_benchmark_print_results(&align_input,seqs_processed,true);
+  if (parameters.verbose >= 0) align_benchmark_print_results(&align_input,seqs_processed);
   // Free
   align_benchmark_free(&align_input);
   fclose(parameters.input_file);
@@ -247,7 +241,7 @@ void align_benchmark_sequential() {
   free(parameters.line1);
   free(parameters.line2);
 }
-void align_benchmark_parallel() {
+void align_benchmark_parallel(void) {
   // PROFILE
   timer_reset(&parameters.timer_global);
   timer_start(&parameters.timer_global);
@@ -310,7 +304,7 @@ void align_benchmark_parallel() {
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);
-  if (parameters.verbose >= 0) align_benchmark_print_results(align_input,seqs_processed,true);
+  if (parameters.verbose >= 0) align_benchmark_print_results(align_input,seqs_processed);
   // Free
   for (int tid=0;tid<parameters.num_threads;++tid) {
     align_benchmark_free(align_input+tid);

@@ -15,8 +15,10 @@ target_include_directories(align_benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/a
 target_link_libraries(align_benchmark PRIVATE m) # Link math library
 target_link_libraries(align_benchmark PRIVATE quicked)
 find_package(OpenMP)
-target_link_libraries(align_benchmark PRIVATE OpenMP::OpenMP_CXX)
-
+if(OpenMP_FOUND)
+    target_link_libraries(align_benchmark PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(align_benchmark PRIVATE OpenMP::OpenMP_C)
+endif()
 file(GLOB UTILS_SRCS
     "${PROJECT_SOURCE_DIR}/utils/src/commons.c"
     "${PROJECT_SOURCE_DIR}/utils/src/mm_allocator.c"

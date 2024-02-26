@@ -386,6 +386,8 @@ bool quicked_check_error(
         case QUICKED_FAIL_NON_CONVERGENCE:
         case QUICKED_UNIMPLEMENTED:
         case QUICKED_UNKNOWN_ALGO:
+        case QUICKED_OK:
+        case QUICKED_WIP:
             return true;
             break;
         default:
@@ -401,17 +403,19 @@ void quicked_print_error(
     switch (status)
     {
         case QUICKED_ERROR:
-            printf("ERROR: Quicked has finished with unspecific error\n");
+            fprintf(stderr,"ERROR: Quicked has finished with unspecific error\n");
             break;
         case QUICKED_FAIL_NON_CONVERGENCE:
-            printf("ERROR: Hirschberg algorithem can not find a middle point of subsequence division!\n");
+            fprintf(stderr,"ERROR: Hirschberg algorithem can not find a middle point of subsequence division!\n");
             break;
         case QUICKED_UNIMPLEMENTED:
-            printf("ERROR: The algorithm or parameter combination selected is not implemented\n");
+            fprintf(stderr,"ERROR: The algorithm or parameter combination selected is not implemented\n");
             break;
         case QUICKED_UNKNOWN_ALGO:
-            printf("ERROR: Unknown algorithm selection\n");
+            fprintf(stderr,"ERROR: Unknown algorithm selection\n");
             break;
+        case QUICKED_OK:
+        case QUICKED_WIP:
         default:
             printf("Quicked finished without errors.\n");
             break;

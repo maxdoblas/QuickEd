@@ -126,10 +126,10 @@ void banded_matrix_allocate(
     }
     banded_matrix->effective_bandwidth = banded_matrix->cutoff_score;
 
-    const int64_t num_words64 = banded_matrix->effective_bandwidth_blocks;
+    const uint64_t num_words64 = banded_matrix->effective_bandwidth_blocks;
     // Allocate auxiliary matrix
-    const int64_t num_cols = (only_score ? 1 : (text_length + 1)); // Only 1 column if only score, or text_length + 1 columns
-    const int64_t aux_matrix_size = num_words64 * UINT64_SIZE * num_cols;
+    const uint64_t num_cols = (only_score ? 1 : (text_length + 1)); // Only 1 column if only score, or text_length + 1 columns
+    const uint64_t aux_matrix_size = num_words64 * UINT64_SIZE * num_cols;
     uint64_t * Pv;
     uint64_t * Mv;
     if (aux_matrix_size > BUFFER_SIZE_256K){

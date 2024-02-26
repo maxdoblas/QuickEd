@@ -39,7 +39,6 @@ typedef enum {
   // QuickEd lib
   alignment_edit_banded,
   alignment_edit_banded_hirschberg,
-  alignment_edit_banded_score,
   alignment_edit_windowed,
   alignment_edit_quicked,
 } alignment_algorithm_type;
@@ -97,7 +96,7 @@ extern align_bench_params_t parameters;
 /*
  * Menu
  */
-void usage();
+void usage(void);
 
 /*
  * Parse arguments

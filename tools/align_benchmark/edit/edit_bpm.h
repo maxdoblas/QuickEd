@@ -39,7 +39,7 @@ typedef struct {
   uint64_t* P;
   uint64_t* M;
   uint64_t* level_mask;
-  int64_t* score;
+  uint64_t* score;
   int64_t* init_score;
   uint64_t* pattern_left;
 } bpm_pattern_t;
@@ -63,7 +63,7 @@ typedef struct {
 void edit_bpm_pattern_compile(
     bpm_pattern_t* const bpm_pattern,
     char* const pattern,
-    const int pattern_length,
+    const uint64_t pattern_length,
     mm_allocator_t* const mm_allocator);
 void edit_bpm_pattern_free(
     bpm_pattern_t* const bpm_pattern,
@@ -85,7 +85,7 @@ void edit_bpm_compute(
     bpm_matrix_t* const bpm_matrix,
     bpm_pattern_t* const bpm_pattern,
     char* const text,
-    const int text_length,
-    const int max_distance);
+    const uint64_t text_length,
+    const uint64_t max_distance);
 
 #endif /* EDIT_BPM_H_ */

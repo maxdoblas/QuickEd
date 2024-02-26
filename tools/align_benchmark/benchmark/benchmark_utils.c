@@ -100,7 +100,6 @@ void benchmark_print_alignment(
 }
 void benchmark_print_output_lite(
     FILE* const stream,
-    align_input_t* const align_input,
     const int score,
     cigar_t* const cigar) {
   // Retrieve CIGAR
@@ -157,7 +156,7 @@ void benchmark_print_output(
     if (align_input->output_full) {
       benchmark_print_output_full(align_input->output_file,align_input,score,cigar);
     } else {
-      benchmark_print_output_lite(align_input->output_file,align_input,score,cigar);
+      benchmark_print_output_lite(align_input->output_file,score,cigar);
     }
   }
 }
