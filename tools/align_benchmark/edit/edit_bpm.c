@@ -156,6 +156,8 @@ void edit_bpm_matrix_allocate(
   bpm_matrix->Pv = Pv;
   // CIGAR
   bpm_matrix->cigar = cigar_new(pattern_length+text_length,mm_allocator);
+  bpm_matrix->cigar->end_offset = pattern_length + text_length;
+  bpm_matrix->cigar->begin_offset = pattern_length + text_length - 1;
 }
 void edit_bpm_matrix_free(
     bpm_matrix_t* const bpm_matrix,
@@ -314,6 +316,8 @@ void edit_bpm_backtrace_matrix(
   while (h>=0) {operations[op_sentinel--] = 'I'; --h;}
   while (v>=0) {operations[op_sentinel--] = 'D'; --v;}
   bpm_matrix->cigar->begin_offset = op_sentinel+1;
+  printf("cigar->begin_offset=%d\n",bpm_matrix->cigar->begin_offset);
+  printf("cigar->end_offset=%d\n",bpm_matrix->cigar->end_offset);
 }
 void edit_bpm_compute(
     bpm_matrix_t* const bpm_matrix,

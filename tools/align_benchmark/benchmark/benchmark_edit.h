@@ -30,9 +30,6 @@
 /*
  * Benchmark Edit
  */
-//void benchmark_edit_bpm(
-//    align_input_t* const align_input);
-
 void benchmark_banded(
     align_input_t* const align_input, 
     const int bandwidth, 
@@ -58,13 +55,14 @@ void benchmark_windowed(
     const int overlap_size, 
     const int force_scalar, 
     const int only_score);
-//void benchmark_edit_bpm_band_hirschberg(
-//    align_input_t* const align_input,
-//    const int bandwidth);
-//void benchmark_edit_dp(
-//    align_input_t* const align_input);
-//void benchmark_edit_dp_banded(
-//    align_input_t* const align_input,
-//    const int bandwidth);
+
+void benchmark_edit_bpm(
+    align_input_t* const align_input);
+
+void benchmark_edit_dp(
+    align_input_t* const align_input);
+void benchmark_edit_dp_banded(
+    align_input_t* const align_input,
+    const int bandwidth);
 
 #endif /* BENCHMARK_EDIT_H_ */

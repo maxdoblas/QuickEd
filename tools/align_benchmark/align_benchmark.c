@@ -165,14 +165,8 @@ void align_benchmark_run_algorithm(
   // Select algorithm
   switch (parameters.algorithm) {
     // Edit
-//    case alignment_edit_dp:
-//      benchmark_edit_dp(align_input);
-//      break;
-//    case alignment_edit_dp_banded:
-//      benchmark_edit_dp_banded(align_input,parameters.bandwidth);
-//      break;
     case alignment_edit_bpm:
-      //benchmark_quicked(align_input);
+      benchmark_edit_bpm(align_input);
       break;
     case alignment_edit_windowed:
       benchmark_windowed(align_input,parameters.window_size, parameters.overlap_size,
@@ -190,7 +184,11 @@ void align_benchmark_run_algorithm(
                         parameters.hew_percentage);
       break;
     case alignment_edit_dp:
+      benchmark_edit_dp(align_input);
+      break;
     case alignment_edit_dp_banded:
+      benchmark_edit_dp_banded(align_input,parameters.bandwidth);
+      break;
     default:
       fprintf(stderr,"Algorithm not implemented\n");
       exit(1);
