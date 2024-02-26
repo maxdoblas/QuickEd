@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "align_benchmark_params.h"
 
@@ -241,6 +242,8 @@ void align_benchmark_sequential(void) {
   free(parameters.line1);
   free(parameters.line2);
 }
+
+#ifdef _OPENMP
 void align_benchmark_parallel(void) {
   // PROFILE
   timer_reset(&parameters.timer_global);
@@ -315,6 +318,7 @@ void align_benchmark_parallel(void) {
   free(parameters.line1);
   free(parameters.line2);
 }
+#endif
 /*
  * Main
  */
@@ -325,6 +329,10 @@ int main(int argc,char* argv[]) {
   if (parameters.num_threads == 1) {
     align_benchmark_sequential();
   } else {
-    align_benchmark_parallel();
+    #ifdef _OPENMP
+      align_benchmark_parallel();
+    #else
+      align_benchmark_sequential();
+    #endif
   }
 }

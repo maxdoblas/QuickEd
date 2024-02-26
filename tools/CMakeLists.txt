@@ -15,8 +15,10 @@ target_include_directories(align_benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/a
 target_link_libraries(align_benchmark PRIVATE m) # Link math library
 target_link_libraries(align_benchmark PRIVATE quicked)
 find_package(OpenMP)
-if(OpenMP_FOUND)
+if(OpenMP_CXX_FOUND)
     target_link_libraries(align_benchmark PRIVATE OpenMP::OpenMP_CXX)
+endif()
+if(OpenMP_C_FOUND)
     target_link_libraries(align_benchmark PRIVATE OpenMP::OpenMP_C)
 endif()
 file(GLOB UTILS_SRCS

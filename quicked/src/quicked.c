@@ -386,10 +386,10 @@ bool quicked_check_error(
         case QUICKED_FAIL_NON_CONVERGENCE:
         case QUICKED_UNIMPLEMENTED:
         case QUICKED_UNKNOWN_ALGO:
-        case QUICKED_OK:
-        case QUICKED_WIP:
             return true;
             break;
+        case QUICKED_OK:
+        case QUICKED_WIP:
         default:
             return false;
             break;
