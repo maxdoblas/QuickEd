@@ -41,12 +41,6 @@ align_bench_params_t parameters = {
   .line2 = NULL,
   .line1_allocated = 0,
   .line2_allocated = 0,
-  // Alignment form
-  .endsfree = false,
-  .pattern_begin_free = 0.0,
-  .text_begin_free = 0.0,
-  .pattern_end_free = 0.0,
-  .text_end_free = 0.0,
   // Other algorithms parameters
   .bandwidth = 15,
   .window_size = 9,
@@ -61,7 +55,6 @@ align_bench_params_t parameters = {
   .check_correct = false,
   .check_score = false,
   .check_alignments = false,
-  .plot = 0,
   // System
   .num_threads = 1,
   .batch_size = 10000,
@@ -100,11 +93,10 @@ void usage(void) {
       "        [Misc]                                                          \n"
       "          --check|c 'correct'|'score'|'alignment'                       \n"
       "          --check-bandwidth INT                                         \n"
-    //"          --plot                                                        \n"
       "        [System]                                                        \n"
-    //"          --num-threads|t INT                                           \n"
-    //"          --batch-size INT                                              \n"
-    //"          --progress|P INT                                              \n"
+      "          --num-threads|t INT                                           \n"
+      "          --batch-size INT                                              \n"
+      "          --progress|P INT                                              \n"
       "          --verbose|v INT                                               \n"
       "          --quiet|q                                                     \n"
       "          --help|h                                                      \n");
@@ -134,7 +126,6 @@ void parse_arguments(
     /* Misc */
     { "check", required_argument, 0, 'c' },
     { "check-bandwidth", required_argument, 0, 3002 },
-    { "plot", optional_argument, 0, 3003 },
     /* System */
     { "num-threads", required_argument, 0, 't' },
     { "batch-size", required_argument, 0, 4000 },
@@ -192,21 +183,6 @@ void parse_arguments(
       parameters.output_full = true;
       break;
     /*
-     * Penalties
-     */
-    case 901: { // --ends-free P0,Pf,T0,Tf
-      parameters.endsfree = true;
-      char* sentinel = strtok(optarg,",");
-      parameters.pattern_begin_free = atof(sentinel);
-      sentinel = strtok(NULL,",");
-      parameters.pattern_end_free = atof(sentinel);
-      sentinel = strtok(NULL,",");
-      parameters.text_begin_free = atof(sentinel);
-      sentinel = strtok(NULL,",");
-      parameters.text_end_free = atof(sentinel);
-      break;
-    }
-    /*
      * Other alignment parameters
      */
     case 2000: // --bandwidth
@@ -259,9 +235,6 @@ void parse_arguments(
       break;
     case 3002: // --check-bandwidth
       parameters.check_bandwidth = atoi(optarg);
-      break;
-    case 3003: // --plot
-      parameters.plot = (optarg==NULL) ? 1 : atoi(optarg);
       break;
     /*
      * System
@@ -337,12 +310,5 @@ void parse_arguments(
     case alignment_edit_quicked:
     default:
       break;
-  }
-  // Checks parallel
-  if (parameters.num_threads > 1) {
-    if (parameters.plot > 0) {
-      fprintf(stderr,"Parameter 'plot' disabled for parallel executions\n");
-      parameters.plot = 0;
-    }
   }
 }

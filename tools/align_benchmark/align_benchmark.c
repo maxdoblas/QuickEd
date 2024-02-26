@@ -43,8 +43,6 @@ void align_input_configure_global(
     align_input_t* const align_input) {
   // Clear
   benchmark_align_input_clear(align_input);
-  // Alignment form
-  align_input->ends_free = parameters.endsfree;
   // Output
   align_input->output_file = parameters.output_file;
   align_input->output_full = parameters.output_full;
@@ -64,18 +62,6 @@ void align_input_configure_global(
   if (parameters.check_alignments) align_input->debug_flags |= ALIGN_DEBUG_CHECK_ALIGNMENT;
   align_input->check_bandwidth = parameters.check_bandwidth;
   align_input->verbose = parameters.verbose;
-}
-void align_input_configure_local(
-    align_input_t* const align_input) {
-  // Ends-free configuration
-  if (parameters.endsfree) {
-    const int plen = align_input->pattern_length;
-    const int tlen = align_input->text_length;
-    align_input->pattern_begin_free = nominal_prop_u32(plen,parameters.pattern_begin_free);
-    align_input->pattern_end_free = nominal_prop_u32(plen,parameters.pattern_end_free);
-    align_input->text_begin_free = nominal_prop_u32(tlen,parameters.text_begin_free);
-    align_input->text_end_free = nominal_prop_u32(tlen,parameters.text_end_free);
-  }
 }
 void align_benchmark_free(
     align_input_t* const align_input) {
@@ -160,8 +146,6 @@ void align_benchmark_print_results(
  */
 void align_benchmark_run_algorithm(
     align_input_t* const align_input) {
-  // Sequence-dependent configuration
-  align_input_configure_local(align_input);
   // Select algorithm
   switch (parameters.algorithm) {
     // Edit

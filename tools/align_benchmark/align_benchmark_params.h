@@ -60,12 +60,6 @@ typedef struct {
   size_t line1_allocated;
   size_t line2_allocated;
   FILE* output_file;
-  // Alignment form
-  bool endsfree;
-  double pattern_begin_free;
-  double text_begin_free;
-  double pattern_end_free;
-  double text_end_free;
   // Other algorithms parameters
   int bandwidth;
   int window_size;
@@ -80,7 +74,6 @@ typedef struct {
   bool check_score;
   bool check_alignments;
   int check_bandwidth;
-  int plot;
   // Profile
   profiler_timer_t timer_global;
   // System
