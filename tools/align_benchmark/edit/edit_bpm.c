@@ -301,7 +301,7 @@ void edit_bpm_backtrace_matrix(
     } else if (Mv[(bdp_idx-num_words64)] & mask) {
       operations[op_sentinel--] = 'I';
       --h;
-    } else if ((text[h]==pattern[v])) {
+    } else if (text[h]==pattern[v]) {
       operations[op_sentinel--] = 'M';
       --h;
       --v;

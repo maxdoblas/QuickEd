@@ -135,14 +135,16 @@ void banded_matrix_allocate(
     if (aux_matrix_size > BUFFER_SIZE_256K){
         Pv = (uint64_t *)mm_allocator_allocate(mm_allocator, aux_matrix_size,false,BUFFER_SIZE_2M);
         Mv = (uint64_t *)mm_allocator_allocate(mm_allocator, aux_matrix_size,false,BUFFER_SIZE_2M);
-        if (madvise(Pv, aux_matrix_size, MADV_HUGEPAGE) == -1) {
-            perror("madvise");
-            exit(EXIT_FAILURE);
-        }
-        if (madvise(Mv, aux_matrix_size, MADV_HUGEPAGE) == -1) {
-            perror("madvise");
-            exit(EXIT_FAILURE);
-        }
+        #ifdef __linux__
+            if (madvise(Pv, aux_matrix_size, MADV_HUGEPAGE) == -1) {
+                perror("madvise");
+                exit(EXIT_FAILURE);
+            }
+            if (madvise(Mv, aux_matrix_size, MADV_HUGEPAGE) == -1) {
+                perror("madvise");
+                exit(EXIT_FAILURE);
+            }
+        #endif
     } else {
         Pv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
         Mv = (uint64_t *)mm_allocator_malloc(mm_allocator, aux_matrix_size);
