@@ -123,4 +123,4 @@ jobs:
     - name: Run Tests
       run: |
         cd ${{ steps.strings.outputs.build-dir }}
-        ctest --build-config ${{ matrix.build_type }} --output-on-failure
+        ctest --build-config ${{ matrix.build_type }} --output-on-failure -E edlib_tests

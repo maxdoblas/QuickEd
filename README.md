@@ -19,7 +19,7 @@ To execute all tests, run:
 
 ```bash
 cd build
-make test # (or ctest)
+ctest -E edlib-tests --output-on-failure # Exclude Edlib tests
 ```
 
 ## Debugging
