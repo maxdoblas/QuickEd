@@ -28,7 +28,7 @@
 #include "utils/include/mm_allocator.h"
 #include "utils/include/cigar.h"
 
-void bpm_compute_matrix_hirschberg(
+quicked_status_t bpm_compute_matrix_hirschberg(
     const char* text,
     const char* text_r,
     const int64_t text_length,

@@ -146,7 +146,7 @@ quicked_status_t run_hirschberg(
 
     // Align
     timer_start(aligner->timer);
-    bpm_compute_matrix_hirschberg(text, text_r, text_len, pattern, pattern_r, pattern_len,
+    quicked_status_t status = bpm_compute_matrix_hirschberg(text, text_r, text_len, pattern, pattern_r, pattern_len,
                                   cutoff_score, &cigar_out, mm_allocator);
     timer_stop(aligner->timer);
 
@@ -157,7 +157,7 @@ quicked_status_t run_hirschberg(
     mm_allocator_free(mm_allocator, cigar_out.operations);
     mm_allocator_free(mm_allocator, pattern_r);
     mm_allocator_free(mm_allocator, text_r);
-    return QUICKED_WIP;
+    return status;
 }
 
 quicked_status_t run_quicked(
@@ -375,6 +375,48 @@ quicked_status_t quicked_free(
     }
 
     return QUICKED_WIP;
+}
+
+bool quicked_check_error(
+    quicked_status_t status)
+{
+    switch (status)
+    {
+        case QUICKED_ERROR:
+        case QUICKED_FAIL_NON_CONVERGENCE:
+        case QUICKED_UNIMPLEMENTED:
+        case QUICKED_UNKNOWN_ALGO:
+            return true;
+            break;
+        default:
+            return false;
+            break;
+    }
+
+}
+
+void quicked_print_error(
+    quicked_status_t status)
+{
+    switch (status)
+    {
+        case QUICKED_ERROR:
+            printf("ERROR: Quicked has finished with unspecific error\n");
+            break;
+        case QUICKED_FAIL_NON_CONVERGENCE:
+            printf("ERROR: Hirschberg algorithem can not find a middle point of subsequence division!\n");
+            break;
+        case QUICKED_UNIMPLEMENTED:
+            printf("ERROR: The algorithm or parameter combination selected is not implemented\n");
+            break;
+        case QUICKED_UNKNOWN_ALGO:
+            printf("ERROR: Unknown algorithm selection\n");
+            break;
+        default:
+            printf("Quicked finished without errors.\n");
+            break;
+    }
+
 }
 
 quicked_status_t quicked_align(

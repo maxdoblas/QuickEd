@@ -172,7 +172,11 @@ void benchmark_hirschberg(
   aligner.timer_align = &align_input->timer_align;
   
   // Align
-  quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
+  quicked_status_t status = quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
+
+   if (quicked_check_error(status)){
+    quicked_print_error(status);
+   }
   
   // DEBUG
   if (align_input->debug_flags) { // TODO
@@ -180,7 +184,11 @@ void benchmark_hirschberg(
   }
   // Output
   if (align_input->output_file) {
-    quicked_print_output(align_input,false,aligner.cigar,aligner.score);
+    if (quicked_check_error(status)){
+      quicked_print_output_error(align_input,false);
+    }else{
+      quicked_print_output(align_input,false,aligner.cigar,aligner.score);
+    }
   }
   // Free
   quicked_free(&aligner);                 // Free whatever memory the aligner allocated

@@ -27,9 +27,10 @@
 #include "utils/include/mm_allocator.h"
 #include "utils/include/dna_text.h"
 #include "bpm_banded.h"
+#include "quicked.h"
 #include "bpm_commons.h"
 
-void bpm_compute_matrix_hirschberg(
+quicked_status_t bpm_compute_matrix_hirschberg(
     const char* text,
     const char* text_r,
     const int64_t text_length,
@@ -112,8 +113,11 @@ void bpm_compute_matrix_hirschberg(
 
         // TODO:: make it properly
         if((bottom_pos > higher_pos_r) || (bottom_pos_r > higher_pos)){
-            printf("ERROR: Hirschberg algorithem can not find a middle point of division\n");
-            exit(1);
+            banded_pattern_free(&banded_pattern, mm_allocator);
+            banded_pattern_free(&banded_pattern_r, mm_allocator);
+            banded_matrix_free(&banded_matrix, mm_allocator);
+            banded_matrix_free(&banded_matrix_r, mm_allocator);
+            return QUICKED_FAIL_NON_CONVERGENCE;
         }
 
         // select lower cell between the two aligmnets
@@ -202,8 +206,9 @@ void bpm_compute_matrix_hirschberg(
         mm_allocator_free(mm_allocator, cell_score);
         mm_allocator_free(mm_allocator, cell_score_r);
 
+        quicked_status_t status;
         // Compute right
-        bpm_compute_matrix_hirschberg(
+        status = bpm_compute_matrix_hirschberg(
             text_right,
             text_r,
             text_length_right,
@@ -213,9 +218,13 @@ void bpm_compute_matrix_hirschberg(
             score_r,
             cigar_out,
             mm_allocator);
+        
+        if(quicked_check_error(status)){
+            return status;
+        }
 
         // Compute left
-        bpm_compute_matrix_hirschberg(
+        status = bpm_compute_matrix_hirschberg(
             text,
             text_r_left,
             text_len,
@@ -225,6 +234,10 @@ void bpm_compute_matrix_hirschberg(
             score_l,
             cigar_out,
             mm_allocator);
+        
+        if(quicked_check_error(status)){
+            return status;
+        }
     }
     else
     { // solve the alignment
@@ -250,4 +263,5 @@ void bpm_compute_matrix_hirschberg(
         banded_pattern_free(&banded_pattern, mm_allocator);
         banded_matrix_free(&banded_matrix, mm_allocator);
     }
+    return QUICKED_OK;
 }

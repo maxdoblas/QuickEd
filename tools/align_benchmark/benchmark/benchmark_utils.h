@@ -116,6 +116,9 @@ void quicked_print_output(
     const bool score_only,
     char* const cigar,
     int score);
+void quicked_print_output_error(
+    align_input_t* const align_input,
+    const bool score_only);
 
 /*
  * Stats

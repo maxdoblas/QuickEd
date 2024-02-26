@@ -181,6 +181,24 @@ void quicked_print_output(
     }
   }
 }
+void quicked_print_output_error(
+    align_input_t* const align_input,
+    const bool score_only) {
+  if (align_input->output_file) {
+    // Print summary
+    if (align_input->output_full) {
+      fprintf(align_input->output_file,"%d\t%d\t%s\t%s\t%s\t%s\n",
+              align_input->pattern_length,     // Pattern length
+              align_input->text_length,        // Text length
+              "ERROR",                         // Alignment score
+              align_input->pattern,            // Pattern sequence
+              align_input->text,               // Text sequence
+              (score_only) ? "-" : "ERROR"); // CIGAR
+    } else {
+      fprintf(align_input->output_file,"%s\t%s\n","ERROR",(score_only) ? "-" : "ERROR");
+    }
+  }
+}
 /*
  * Stats
  */
