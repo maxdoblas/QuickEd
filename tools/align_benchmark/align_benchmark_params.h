@@ -41,6 +41,8 @@ typedef enum {
   alignment_edit_banded_hirschberg,
   alignment_edit_windowed,
   alignment_edit_quicked,
+  // External
+  alignment_edlib,
 } alignment_algorithm_type;
 
 /*

@@ -163,6 +163,8 @@ void parse_arguments(
         parameters.algorithm = alignment_edit_dp;
       } else if (strcmp(optarg,"edit-dp-banded")==0) {
         parameters.algorithm = alignment_edit_dp_banded;
+      }  else if (strcmp(optarg,"edlib")==0) {
+        parameters.algorithm = alignment_edlib;
       } else {
         fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);
         exit(1);
@@ -307,6 +309,7 @@ void parse_arguments(
       break;
     case alignment_edit_dp:
     case alignment_edit_bpm:
+    case alignment_edlib:
     case alignment_edit_quicked:
     default:
       break;

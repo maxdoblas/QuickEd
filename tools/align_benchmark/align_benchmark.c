@@ -171,7 +171,11 @@ void align_benchmark_run_algorithm(
       benchmark_edit_dp(align_input);
       break;
     case alignment_edit_dp_banded:
-      benchmark_edit_dp_banded(align_input,parameters.bandwidth);
+      benchmark_edit_dp_banded(align_input, parameters.bandwidth);
+      break;
+    // External
+    case alignment_edlib:
+      benchmark_edlib(align_input, parameters.bandwidth);
       break;
     default:
       fprintf(stderr,"Algorithm not implemented\n");

@@ -28,6 +28,7 @@
 #include "edit/edit_bpm.h"
 #include "../../../quicked/quicked.h"
 #include "utils/include/commons.h"
+#include "external/edlib/edlib/include/edlib.h"
 
 /*
  * Benchmark Edit
@@ -265,6 +266,7 @@ void benchmark_edit_dp(
   score_matrix_free(&score_matrix);
   cigar_free(cigar,align_input->mm_allocator);
 }
+
 void benchmark_edit_dp_banded(
     align_input_t* const align_input,
     const int bandwidth) {
@@ -299,4 +301,45 @@ void benchmark_edit_dp_banded(
   cigar_free(cigar,align_input->mm_allocator);
 }
 
+
+// External
+
+void benchmark_edlib(align_input_t* const align_input,
+    const int bandwidth) {
+  
+  const int pattern_length = align_input->pattern_length;
+  const int text_length = align_input->text_length;
+  int64_t bandwidth_k = bandwidth != -1 ? (MAX(text_length,pattern_length)*bandwidth)/100 : -1;
+  // Parameters
+  EdlibAlignResult result;
+  char* edlib_cigar = NULL;
+  // Align
+  timer_start(&align_input->timer);
+  result = edlibAlign(
+      align_input->pattern,align_input->pattern_length,
+      align_input->text,align_input->text_length,
+      edlibNewAlignConfig(bandwidth_k,EDLIB_MODE_NW,EDLIB_TASK_PATH,NULL,0));
+  edlib_cigar = edlibAlignmentToCigar(
+      result.alignment,result.alignmentLength,EDLIB_CIGAR_EXTENDED); // Traceback
+  timer_stop(&align_input->timer);
+  // Adapt CIGAR
+  uint64_t cigar_len = strlen(edlib_cigar);
+  for(uint64_t i = 0; i < cigar_len;i++){
+    char operation = edlib_cigar[i];
+    if (operation=='=') edlib_cigar[i] = 'M';
+    else if (operation=='D') edlib_cigar[i] = 'I';
+    else if (operation=='I') edlib_cigar[i] = 'D';
+  }
+  // DEBUG
+  if (align_input->debug_flags) {
+    // benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    quicked_print_output(align_input,false,edlib_cigar,result.editDistance);
+  }
+  // Free
+  free(edlib_cigar);
+  edlibFreeAlignResult(result);
+}
 

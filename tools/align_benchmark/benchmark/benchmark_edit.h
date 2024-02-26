@@ -65,4 +65,10 @@ void benchmark_edit_dp_banded(
     align_input_t* const align_input,
     const int bandwidth);
 
+// External
+
+void benchmark_edlib(
+    align_input_t* const align_input,
+    const int bandwidth);
+
 #endif /* BENCHMARK_EDIT_H_ */
