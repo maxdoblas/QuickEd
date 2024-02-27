@@ -377,25 +377,7 @@ quicked_status_t quicked_free(
     return QUICKED_WIP;
 }
 
-bool quicked_check_error(
-    quicked_status_t status)
-{
-    switch (status)
-    {
-        case QUICKED_ERROR:
-        case QUICKED_FAIL_NON_CONVERGENCE:
-        case QUICKED_UNIMPLEMENTED:
-        case QUICKED_UNKNOWN_ALGO:
-            return true;
-            break;
-        case QUICKED_OK:
-        case QUICKED_WIP:
-        default:
-            return false;
-            break;
-    }
-
-}
+bool quicked_check_error(quicked_status_t status) { return status < 0; }
 
 void quicked_print_error(
     quicked_status_t status)

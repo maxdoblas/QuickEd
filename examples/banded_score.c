@@ -28,27 +28,41 @@
 
 int main(void) {
     quicked_aligner_t aligner;                          // Aligner object
+    quicked_status_t status;                            // Return code from QuickEdit functions
     quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters
 
     params.algo = BANDED;                               // Select the algorithm: Banded
     params.bandwidth = 10;                              // Banded needs a bandwidth
                                                         //  10% of the seq. length (Default: 15%)
-    params.only_score = true;                            // Only score, don't compute CIGAR.
+    params.only_score = true;                           // Only score, don't compute CIGAR.
                                                         //  This saves memory and time.
 
-    quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
+    status = quicked_new(&aligner, &params);            // Initialize the aligner with the given parameters
+    if (quicked_check_error(status)) {
+        quicked_print_error(status);
+        return 1;
+    }
 
     const char* pattern = "ACGT";                       // Pattern sequence
     const char* text = "ACTT";                          // Text sequence
 
     // Align the sequences!
     printf("Aligning '%s' and '%s' using Banded (Only Score)\n", pattern, text);
-    quicked_align(&aligner, pattern, strlen(pattern), text, strlen(text));
+
+    status = quicked_align(&aligner, pattern, strlen(pattern), text, strlen(text));
+    if (quicked_check_error(status)) {
+        quicked_print_error(status);
+        return 1;
+    }
 
     printf("Score: %d\n", aligner.score);                   // Print the score
     printf("CIGAR <Expecting NULL>: %s\n", aligner.cigar);  // We didn't compute the CIGAR, so it's NULL
 
-    quicked_free(&aligner);                                 // Free whatever memory the aligner allocated
+    status = quicked_free(&aligner);                        // Free whatever memory the aligner allocated
+    if (quicked_check_error(status)) {
+        quicked_print_error(status);
+        return 1;
+    }
 
     return 0;
 }

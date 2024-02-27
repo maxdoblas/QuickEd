@@ -67,14 +67,14 @@ typedef struct quicked_aligner_t {
 } quicked_aligner_t;
 
 typedef enum quicked_status_t {
-    QUICKED_OK = 0,
-    QUICKED_ERROR,          // Default error code
-    QUICKED_FAIL_NON_CONVERGENCE, // The hirschberg has no solution for the actual cutoff score 
-    QUICKED_UNKNOWN_ALGO,   // Provided algorithm is not supported
+    QUICKED_OK                   = 0,
+    QUICKED_ERROR                = -1,  // Default error code
+    QUICKED_FAIL_NON_CONVERGENCE = -2,  // The hirschberg has no solution for the actual cutoff score
+    QUICKED_UNKNOWN_ALGO         = -3,  // Provided algorithm is not supported
 
     // Development codes
-    QUICKED_UNIMPLEMENTED,  // function declared but not implemented
-    QUICKED_WIP,            // function implementation in progress
+    QUICKED_UNIMPLEMENTED        = -10, // Function declared but not implemented
+    QUICKED_WIP                  = 1,   // Function implementation in progress. Considered not an error
 } quicked_status_t;
 
 bool quicked_check_error(quicked_status_t status);

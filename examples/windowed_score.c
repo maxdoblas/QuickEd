@@ -28,6 +28,7 @@
 
 int main(void) {
     quicked_aligner_t aligner;                          // Aligner object
+    quicked_status_t status;                            // Return code from QuickEdit functions
     quicked_params_t params = quicked_default_params(); // Get a set of sensible default parameters1
 
     params.algo = WINDOWED;                             // Select the algorithm: Windowed
@@ -35,22 +36,31 @@ int main(void) {
     // Default Windowed configuration (2x2, overlap 1) has an SSE4.1 implementation.
     // This is transparent to the user, and will be used if the CPU supports it.
 
-    params.only_score = true;                            // Only score, don't compute CIGAR.
+    params.only_score = true;                           // Only score, don't compute CIGAR.
                                                         //  This saves memory and time.
 
-    quicked_new(&aligner, &params);                     // Initialize the aligner with the given parameters
+    status = quicked_new(&aligner, &params);            // Initialize the aligner with the given parameters
 
     const char* pattern = "ACGT";                       // Pattern sequence
     const char* text = "ACTT";                          // Text sequence
 
     // Align the sequences!
     printf("Aligning '%s' and '%s' using Windowed (Only Score)\n", pattern, text);
-    quicked_align(&aligner, pattern, strlen(pattern), text, strlen(text));
+
+    status = quicked_align(&aligner, pattern, strlen(pattern), text, strlen(text));
+    if (quicked_check_error(status)) {
+        quicked_print_error(status);
+        return 1;
+    }
 
     printf("Score: %d\n", aligner.score);                   // Print the score
     printf("CIGAR <Expecting NULL>: %s\n", aligner.cigar);  // We didn't compute the CIGAR, so it's NULL
 
-    quicked_free(&aligner);                                 // Free whatever memory the aligner allocated
+    status = quicked_free(&aligner);                        // Free whatever memory the aligner allocated
+    if (quicked_check_error(status)) {
+        quicked_print_error(status);
+        return 1;
+    }
 
     return 0;
 }
