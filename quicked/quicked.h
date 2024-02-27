@@ -71,6 +71,7 @@ typedef enum quicked_status_t {
     QUICKED_ERROR                = -1,  // Default error code
     QUICKED_FAIL_NON_CONVERGENCE = -2,  // The hirschberg has no solution for the actual cutoff score
     QUICKED_UNKNOWN_ALGO         = -3,  // Provided algorithm is not supported
+    QUICKED_EMPTY_SEQUENCE       = -4,  // Empty sequence
 
     // Development codes
     QUICKED_UNIMPLEMENTED        = -10, // Function declared but not implemented

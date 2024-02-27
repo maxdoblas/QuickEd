@@ -29,16 +29,29 @@
 int main(int argc, char *argv[]) { // Usage: ./quicked_harness <text> <pattern> <expected score>
 
     quicked_aligner_t aligner;
+    quicked_status_t status;
     quicked_params_t params = quicked_default_params();
 
-    quicked_new(&aligner, &params);
+    status = quicked_new(&aligner, &params);
+    if (quicked_check_error(status)) {
+        quicked_print_error(status);
+        exit(EXIT_FAILURE);
+    }
 
-    quicked_align(&aligner, argv[1], strlen(argv[1]), argv[2], strlen(argv[2]));
+    status = quicked_align(&aligner, argv[1], strlen(argv[1]), argv[2], strlen(argv[2]));
+    if (quicked_check_error(status)) {
+        quicked_print_error(status);
+        exit(EXIT_FAILURE);
+    }
 
     int score = aligner.score;
     printf("Got score: %d\n", score);
 
-    quicked_free(&aligner);
+    status = quicked_free(&aligner);
+    if (quicked_check_error(status)) {
+        quicked_print_error(status);
+        exit(EXIT_FAILURE);
+    }
 
     if (argc == 4) { // If expected score is provided, check if it matches
         printf("Expected score: %d", atoi(argv[3]));

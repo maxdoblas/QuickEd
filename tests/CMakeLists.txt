@@ -8,9 +8,7 @@ add_dependencies(tests quicked_harness)
 
 # Add the tests
 add_test(NAME test_empty COMMAND $<TARGET_FILE:quicked_harness> "" "")
-set_property(TEST test_empty PROPERTY
-    SKIP_REGULAR_EXPRESSION "^MMAllocator error. Zero bytes requested")
-# This is not proper handling of zero-length strings, but it is not a fail either.
+set_property(TEST test_empty PROPERTY PASS_REGULAR_EXPRESSION "ERROR: Tried to align an empty sequence")
 
 add_test(NAME test_nonDNA COMMAND $<TARGET_FILE:quicked_harness> "GATC" "GATO" 1)
 

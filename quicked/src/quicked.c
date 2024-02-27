@@ -396,6 +396,9 @@ void quicked_print_error(
         case QUICKED_UNKNOWN_ALGO:
             fprintf(stderr,"ERROR: Unknown algorithm selection\n");
             break;
+        case QUICKED_EMPTY_SEQUENCE:
+            fprintf(stderr,"ERROR: Tried to align an empty sequence\n");
+            break;
         case QUICKED_OK:
         case QUICKED_WIP:
         default:
@@ -410,6 +413,12 @@ quicked_status_t quicked_align(
     const char* pattern, const int pattern_len,
     const char* text, const int text_len)
 {
+
+    if (pattern_len == 0 || text_len == 0)
+    {
+        return QUICKED_EMPTY_SEQUENCE;
+    }
+
     quicked_status_t status = QUICKED_ERROR;
 
     switch (aligner->params->algo)
