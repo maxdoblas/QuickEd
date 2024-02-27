@@ -316,8 +316,6 @@ void edit_bpm_backtrace_matrix(
   while (h>=0) {operations[op_sentinel--] = 'I'; --h;}
   while (v>=0) {operations[op_sentinel--] = 'D'; --v;}
   bpm_matrix->cigar->begin_offset = op_sentinel+1;
-  printf("cigar->begin_offset=%d\n",bpm_matrix->cigar->begin_offset);
-  printf("cigar->end_offset=%d\n",bpm_matrix->cigar->end_offset);
 }
 void edit_bpm_compute(
     bpm_matrix_t* const bpm_matrix,

@@ -255,8 +255,6 @@ void cigar_get_CIGAR(
 int cigar_score_edit(
     cigar_t* const cigar) {
   int score = 0, i;
-  printf("cigar->begin_offset=%d\n",cigar->begin_offset);
-  printf("cigar->end_offset=%d\n",cigar->end_offset);
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
     switch (cigar->operations[i]) {
       case 'M': break;
