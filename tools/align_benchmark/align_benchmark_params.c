@@ -91,7 +91,7 @@ void usage(void) {
       "          --hew-prercentage INT                                         \n"
       "          --force-scalar                                                \n"
       "        [Misc]                                                          \n"
-      "          --check|c 'correct'|'score'|'alignment'                       \n"
+      "          --check|c 'display'|'correct'|'score'|'alignment'             \n"
       "          --check-bandwidth INT                                         \n"
       "        [System]                                                        \n"
       "          --num-threads|t INT                                           \n"

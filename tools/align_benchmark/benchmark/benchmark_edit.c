@@ -68,8 +68,16 @@ void benchmark_quicked(
   quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
   
   // DEBUG
-  if (align_input->debug_flags) { // TODO
-    //benchmark_check_alignment(align_input,cigar);
+  if (align_input->debug_flags) {
+    cigar_t* const cigar = cigar_new(
+      align_input->pattern_length + align_input->text_length,
+      align_input->mm_allocator
+    );
+    cigar_to_operations(cigar, aligner.cigar, strlen(aligner.cigar));
+
+    benchmark_check_alignment(align_input,cigar);
+
+    cigar_free(cigar, align_input->mm_allocator);
   }
   // Output
   if (align_input->output_file) {
@@ -106,8 +114,16 @@ void benchmark_banded(
   quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
   
   // DEBUG
-  if (align_input->debug_flags) { // TODO
-    // benchmark_check_alignment(align_input,cigar);
+  if (align_input->debug_flags) {
+    cigar_t* const cigar = cigar_new(
+      align_input->pattern_length + align_input->text_length,
+      align_input->mm_allocator
+    );
+    cigar_to_operations(cigar, aligner.cigar, strlen(aligner.cigar));
+
+    benchmark_check_alignment(align_input,cigar);
+
+    cigar_free(cigar, align_input->mm_allocator);
   }
   // Output
   if (align_input->output_file) {
@@ -146,8 +162,16 @@ void benchmark_hirschberg(
    }
   
   // DEBUG
-  if (align_input->debug_flags) { // TODO
-    // benchmark_check_alignment(align_input,cigar);
+  if (align_input->debug_flags) {
+    cigar_t* const cigar = cigar_new(
+      align_input->pattern_length + align_input->text_length,
+      align_input->mm_allocator
+    );
+    cigar_to_operations(cigar, aligner.cigar, strlen(aligner.cigar));
+
+    benchmark_check_alignment(align_input,cigar);
+
+    cigar_free(cigar, align_input->mm_allocator);
   }
   // Output
   if (align_input->output_file) {
@@ -193,8 +217,16 @@ void benchmark_windowed(
   quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
   
   // DEBUG
-  if (align_input->debug_flags) { // TODO
-    // benchmark_check_alignment(align_input,cigar);
+  if (align_input->debug_flags) {
+    cigar_t* const cigar = cigar_new(
+      align_input->pattern_length + align_input->text_length,
+      align_input->mm_allocator
+    );
+    cigar_to_operations(cigar, aligner.cigar, strlen(aligner.cigar));
+
+    benchmark_check_alignment(align_input,cigar);
+
+    cigar_free(cigar, align_input->mm_allocator);
   }
   // Output
   if (align_input->output_file) {
@@ -329,10 +361,6 @@ void benchmark_edlib(align_input_t* const align_input,
     if (operation=='=') edlib_cigar[i] = 'M';
     else if (operation=='D') edlib_cigar[i] = 'I';
     else if (operation=='I') edlib_cigar[i] = 'D';
-  }
-  // DEBUG
-  if (align_input->debug_flags) {
-    // benchmark_check_alignment(align_input,&cigar);
   }
   // Output
   if (align_input->output_file) {

@@ -135,8 +135,7 @@ void align_benchmark_print_results(
   }
   // Print Stats
   const bool checks_enabled =
-      parameters.check_display || parameters.check_correct ||
-      parameters.check_score || parameters.check_alignments;
+      parameters.check_correct || parameters.check_score || parameters.check_alignments;
   if (checks_enabled && parameters.num_threads==1) {
     benchmark_print_stats(stderr,align_input);
   }

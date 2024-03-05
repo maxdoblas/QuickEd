@@ -96,6 +96,10 @@ void cigar_get_CIGAR(
     uint32_t** const cigar_buffer,
     int* const cigar_length);
 
+void cigar_to_operations(
+    cigar_t* const cigar,
+    const char* const cigar_str,
+    const uint64_t cigar_length);
 /*
  * Score
  */

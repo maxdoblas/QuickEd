@@ -24,7 +24,7 @@
 
 #include "benchmark_check.h"
 #include "score_matrix.h"
-#include "edit/edit_dp.h"
+#include "external/edlib/edlib/include/edlib.h"
 
 /*
  * Checker (given the correct CIGAR+SCORE)
@@ -116,31 +116,48 @@ void benchmark_check_alignment_using_solution(
 void benchmark_check_alignment_edit(
     align_input_t* const align_input,
     cigar_t* const cigar_computed) {
-  score_matrix_t score_matrix;
-  score_matrix_allocate(
-      &score_matrix,align_input->pattern_length+1,
-      align_input->text_length+1,align_input->mm_allocator);
+  EdlibAlignResult result;
+  char* edlib_cigar = NULL;
+
   cigar_t* const cigar = cigar_new(
-      align_input->pattern_length+align_input->text_length,align_input->mm_allocator);
-  if (align_input->check_bandwidth <= 0) {
-    edit_dp_align(&score_matrix,
-        align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length,cigar);
-  } else {
-    edit_dp_align_banded(&score_matrix,
-        align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length,
-        align_input->check_bandwidth,cigar);
+    align_input->pattern_length + align_input->text_length,
+    align_input->mm_allocator
+  );
+
+  result = edlibAlign(
+    align_input->pattern, align_input->pattern_length,
+    align_input->text, align_input->text_length,
+    edlibNewAlignConfig(
+      align_input->check_bandwidth,
+      EDLIB_MODE_NW,EDLIB_TASK_PATH,
+      NULL,0
+    )
+  );
+  edlib_cigar = edlibAlignmentToCigar(
+    result.alignment,
+    result.alignmentLength,
+    EDLIB_CIGAR_EXTENDED
+  );
+
+  uint64_t cigar_len = strlen(edlib_cigar);
+  for(uint64_t i = 0; i < cigar_len;i++){
+    char operation = edlib_cigar[i];
+    if (operation=='=') edlib_cigar[i] = 'M';
+    else if (operation=='D') edlib_cigar[i] = 'I';
+    else if (operation=='I') edlib_cigar[i] = 'D';
   }
+  cigar_to_operations(cigar, edlib_cigar, cigar_len);
+
   const int score_correct = cigar_score_edit(cigar);
   const int score_computed = cigar_score_edit(cigar_computed);
-  // Check alignment
+
   benchmark_check_alignment_using_solution(
-      align_input,cigar_computed,score_computed,
-      cigar,score_correct);
-  // Free
-  score_matrix_free(&score_matrix);
-  cigar_free(cigar,align_input->mm_allocator);
+    align_input, cigar_computed, score_computed,
+    cigar, score_correct);
+
+  cigar_free(cigar, align_input->mm_allocator);
+  free(edlib_cigar);
+  edlibFreeAlignResult(result);
 }
 /*
  * Check

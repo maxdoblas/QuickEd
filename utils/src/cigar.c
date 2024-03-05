@@ -249,6 +249,25 @@ void cigar_get_CIGAR(
   *cigar_buffer = cigar->cigar_buffer;
   *cigar_length = cigar->cigar_length;
 }
+void cigar_to_operations(
+    cigar_t* const cigar,
+    const char* const cigar_str,
+    const uint64_t cigar_length) {
+  int num;
+  for(uint64_t i = 0; i < cigar_length;){
+    char operation = cigar_str[i];
+    if (operation >= '0' && operation <= '9') {
+      num = atoi(cigar_str + i);
+      while (cigar_str[i] >= '0' && cigar_str[i] <= '9') { i++; } // skip the number
+    }
+    else {
+      for (int j = 0; j < num; j++) {
+        cigar->operations[cigar->end_offset++] = operation;
+      }
+      i++;
+    }
+  }
+}
 /*
  * Score
  */
@@ -262,7 +281,7 @@ int cigar_score_edit(
       case 'D':
       case 'I': ++score; break;
       default:
-        fprintf(stderr,"[CIGAR] Computing CIGAR score: Unknown operation\n");
+        fprintf(stderr,"[CIGAR] Computing CIGAR score: Unknown operation (%c)\n",cigar->operations[i]);
         exit(1);
     }
   }
@@ -429,7 +448,7 @@ void cigar_print(
   cigar_sprint(buffer,buf_size,cigar,print_matches);
   fprintf(stream,"%s",buffer); // Print
   // Free
-  free(buffer);
+  mm_allocator_free(mm_allocator, buffer);
 }
 int cigar_sprint(
     char* const buffer,
@@ -480,7 +499,7 @@ void cigar_print_SAM_CIGAR(
   cigar_sprint_SAM_CIGAR(buffer,buf_size,cigar,show_mismatches);
   fprintf(stream,"%s",buffer); // Print
   // Free
-  free(buffer);
+  mm_allocator_free(mm_allocator, buffer);
 }
 int cigar_sprint_SAM_CIGAR(
     char* const buffer,
@@ -522,7 +541,7 @@ void cigar_print_pretty(
   const int end_offset = cigar->end_offset;
   // Allocate alignment buffers
   const int max_buffer_length = text_length + pattern_length + 1;
-  char* const mem = calloc(3*max_buffer_length,1);
+  char* const mem = mm_allocator_calloc(mm_allocator, 3*max_buffer_length, char, true);
   char* const pattern_alg = mem;
   char* const ops_alg = pattern_alg + max_buffer_length;
   char* const text_alg = ops_alg + max_buffer_length;
@@ -593,7 +612,7 @@ void cigar_print_pretty(
   fprintf(stream,"                 %s\n",ops_alg);
   fprintf(stream,"      TEXT       %s\n",text_alg);
   // Free
-  free(mem);
+  mm_allocator_free(mm_allocator, mem);
 }
 
 
