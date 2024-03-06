@@ -55,13 +55,4 @@ void score_matrix_allocate(
 void score_matrix_free(
     score_matrix_t* const score_matrix);
 
-/*
- * Display
- */
-void score_matrix_print(
-    FILE* const stream,
-    const score_matrix_t* const score_matrix,
-    const char* const pattern,
-    const char* const text);
-
 #endif /* SCORE_MATRIX_H_ */

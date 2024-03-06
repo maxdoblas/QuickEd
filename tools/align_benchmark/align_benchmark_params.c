@@ -70,10 +70,12 @@ void usage(void) {
       "      Options::                                                         \n"
       "        [Algorithm]                                                     \n"
       "          --algorithm|a ALGORITHM                                       \n"
-      "            [Edit (Levenshtein)]                                        \n"
+      "            [Quicked Edit (Levenshtein)]                                \n"
       "              quicked                                                   \n"
       "              edit-banded                                               \n"
       "              edit-windowed                                             \n"
+      "            [Other Edit (Levenshtein)]                                  \n"
+      "              edlib                                                     \n"
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
       "              edit-bpm                                                  \n"
@@ -81,14 +83,13 @@ void usage(void) {
       "          --input|i PATH                                                \n"
       "          --output|o PATH                                               \n"
       "          --output-full PATH                                            \n"
-      "        [Penalties & Span]                                              \n"
-      "          --ends-free P0,Pf,T0,Tf                                       \n"
       "        [Other Parameters]                                              \n"
       "          --bandwidth INT                                               \n"
       "          --window-size INT                                             \n"
       "          --overlap-size INT                                            \n"
       "          --hew-threshold INT                                           \n"
       "          --hew-prercentage INT                                         \n"
+      "          --only-score                                                  \n"
       "          --force-scalar                                                \n"
       "        [Misc]                                                          \n"
       "          --check|c 'display'|'correct'|'score'|'alignment'             \n"
@@ -113,8 +114,6 @@ void parse_arguments(
     { "input", required_argument, 0, 'i' },
     { "output", required_argument, 0, 'o' },
     { "output-full", required_argument, 0, 800 },
-    /* Penalties */
-    { "ends-free", required_argument, 0, 901 },
     /* Other alignment parameters */
     { "bandwidth", required_argument, 0, 2000 },
     { "window-size", required_argument, 0, 2001 },
