@@ -127,11 +127,7 @@ void benchmark_check_alignment_edit(
   result = edlibAlign(
     align_input->pattern, align_input->pattern_length,
     align_input->text, align_input->text_length,
-    edlibNewAlignConfig(
-      align_input->check_bandwidth,
-      EDLIB_MODE_NW,EDLIB_TASK_PATH,
-      NULL,0
-    )
+    edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_PATH, NULL, 0)
   );
   edlib_cigar = edlibAlignmentToCigar(
     result.alignment,

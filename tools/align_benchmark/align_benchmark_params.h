@@ -75,7 +75,6 @@ typedef struct {
   bool check_correct;
   bool check_score;
   bool check_alignments;
-  int check_bandwidth;
   // Profile
   profiler_timer_t timer_global;
   // System

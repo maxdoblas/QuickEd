@@ -50,7 +50,6 @@ align_bench_params_t parameters = {
   .force_scalar = false,
   .only_score = false,
   // Misc
-  .check_bandwidth = -1,
   .check_display = false,
   .check_correct = false,
   .check_score = false,
@@ -93,7 +92,6 @@ void usage(void) {
       "          --force-scalar                                                \n"
       "        [Misc]                                                          \n"
       "          --check|c 'display'|'correct'|'score'|'alignment'             \n"
-      "          --check-bandwidth INT                                         \n"
       "        [System]                                                        \n"
       "          --num-threads|t INT                                           \n"
       "          --batch-size INT                                              \n"
@@ -124,7 +122,6 @@ void parse_arguments(
     { "only-score", no_argument, 0, 2006 },
     /* Misc */
     { "check", required_argument, 0, 'c' },
-    { "check-bandwidth", required_argument, 0, 3002 },
     /* System */
     { "num-threads", required_argument, 0, 't' },
     { "batch-size", required_argument, 0, 4000 },
@@ -233,9 +230,6 @@ void parse_arguments(
         fprintf(stderr,"Option '--check' must be in {'correct','score','alignment'}\n");
         exit(1);
       }
-      break;
-    case 3002: // --check-bandwidth
-      parameters.check_bandwidth = atoi(optarg);
       break;
     /*
      * System

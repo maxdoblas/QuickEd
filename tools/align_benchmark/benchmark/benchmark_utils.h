@@ -86,7 +86,6 @@ typedef struct {
   profiler_counter_t align_ins;
   // DEBUG
   int debug_flags;
-  int check_bandwidth;
   bool verbose;
   float diff_scores;
 } align_input_t;

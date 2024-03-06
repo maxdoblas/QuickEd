@@ -60,7 +60,6 @@ void align_input_configure_global(
   if (parameters.check_correct) align_input->debug_flags |= ALIGN_DEBUG_CHECK_CORRECT;
   if (parameters.check_score) align_input->debug_flags |= ALIGN_DEBUG_CHECK_SCORE;
   if (parameters.check_alignments) align_input->debug_flags |= ALIGN_DEBUG_CHECK_ALIGNMENT;
-  align_input->check_bandwidth = parameters.check_bandwidth;
   align_input->verbose = parameters.verbose;
 }
 void align_benchmark_free(
