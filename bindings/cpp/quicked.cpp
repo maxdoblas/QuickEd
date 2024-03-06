@@ -24,18 +24,28 @@
 
 #include "quicked.hpp"
 
-quicked::QuickedAligner::QuickedAligner()
-{
-    this->params = quicked_default_params();
-    quicked_new(&this->aligner, &this->params);
-}
+namespace quicked {
 
-quicked::QuickedAligner::~QuickedAligner()
-{
-    quicked_free(&this->aligner);
-}
+    QuickedAligner::QuickedAligner()
+    {
+        this->params = quicked_default_params();
+        quicked_new(&this->aligner, &this->params);
+    }
 
-quicked::quicked_status_t quicked::QuickedAligner::align(std::string *pattern, std::string *text)
-{
-    return quicked_align(&this->aligner, pattern->c_str(), pattern->length(), text->c_str(), text->length());
+    QuickedAligner::~QuickedAligner()
+    {
+        quicked_free(&this->aligner);
+    }
+
+    quicked_status_t QuickedAligner::align(std::string *pattern, std::string *text)
+    {
+        return quicked_align(&this->aligner, pattern->c_str(), pattern->length(), text->c_str(), text->length());
+    }
+
+    void QuickedAligner::setHEWThreshold(unsigned int hew_threshold) {
+        for (int i = 0; i < QUICKED_WINDOW_STAGES; i++) this->aligner.params->hew_threshold[i] = hew_threshold;
+    };
+    void QuickedAligner::setHEWPercentage(unsigned int hew_percentage) {
+        for (int i = 0; i < QUICKED_WINDOW_STAGES; i++) this->aligner.params->hew_percentage[i] = hew_percentage;
+    };
 }

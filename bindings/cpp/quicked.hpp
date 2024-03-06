@@ -33,7 +33,6 @@ namespace quicked {
     #include "quicked/quicked.h"
     }
 
-
     class QuickedAligner {
     public:
         QuickedAligner();
@@ -47,6 +46,8 @@ namespace quicked {
         void setWindowSize(unsigned int window_size)    { this->aligner.params->window_size = window_size; };
         void setOverlapSize(unsigned int overlap_size)  { this->aligner.params->overlap_size = overlap_size; };
         void setForceScalar(bool force_scalar)          { this->aligner.params->force_scalar = force_scalar; };
+        void setHEWThreshold(unsigned int hew_threshold);
+        void setHEWPercentage(unsigned int hew_percentage);
 
         int getScore()          { return this->aligner.score; }
         std::string getCigar()  { return std::string((this->aligner.cigar) ? this->aligner.cigar : "NULL"); }
