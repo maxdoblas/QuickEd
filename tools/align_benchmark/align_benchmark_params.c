@@ -87,7 +87,7 @@ void usage(void) {
       "          --window-size INT                                             \n"
       "          --overlap-size INT                                            \n"
       "          --hew-threshold INT                                           \n"
-      "          --hew-prercentage INT                                         \n"
+      "          --hew-percentage INT                                          \n"
       "          --only-score                                                  \n"
       "          --force-scalar                                                \n"
       "        [Misc]                                                          \n"
