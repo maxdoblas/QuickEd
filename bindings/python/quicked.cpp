@@ -26,35 +26,39 @@
 #include "quicked.hpp"
 
 namespace py = pybind11;
+namespace quicked {
+    PYBIND11_MODULE(pyquicked, m) {
+        m.doc() = "QuickEd Library";
 
-PYBIND11_MODULE(pyquicked, m) {
-    m.doc() = "QuickEd Library";
+    py::class_<QuickedAligner>(m, "QuickedAligner")
+            .def(py::init<>())
+            .def("align", &QuickedAligner::align)
+            .def("setAlgorithm", &QuickedAligner::setAlgorithm)
+            .def("setOnlyScore", &QuickedAligner::setOnlyScore)
+            .def("setBandwidth", &QuickedAligner::setBandwidth)
+            .def("setWindowSize", &QuickedAligner::setWindowSize)
+            .def("setOverlapSize", &QuickedAligner::setOverlapSize)
+            .def("setForceScalar", &QuickedAligner::setForceScalar)
+            .def("setHEWThreshold", &QuickedAligner::setHEWThreshold)
+            .def("setHEWPercentage", &QuickedAligner::setHEWPercentage)
+            .def("getScore", &QuickedAligner::getScore)
+            .def("getCigar", &QuickedAligner::getCigar);
 
-py::class_<quicked::QuickedAligner>(m, "QuickedAligner")
-        .def(py::init<>())
-        .def("align", &quicked::QuickedAligner::align)
-        .def("setAlgorithm", &quicked::QuickedAligner::setAlgorithm)
-        .def("setOnlyScore", &quicked::QuickedAligner::setOnlyScore)
-        .def("setBandwidth", &quicked::QuickedAligner::setBandwidth)
-        .def("setWindowSize", &quicked::QuickedAligner::setWindowSize)
-        .def("setOverlapSize", &quicked::QuickedAligner::setOverlapSize)
-        .def("setForceScalar", &quicked::QuickedAligner::setForceScalar)
-        .def("getScore", &quicked::QuickedAligner::getScore)
-        .def("getCigar", &quicked::QuickedAligner::getCigar);
+        py::enum_<quicked_algo_t>(m, "QuickedAlgo")
+            .value("QUICKED", QUICKED)
+            .value("WINDOWED", WINDOWED)
+            .value("BANDED", BANDED)
+            .value("HIRSCHBERG", HIRSCHBERG)
+            .export_values();
 
-    py::enum_<quicked::quicked_algo_t>(m, "QuickedAlgo")
-        .value("QUICKED", quicked::QUICKED)
-        .value("WINDOWED", quicked::WINDOWED)
-        .value("BANDED", quicked::BANDED)
-        .value("HIRSCHBERG", quicked::HIRSCHBERG)
-        .export_values();
-
-    py::enum_<quicked::quicked_status_t>(m, "QuickedStatus")
-        .value("QUICKED_OK", quicked::QUICKED_OK)
-        .value("QUICKED_ERROR", quicked::QUICKED_ERROR)
-        .value("QUICKED_UNKNOWN_ALGO", quicked::QUICKED_UNKNOWN_ALGO)
-        .value("QUICKED_UNIMPLEMENTED", quicked::QUICKED_UNIMPLEMENTED)
-        .value("QUICKED_WIP", quicked::QUICKED_WIP)
-        .export_values();
-
+        py::enum_<quicked_status_t>(m, "QuickedStatus")
+            .value("QUICKED_OK", QUICKED_OK)
+            .value("QUICKED_ERROR", QUICKED_ERROR)
+            .value("QUICKED_FAIL_NON_CONVERGENCE", QUICKED_FAIL_NON_CONVERGENCE)
+            .value("QUICKED_UNKNOWN_ALGO", QUICKED_UNKNOWN_ALGO)
+            .value("QUICKED_EMPTY_SEQUENCE", QUICKED_EMPTY_SEQUENCE)
+            .value("QUICKED_UNIMPLEMENTED", QUICKED_UNIMPLEMENTED)
+            .value("QUICKED_WIP", QUICKED_WIP)
+            .export_values();
+    }
 }
