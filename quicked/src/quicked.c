@@ -243,7 +243,7 @@ quicked_status_t run_quicked(
             banded_matrix_t banded_matrix_score;
             banded_pattern_compile(&banded_pattern, pattern, pattern_len, mm_allocator);
 
-            score = MAX(text_len, pattern_len) * 3 / 20;
+            score = MIN(MAX(text_len, pattern_len) * aligner->params->bandwidth / 100, score);
 
             banded_matrix_allocate(&banded_matrix_score, pattern_len, text_len, score, SCORE_ONLY, mm_allocator);
 

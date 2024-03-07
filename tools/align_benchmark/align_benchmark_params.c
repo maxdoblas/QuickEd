@@ -42,7 +42,7 @@ align_bench_params_t parameters = {
   .line1_allocated = 0,
   .line2_allocated = 0,
   // Other algorithms parameters
-  .bandwidth = 15,
+  .bandwidth = -1,
   .window_size = 9,
   .overlap_size = 1,
   .hew_percentage = 15,
@@ -300,10 +300,18 @@ void parse_arguments(
         exit(1);
       }
       break;
+
+    case alignment_edit_quicked:
+      if (parameters.bandwidth == -1) {
+        parameters.bandwidth = 15;
+      } else if (parameters.bandwidth < 1) {
+        fprintf(stderr,"Parameter 'bandwidth' has to be > 0\n");
+        exit(1);
+      }
+      break;
     case alignment_edit_dp:
     case alignment_edit_bpm:
     case alignment_edlib:
-    case alignment_edit_quicked:
     default:
       break;
   }
