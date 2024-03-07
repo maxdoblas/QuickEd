@@ -79,7 +79,7 @@ typedef enum quicked_status_t {
 } quicked_status_t;
 
 bool quicked_check_error(quicked_status_t status);
-void quicked_print_error(quicked_status_t status);
+const char* quicked_status_msg(quicked_status_t status);
 
 quicked_params_t quicked_default_params(void);
 quicked_status_t quicked_new(

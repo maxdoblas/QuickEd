@@ -34,13 +34,13 @@ int main(int argc, char *argv[]) { // Usage: ./quicked_harness <text> <pattern> 
 
     status = quicked_new(&aligner, &params);
     if (quicked_check_error(status)) {
-        quicked_print_error(status);
+        fprintf(stderr, "%s", quicked_status_msg(status));
         exit(EXIT_FAILURE);
     }
 
     status = quicked_align(&aligner, argv[1], strlen(argv[1]), argv[2], strlen(argv[2]));
     if (quicked_check_error(status)) {
-        quicked_print_error(status);
+        fprintf(stderr, "%s", quicked_status_msg(status));
         exit(EXIT_FAILURE);
     }
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) { // Usage: ./quicked_harness <text> <pattern> 
 
     status = quicked_free(&aligner);
     if (quicked_check_error(status)) {
-        quicked_print_error(status);
+        fprintf(stderr, "%s", quicked_status_msg(status));
         exit(EXIT_FAILURE);
     }
 

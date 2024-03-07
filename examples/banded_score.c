@@ -39,7 +39,7 @@ int main(void) {
 
     status = quicked_new(&aligner, &params);            // Initialize the aligner with the given parameters
     if (quicked_check_error(status)) {
-        quicked_print_error(status);
+        fprintf(stderr, "%s", quicked_status_msg(status));
         return 1;
     }
 
@@ -51,7 +51,7 @@ int main(void) {
 
     status = quicked_align(&aligner, pattern, strlen(pattern), text, strlen(text));
     if (quicked_check_error(status)) {
-        quicked_print_error(status);
+        fprintf(stderr, "%s", quicked_status_msg(status));
         return 1;
     }
 
@@ -60,7 +60,7 @@ int main(void) {
 
     status = quicked_free(&aligner);                        // Free whatever memory the aligner allocated
     if (quicked_check_error(status)) {
-        quicked_print_error(status);
+        fprintf(stderr, "%s", quicked_status_msg(status));
         return 1;
     }
 

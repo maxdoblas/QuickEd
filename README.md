@@ -157,7 +157,7 @@ The `quicked_align` function returns the status struct (`quicked_status_t`), and
   quicked_status_t status = quicked_align(&aligner, pattern, pattern_length, text, text_length);
   
   if (quicked_check_error(status)){
-    quicked_print_error(status);
+    fprintf(stderr, "%s", quicked_status_msg(status));
     exit(1);
   } else {
     printf("Alignemnt: %d - $s\n", aligner.score, aligner.cigar);   // Print the score and CIGAR

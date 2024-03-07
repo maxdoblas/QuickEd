@@ -158,7 +158,7 @@ void benchmark_hirschberg(
   quicked_status_t status = quicked_align(&aligner, align_input->pattern, align_input->pattern_length, align_input->text, align_input->text_length);
 
    if (quicked_check_error(status)){
-    quicked_print_error(status);
+    fprintf(stderr, "%s", quicked_status_msg(status));
    }
   
   // DEBUG

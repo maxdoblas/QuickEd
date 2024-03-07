@@ -379,31 +379,25 @@ quicked_status_t quicked_free(
 
 bool quicked_check_error(quicked_status_t status) { return status < 0; }
 
-void quicked_print_error(
+const char* quicked_status_msg(
     quicked_status_t status)
 {
     switch (status)
     {
         case QUICKED_ERROR:
-            fprintf(stderr,"ERROR: Quicked has finished with unspecific error\n");
-            break;
+            return "ERROR: Quicked has finished with unspecific error\n";
         case QUICKED_FAIL_NON_CONVERGENCE:
-            fprintf(stderr,"ERROR: Hirschberg algorithem can not find a middle point of subsequence division!\n");
-            break;
+            return "ERROR: Hirschberg algorithem can not find a middle point of subsequence division!\n";
         case QUICKED_UNIMPLEMENTED:
-            fprintf(stderr,"ERROR: The algorithm or parameter combination selected is not implemented\n");
-            break;
+            return "ERROR: The algorithm or parameter combination selected is not implemented\n";
         case QUICKED_UNKNOWN_ALGO:
-            fprintf(stderr,"ERROR: Unknown algorithm selection\n");
-            break;
+            return "ERROR: Unknown algorithm selection\n";
         case QUICKED_EMPTY_SEQUENCE:
-            fprintf(stderr,"ERROR: Tried to align an empty sequence\n");
-            break;
+            return "ERROR: Tried to align an empty sequence\n";
         case QUICKED_OK:
         case QUICKED_WIP:
         default:
-            printf("Quicked finished without errors.\n");
-            break;
+            return "Quicked finished without errors.\n";
     }
 
 }
