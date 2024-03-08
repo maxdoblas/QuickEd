@@ -9,7 +9,7 @@ on:
     branches: [ main ]
 
 jobs:
-  Build:
+  Build-and-Test:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -46,79 +46,8 @@ jobs:
     - name: Build
       run: cmake --build ${{ steps.strings.outputs.build-dir }} --config ${{ matrix.build_type }} --parallel 2
 
-    - name: Cache build directory
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.strings.outputs.build-dir }}
-        key: ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-cmake-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-cmake-
-
-    - name: Cache bin directory
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.strings.outputs.bin-dir }}
-        key: ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-binaries-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-binaries-
-
-    - name: Cache lib directory
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.strings.outputs.lib-dir }}
-        key: ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-libraries-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-libraries-
-
-  Test:
-    needs: Build
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        build_type: [Debug]
-        compiler: [ {cpp: g++, c: gcc}, {cpp: clang++, c: clang} ]
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
-        submodules: recursive
-
-    - name: Set reusable strings
-      id: strings
-      shell: bash
-      run: |
-        echo "build-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-        echo "bin-dir=${{ github.workspace }}/bin" >> "$GITHUB_OUTPUT"
-        echo "lib-dir=${{ github.workspace }}/lib" >> "$GITHUB_OUTPUT"
-
-    - name: Restore build directory
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.strings.outputs.build-dir }}
-        key: ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-cmake-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-cmake-
-
-    - name: Restore bin directory
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.strings.outputs.bin-dir }}
-        key: ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-binaries-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-binaries-
-
-    - name: Restore lib directory
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.strings.outputs.lib-dir }}
-        key: ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-libraries-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.build_type }}-${{ matrix.compiler.c }}-libraries-
+    - name: Install
+      run: cmake --install ${{ steps.strings.outputs.build-dir }} --config ${{ matrix.build_type }} # Test if install works
 
     - name: Run Tests
       run: |
