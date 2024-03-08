@@ -29,18 +29,28 @@
 using namespace std;
 
 int main(void) {
-    quicked::QuickedAligner aligner;    // Aligner object, with sensible default parameters
-    // Without any extra configuration, the aligner will use the Quicked algorithm
+    string pattern = "ACGT"; // Pattern sequence
+    string text = "ACTT";    // Text sequence
+    int score = -1;          // Alignment score
+    string cigar;            // CIGAR string
 
-    string pattern = "ACGT";            // Pattern sequence
-    string text = "ACTT";               // Text sequence
-
-    // Align the sequences!
     cout << "Aligning " << pattern << " and " << text << " using Quicked" << endl;
-    aligner.align(&pattern, &text);
 
-    cout << "Score: " << aligner.getScore() << endl; // Print the score
-    cout << "Cigar: " << aligner.getCigar() << endl; // Print the CIGAR string
+    try {
+        quicked::QuickedAligner aligner; // Aligner object, with sensible default parameters
+        // Without any extra configuration, the aligner will use the Quicked algorithm
+
+        aligner.align(&pattern, &text);  // Align the sequences!
+
+        aligner.getScore();              // Get the score
+        aligner.getCigar();              // Get the CIGAR string
+    } catch (quicked::QuickedException &e) {
+        cerr << e.what() << endl;
+        return 1;
+    }
+
+    cout << "Score: " << score << endl;  // Print the score
+    cout << "Cigar: " << cigar << endl;  // Print the CIGAR string
 
     return 0;
 }

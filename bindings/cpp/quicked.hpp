@@ -33,12 +33,23 @@ namespace quicked {
     #include "quicked/quicked.h"
     }
 
+    class QuickedException : public std::exception {
+    private:
+        quicked_status_t status;
+
+    public:
+        QuickedException(quicked_status_t s) : status(s) {}
+        const char* what () const noexcept override {
+            return quicked_status_msg(this->status);
+        }
+    };
+
     class QuickedAligner {
     public:
         QuickedAligner();
         ~QuickedAligner();
 
-        quicked_status_t align(std::string *pattern, std::string *text);
+        void align(std::string *pattern, std::string *text);
 
         void setAlgorithm(quicked_algo_t algo)          { this->aligner.params->algo = algo; };
         void setOnlyScore(bool only_score)              { this->aligner.params->only_score = only_score; };

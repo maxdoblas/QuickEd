@@ -23,23 +23,43 @@
  */
 
 #include "quicked.hpp"
+#include <iostream>
 
 namespace quicked {
 
     QuickedAligner::QuickedAligner()
     {
+        quicked_status_t status;
+
         this->params = quicked_default_params();
-        quicked_new(&this->aligner, &this->params);
+        status = quicked_new(&this->aligner, &this->params);
+
+        if (quicked_check_error(status)) {
+            throw QuickedException(status);
+        }
     }
 
     QuickedAligner::~QuickedAligner()
     {
-        quicked_free(&this->aligner);
+        quicked_status_t status;
+
+        status = quicked_free(&this->aligner);
+
+        if (quicked_check_error(status)) {
+            // As this is a destructor, we can't throw an exception
+            std::cerr << "Error freeing QuickedAligner: " << quicked_status_msg(status) << std::endl;
+        }
     }
 
-    quicked_status_t QuickedAligner::align(std::string *pattern, std::string *text)
+    void QuickedAligner::align(std::string *pattern, std::string *text)
     {
-        return quicked_align(&this->aligner, pattern->c_str(), pattern->length(), text->c_str(), text->length());
+        quicked_status_t status;
+
+        status = quicked_align(&this->aligner, pattern->c_str(), pattern->length(), text->c_str(), text->length());
+
+        if (quicked_check_error(status)) {
+            throw QuickedException(status);
+        }
     }
 
     void QuickedAligner::setHEWThreshold(unsigned int hew_threshold) {

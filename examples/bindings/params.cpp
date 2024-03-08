@@ -29,23 +29,33 @@
 using namespace std;
 
 int main(void) {
-    quicked::QuickedAligner aligner;        // Aligner object, with sensible default parameters
+    string pattern = "ACGT"; // Pattern sequence
+    string text = "ACTT";    // Text sequence
+    int score = -1;          // Alignment score
+    string cigar;            // CIGAR string
 
-    aligner.setAlgorithm(quicked::BANDED);  // Select the algorithm: Banded
-    aligner.setBandwidth(10);               // Banded needs a bandwidth
-                                            //  10% of the seq. length (Default: 15%)
-    aligner.setOnlyScore(true);             // Only score, don't compute CIGAR.
-                                            //  This saves memory and time.
-
-    string pattern = "ACGT";                // Pattern sequence
-    string text = "ACTT";                   // Text sequence
-
-    // Align the sequences!
     cout << "Aligning " << pattern << " and " << text << " using Banded" << endl;
-    aligner.align(&pattern, &text);
 
-    cout << "Score: " << aligner.getScore() << endl;                    // Print the score
-    cout << "Cigar <Expecting NULL>: " << aligner.getCigar() << endl;   // We didn't compute the CIGAR, so it's NULL
+    try {
+        quicked::QuickedAligner aligner;        // Aligner object, with sensible default parameters
+
+        aligner.setAlgorithm(quicked::BANDED);  // Select the algorithm: Banded
+        aligner.setBandwidth(10);               // Banded needs a bandwidth
+                                                //  10% of the seq. length (Default: 15%)
+        aligner.setOnlyScore(true);             // Only score, don't compute CIGAR.
+                                                //  This saves memory and time.
+
+        aligner.align(&pattern, &text);         // Align the sequences!
+
+        aligner.getScore();                     // Get the score
+        aligner.getCigar();                     // Get the CIGAR string
+    } catch (quicked::QuickedException &e) {
+        cerr << e.what() << endl;
+        return 1;
+    }
+
+    cout << "Score: " << score << endl;                    // Print the score
+    cout << "Cigar <Expecting NULL>: " << cigar << endl;   // We didn't compute the CIGAR, so it's NULL
 
     return 0;
 }
