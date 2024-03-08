@@ -5,6 +5,9 @@ name: Build and Test
 on:
   push:
     branches: [ dev, testing ]
+    paths-ignore: # Skip the workflow if only documentation files are changed
+      - '**/*.md'
+      - '**/LICENSE'
   pull_request:
     branches: [ main ]
 
