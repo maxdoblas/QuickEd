@@ -22,17 +22,23 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-from pyquicked import QuickedAligner
+from pyquicked import QuickedAligner, QuickedException
 
-aligner = QuickedAligner()  # Aligner object, with sensible default parameters
-# Without any extra configuration, the aligner will use the Quicked algorithm
+pattern = "ACGT" # Pattern sequence
+text = "ACTT"    # Text sequence
+score = -1       # Alignment score
+cigar = ""       # CIGAR string
 
-pattern = "ACGT";           # Pattern sequence
-text = "ACTT";              # Text sequence
+try:
+    aligner = QuickedAligner()    # Aligner object, with sensible default parameters
+    # Without any extra configuration, the aligner will use the Quicked algorithm
 
-#Align the sequences!
-print(f"Aligning {pattern} and {text} using Quicked")
-aligner.align(pattern, text)
+    aligner.align(pattern, text)  # Align the sequences!
+
+    score = aligner.getScore()    # Get the score
+    cigar = aligner.getCigar()    # Get the CIGAR string
+except QuickedEception as e:
+    print(e)
 
 print(f"Score: {aligner.getScore()}") # Print the score
 print(f"Cigar: {aligner.getCigar()}")  # Print the CIGAR string

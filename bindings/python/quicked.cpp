@@ -60,5 +60,8 @@ namespace quicked {
             .value("QUICKED_UNIMPLEMENTED", QUICKED_UNIMPLEMENTED)
             .value("QUICKED_WIP", QUICKED_WIP)
             .export_values();
+
+        py::register_exception<QuickedException>(m, "QuickedException");
+
     }
 }
