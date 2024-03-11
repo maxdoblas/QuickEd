@@ -25,8 +25,8 @@
 #ifndef QUICKED_H
 #define QUICKED_H
 
-#include "utils/include/mm_allocator.h"
-#include "utils/include/profiler_timer.h"
+#include <quicked_utils/include/mm_allocator.h>
+#include <quicked_utils/include/profiler_timer.h>
 #include <stdbool.h>
 
 #define QUICKED_WINDOW_STAGES 2 // Number of window sizes to go through before doing banded

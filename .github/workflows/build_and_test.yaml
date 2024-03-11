@@ -50,7 +50,7 @@ jobs:
       run: cmake --build ${{ steps.strings.outputs.build-dir }} --config ${{ matrix.build_type }} --parallel 2
 
     - name: Install
-      run: cmake --install ${{ steps.strings.outputs.build-dir }} --config ${{ matrix.build_type }} # Test if install works
+      run: sudo cmake --install ${{ steps.strings.outputs.build-dir }} --config ${{ matrix.build_type }} # Test if install works
 
     - name: Run Tests
       run: |

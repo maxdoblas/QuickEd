@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-#include "utils/include/commons.h"
-#include "utils/include/bitmap.h"
-#include "utils/include/mm_allocator.h"
+#include "quicked_utils/include/commons.h"
+#include "quicked_utils/include/bitmap.h"
+#include "quicked_utils/include/mm_allocator.h"
 
 /*
  * Setup

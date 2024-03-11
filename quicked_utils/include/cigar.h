@@ -25,7 +25,7 @@
 #ifndef CIGAR_H_
 #define CIGAR_H_
 
-#include "utils/include/mm_allocator.h"
+#include "quicked_utils/include/mm_allocator.h"
 
 /*
  * CIGAR

@@ -27,7 +27,7 @@
 #include "edit/edit_dp.h"
 #include "edit/edit_bpm.h"
 #include "../../../quicked/quicked.h"
-#include "utils/include/commons.h"
+#include "quicked_utils/include/commons.h"
 #include "external/edlib/edlib/include/edlib.h"
 
 /*

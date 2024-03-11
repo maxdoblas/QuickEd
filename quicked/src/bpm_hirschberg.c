@@ -23,9 +23,9 @@
  * SOFTWARE.
  */
 
-#include "utils/include/commons.h"
-#include "utils/include/mm_allocator.h"
-#include "utils/include/dna_text.h"
+#include "quicked_utils/include/commons.h"
+#include "quicked_utils/include/mm_allocator.h"
+#include "quicked_utils/include/dna_text.h"
 #include "bpm_banded.h"
 #include "quicked.h"
 #include "bpm_commons.h"

@@ -95,10 +95,7 @@ Now you can compile it with `gcc aligner.c -o aligner -I quicked/include -L quic
 
 ### Approach #2: Install the QuickEd library on the machine
 
-Alternatively, you could avoid copying any QuickEd files and instead install libraries by running `sudo make install` (check [Building](#building) for exact instructions). Now, all you have to do to compile your project is `gcc aligner.cpp -o aligner -lquicked`.
-
-> [!NOTE]
-> If you get an error message like `cannot open shared object file: No such file or directory`, ensure your linker includes the path where Quicked is installed.
+Alternatively, you could avoid copying any QuickEd files and instead install libraries by running `sudo make install` (check [Building](#building) for exact instructions). Now, all you have to do to compile your project is `gcc aligner.c -o aligner -lquicked`.
 
 ### Approach #3: Use Quicked in your project via CMake as a git submodule
 
@@ -121,7 +118,7 @@ cmake ..
 make
 ```
 
-This will create all the tools and example binaries in the `bin/` directory and the QuickEd libraries (static and shared) in the `lib/` directory.
+This will create all the tools and example binaries in the `bin/` directory and the QuickEd static library (as well as the library objects for bindings) in the `lib/` directory.
 
 Optionally, you can run.
 
@@ -129,7 +126,7 @@ Optionally, you can run.
 sudo make install
 ```
 
-To install the QuickEd library on your machine.
+To install the QuickEd library on your machine. This will install the QuickEd library and header files in your system's default location.
 
 ## Usage and examples
 

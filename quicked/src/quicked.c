@@ -27,8 +27,8 @@
 #include "bpm_commons.h"
 #include "bpm_windowed.h"
 #include "bpm_hirschberg.h"
-#include "utils/include/commons.h"
-#include "utils/include/profiler_timer.h"
+#include "quicked_utils/include/commons.h"
+#include "quicked_utils/include/profiler_timer.h"
 #include <stddef.h>
 
 void extract_results(

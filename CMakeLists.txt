@@ -61,7 +61,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/utils/include) # To implcitly #include .h inside utils/src
+include_directories(${PROJECT_SOURCE_DIR}/quicked_utils/include) # To implcitly #include .h inside quicked_utils/src
 
 add_subdirectory(quicked)
 add_subdirectory(bindings)

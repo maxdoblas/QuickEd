@@ -26,7 +26,7 @@
 #define EDIT_DP_H_
 
 #include "score_matrix.h"
-#include "utils/include/cigar.h"
+#include "quicked_utils/include/cigar.h"
 
 /*
  * Edit distance computation using dynamic-programming matrix

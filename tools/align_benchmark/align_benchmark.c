@@ -27,9 +27,9 @@
 
 #include "align_benchmark_params.h"
 
-#include "utils/include/commons.h"
-#include "utils/include/sequence_buffer.h"
-#include "utils/include/profiler_timer.h"
+#include "quicked_utils/include/commons.h"
+#include "quicked_utils/include/sequence_buffer.h"
+#include "quicked_utils/include/profiler_timer.h"
 
 #include "score_matrix.h"
 #include "edit/edit_dp.h"

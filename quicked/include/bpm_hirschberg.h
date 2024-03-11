@@ -25,8 +25,8 @@
 #ifndef BPM_HIRSCHBERG_H_
 #define BPM_HIRSCHBERG_H_
 
-#include "utils/include/mm_allocator.h"
-#include "utils/include/cigar.h"
+#include "quicked_utils/include/mm_allocator.h"
+#include "quicked_utils/include/cigar.h"
 
 quicked_status_t bpm_compute_matrix_hirschberg(
     const char* text,

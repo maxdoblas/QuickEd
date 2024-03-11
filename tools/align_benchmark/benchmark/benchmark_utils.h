@@ -32,10 +32,10 @@
 #ifndef BENCHMARK_UTILS_H_
 #define BENCHMARK_UTILS_H_
 
-#include "utils/include/commons.h"
-#include "utils/include/mm_allocator.h"
-#include "utils/include/profiler_timer.h"
-#include "utils/include/cigar.h"
+#include "quicked_utils/include/commons.h"
+#include "quicked_utils/include/mm_allocator.h"
+#include "quicked_utils/include/profiler_timer.h"
+#include "quicked_utils/include/cigar.h"
 #include "score_matrix.h"
 
 /*

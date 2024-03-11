@@ -25,9 +25,9 @@
 #ifndef BPM_BANDED_H_
 #define BPM_BANDED_H_
 
-#include "utils/include/commons.h"
-#include "utils/include/mm_allocator.h"
-#include "utils/include/cigar.h"
+#include "quicked_utils/include/commons.h"
+#include "quicked_utils/include/mm_allocator.h"
+#include "quicked_utils/include/cigar.h"
 
 typedef struct {
     /* BMP Pattern */

@@ -25,8 +25,8 @@
 #ifndef EDIT_BPM_H_
 #define EDIT_BPM_H_
 
-#include "utils/include/cigar.h"
-#include "utils/include/mm_allocator.h"
+#include "quicked_utils/include/cigar.h"
+#include "quicked_utils/include/mm_allocator.h"
 
 typedef struct {
   /* BMP Pattern */

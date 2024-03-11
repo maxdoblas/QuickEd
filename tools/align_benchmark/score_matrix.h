@@ -25,7 +25,7 @@
 #ifndef SCORE_MATRIX_H_
 #define SCORE_MATRIX_H_
 
-#include "utils/include/mm_allocator.h"
+#include "quicked_utils/include/mm_allocator.h"
 
 /*
  * Constants

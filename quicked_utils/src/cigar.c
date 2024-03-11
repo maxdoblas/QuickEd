@@ -24,7 +24,7 @@
 
 #include "commons.h"
 #include "cigar.h"
-#include "utils/include/mm_allocator.h"
+#include "quicked_utils/include/mm_allocator.h"
 
 /*
  * SAM CIGAR Operations
