@@ -25,6 +25,7 @@
 #include <quicked.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 int main(int argc, char *argv[]) { // Usage: ./quicked_harness <text> <pattern> <expected score>
 
