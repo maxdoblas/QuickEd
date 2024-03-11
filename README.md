@@ -31,31 +31,30 @@ QuickEd has bindings available for **C++** at [bindings/cpp](bindings/cpp) and *
 Contents
 --------
 
-* [](#)
-  * [Features](#features)
-  * [Contents](#contents)
-  * [Using QuickEd in your project](#using-quicked-in-your-project)
-    * [Approach #1: Using QuickEd header file and static library](#approach-1-using-quicked-header-file-and-static-library)
-    * [Approach #2: Install the QuickEd library on the machine](#approach-2-install-the-quicked-library-on-the-machine)
-    * [Approach #3: Use Quicked in your project via CMake as a git submodule](#approach-3-use-quicked-in-your-project-via-cmake-as-a-git-submodule)
-  * [Building](#building)
-  * [Usage and examples](#usage-and-examples)
-    * [Configuring QuickEd](#configuring-quicked)
-    * [Handling result of quicked\_align()](#handling-result-of-quicked_align)
+* [Features](#features)
+* [Contents](#contents)
+* [Integrate QuickEd in your tools](#integrate-quicked-in-your-tools)
+  * [Install QuickEd locally](#install-quicked-locally)
+  * [Use QuickEd in your CMake project](#use-quicked-in-your-cmake-project)
+  * [Manually add QuickEd files to your project](#manually-add-quicked-files-to-your-project)
+* [Building](#building)
+* [Usage](#usage)
+  * [Configuring QuickEd](#configuring-quicked)
+  * [Handling result of quicked\_align()](#handling-result-of-quicked_align)
   * [Alignment methods and parameters inside the QuickEd library](#alignment-methods-and-parameters-inside-the-quicked-library)
-  * [Testing](#testing)
-  * [Development and Debugging](#development-and-debugging)
-    * [Generate code coverage data](#generate-code-coverage-data)
-    * [AddressSanitizer and UndefinedBehaviorSanitizer](#addresssanitizer-and-undefinedbehaviorsanitizer)
+* [Testing](#testing)
+* [Development and Debugging](#development-and-debugging)
+  * [Generate code coverage data](#generate-code-coverage-data)
+  * [AddressSanitizer and UndefinedBehaviorSanitizer](#addresssanitizer-and-undefinedbehaviorsanitizer)
 
-## Using QuickEd in your project
+## Integrate QuickEd in your tools
 
-You can use QuickEd in your project by linking the QuickEd library into your binaries (see [Building](#building) for instructions on how to build the QuickEd library).
-In any case, the only thing that you have to do in your source files is to include `quicked.h`.
+You can use QuickEd in your project by linking the QuickEd static library into your binaries (check [Building](#building) for instructions on how to build the QuickEd static library).
+Besides that, the only thing you have to do is to include `quicked.h` in your source files.
 
-To use QuickEd in your project, look at our examples folder, where we have several use case example codes for C, C++, and Python.
+For examples on how to use QuickEd in your own code, look at the [examples](examples) folder, where we have several use case example codes for C, and for C++ and Python through the provided bindings.
 
-Our simplest example has just one source file, the `basic.c` file, and it looks like this:
+The simplest implementation that uses QuickEd looks like this:
 
 ```c
 #include <quicked.h>
@@ -78,37 +77,67 @@ int main(void) {
     return 0;
 }
 ```
+### Install QuickEd locally
 
-### Approach #1: Using QuickEd header file and static library
+The easiest way to use QuickEd is to install the library files system-wide.
 
-We need to copy the QuickEd static library and header files (check [Building](#building) on how to create a static library). We get the following project structure:
+You can achieve this by running `sudo make install` after building.
+Now, all you have to do to compile your project is `gcc aligner.c -o aligner -lquicked`.
 
-```text
-quicked/         <- copied from quicked
-├─ include/
-│   └─ quicked.h
-├─ quicked.a
-└─ aligner.c     <- your program
-```
+> [!NOTE]
+> You may need to have the necessary permissions to install the library on your system.
 
-Now you can compile it with `gcc aligner.c -o aligner -I quicked/include -L quicked -lquicked`.
+### Use QuickEd in your CMake project
 
-### Approach #2: Install the QuickEd library on the machine
+Since QuickEd is a CMake project, you can easily include it in other CMake projects as a git submodule.
 
-Alternatively, you could avoid copying any QuickEd files and instead install libraries by running `sudo make install` (check [Building](#building) for exact instructions). Now, all you have to do to compile your project is `gcc aligner.c -o aligner -lquicked`.
-
-### Approach #3: Use Quicked in your project via CMake as a git submodule
-
-If you use CMake for infrastructure, you can include QuickEd as a git submodule with the command `git submodule adds https://github.com/mdoblas/quicked external/quicked`. Then, you should add the following statements to your CMakeLists.txt file:
+To do so, use `git submodule add https://github.com/mdoblas/quicked external/quicked`
+Then, you should add the following statements to your CMakeLists.txt file:
 
 ```cmake
 add_subdirectory(external/quicked EXCLUDE_FROM_ALL)
 target_link_libraries(your_exe quicked)
 ```
 
+### Manually add QuickEd files to your project
+
+> [!IMPORTANT]
+> We advise against this method, as it is more error-prone and harder to maintain.
+> You are on your own.
+
+If the other methods don't suffice you, you can manually add the required QuickEd files to your proyect.
+
+You need to copy the QuickEd static library `libquicked.a` and some header files to your project:
+
+```text
+your-project/
+├─ quicked/
+│  └─ quicked.h     <- Found at <this repo>/quicked/quicked.h
+├─ quicked_utils/   <- Copy the indicated files from <this repo>/quicked_utils/include
+│  └─ include/
+│     ├─ commons.h
+│     ├─ mm_allocator.h
+│     ├─ profiler_timer.h
+│     ├─ profiler_counter.h
+│     └─ vector.h
+├─ libquicked.a     <- Found at <this repo>/lib/libquicked.a
+└─ aligner.c        <- Your code
+```
+
+Now you can compile it with `gcc aligner.c -o aligner -I quicked -I quicked_utils -L your-project -lquicked`.
+
 ## Building
 
-QuickEd is built using CMake.
+To build QuickEd, clone the repository and update the submodules:
+
+```bash
+git clone https://github.com/maxdoblas/QuickEd.git
+cd QuickEd
+git submodule update --init --recursive
+```
+
+> [!IMPORTANT]
+> QuickEd is built using CMake, so make sure you have it installed on your system. The minimum required version is 3.20
 
 Execute the following command to build QuickEd using CMake:
 
@@ -128,9 +157,9 @@ sudo make install
 
 To install the QuickEd library on your machine. This will install the QuickEd library and header files in your system's default location.
 
-## Usage and examples
+## Usage
 
-The main function in QuickEd is `quicked_align.` Given two sequences (and their lengths), it will find the edit distance and alignment path.
+The main function of QuickEd is `quicked_align`. Given two DNA strings (and their lengths), it will find the edit distance and alignment path.
 
 ```c
 const char* pattern = "ACGT";                       // Pattern sequence
@@ -185,7 +214,7 @@ The `quicked_align` function returns the status struct (`quicked_status_t`), and
 > [!CAUTION]
 > It is important to free the `quicked_aligner_t` object. It dynamically allocates memory for the different fields inside when created. You can free it using the `quicked_free` function.
 
-## Alignment methods and parameters inside the QuickEd library
+### Alignment methods and parameters inside the QuickEd library
 
 The `quicked_params_t` configuration struct has the following parameters:
 
@@ -203,7 +232,8 @@ The `quicked_params_t` configuration struct has the following parameters:
 * **bool** `only_score`: If set to true, turn off the CIGAR generation for the WindowEd and BandEd methods.
 * **bool** `force_scalar`: If set to true, it forces the WindowEd implementation to use the scalar code.
 
-> [!WARNING] Experimental Parameters
+> [!WARNING]
+> **Experimental Parameters**
 >
 > * **bool** `external_timer`: If set to true, it uses external timers and avoids the generation of a new allocator.
 > * **mm_allocator_t** `*external_allocator`: If it is set with an external allocator, this allocator will be used instead of creating a new allocator object.
