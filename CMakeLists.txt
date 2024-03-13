@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 11)
 include(CTest)
 enable_testing()
 
+# Options
+option(QUICKED_NONATIVE "Compile QuickEd for generic x86_64" OFF)
+
 # Set build type to Release if not specified
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
@@ -53,7 +56,12 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # Set global compiler flags
-add_compile_options(-fPIC -march=native)
+add_compile_options(-fPIC)
+if (NOT QUICKED_NONATIVE)
+    add_compile_options(-march=native)
+else()
+    add_compile_options(-march=x86-64 -msse4.1)
+endif()
 
 # Output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)

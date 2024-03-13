@@ -1,0 +1,43 @@
+on:
+  release:
+    types: [created]
+name: Handle Release
+jobs:
+  Publish-Release-Binaries:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        submodules: recursive
+
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        echo "bin-dir=${{ github.workspace }}/bin" >> "$GITHUB_OUTPUT"
+
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-dir }}
+        -DQUICKED_NONATIVE=ON
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build ${{ steps.strings.outputs.build-dir }} --config Release --parallel 2
+
+    - name: Move the target artifacts
+      run: |
+        mkdir -p ${{ steps.strings.outputs.bin-dir }}/release
+        mv ${{ steps.strings.outputs.bin-dir }}/align_benchmark ${{ steps.strings.outputs.bin-dir }}/release/align_benchmark-x86_64
+        mv ${{ steps.strings.outputs.bin-dir }}/generate_dataset ${{ steps.strings.outputs.bin-dir }}/release/generate_dataset-x86_64
+
+    - name: Upload the artifacts
+      uses: skx/github-action-publish-binaries@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: '${{ steps.strings.outputs.bin-dir }}/release/*'
