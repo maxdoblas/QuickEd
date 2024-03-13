@@ -72,6 +72,7 @@ void usage(void) {
       "            [Quicked Edit (Levenshtein)]                                \n"
       "              quicked                                                   \n"
       "              edit-banded                                               \n"
+      "              edit-banded-hirschberg                                    \n"
       "              edit-windowed                                             \n"
       "            [Other Edit (Levenshtein)]                                  \n"
       "              edlib                                                     \n"
