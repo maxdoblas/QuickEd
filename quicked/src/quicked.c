@@ -385,9 +385,9 @@ const char* quicked_status_msg(
     switch (status)
     {
         case QUICKED_ERROR:
-            return "ERROR: Quicked has finished with unspecific error\n";
+            return "ERROR: QuickEd has finished with unspecific error\n";
         case QUICKED_FAIL_NON_CONVERGENCE:
-            return "ERROR: Hirschberg algorithem can not find a middle point of subsequence division!\n";
+            return "ERROR: Hirschberg algorithm can not find a middle point of subsequence division!\n";
         case QUICKED_UNIMPLEMENTED:
             return "ERROR: The algorithm or parameter combination selected is not implemented\n";
         case QUICKED_UNKNOWN_ALGO:
@@ -397,7 +397,7 @@ const char* quicked_status_msg(
         case QUICKED_OK:
         case QUICKED_WIP:
         default:
-            return "Quicked finished without errors.\n";
+            return "QuickEd finished without errors.\n";
     }
 
 }
