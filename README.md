@@ -1,7 +1,7 @@
 QuickEd
 &nbsp;
-[![Release](https://img.shields.io/github/release/mdoblas/quicked.svg)](https://github.com/mdoblas/quicked/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/mdoblas/quicked/build_and_test.yaml?branch=dev)](https://github.com/maxdoblas/QuickEd/actions/workflows/build_and_test.yaml)
+[![Release](https://img.shields.io/github/release/maxdoblas/quicked.svg)](https://github.com/maxdoblas/quicked/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/maxdoblas/quicked/build_and_test.yaml?branch=dev)](https://github.com/maxdoblas/QuickEd/actions/workflows/build_and_test.yaml)
 [![Publication](https://img.shields.io/badge/Published%20in-BioRxiv-167DA4.svg)](https://www.biorxiv.org/)
 =====
 
@@ -91,7 +91,7 @@ Now, all you have to do to compile your project is `gcc aligner.c -o aligner -lq
 
 Since QuickEd is a CMake project, you can easily include it in other CMake projects as a git submodule.
 
-To do so, use `git submodule add https://github.com/mdoblas/quicked external/quicked`
+To do so, use `git submodule add https://github.com/maxdoblas/quicked external/quicked`
 Then, you should add the following statements to your CMakeLists.txt file:
 
 ```cmake
