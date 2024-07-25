@@ -4,12 +4,12 @@ name: Build and Test
 
 on:
   push:
-    branches: [ dev, testing ]
     paths-ignore: # Skip the workflow if only documentation files are changed
       - '**/*.md'
       - '**/LICENSE'
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   Build-and-Test:
@@ -20,7 +20,7 @@ jobs:
       # fail-fast: false
 
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-22.04, macos-13]
         build_type: [Debug]
         compiler: [ {cpp: g++, c: gcc}, {cpp: clang++, c: clang} ]
 

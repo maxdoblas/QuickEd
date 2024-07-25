@@ -305,7 +305,7 @@ quicked_status_t run_quicked(
     return QUICKED_WIP;
 }
 
-quicked_params_t quicked_default_params()
+quicked_params_t quicked_default_params(void)
 {
     return (quicked_params_t){
         .algo = QUICKED,
