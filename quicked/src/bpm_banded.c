@@ -226,7 +226,7 @@ void bpm_reset_search(
     int64_t *const scores)
 {
     // Reset P,M
-    uint64_t i, reduction = BPM_W64_LENGTH;
+    uint64_t i;
     P[0] = BPM_W64_ONES;
     M[0] = 0;
     scores[0] = BPM_W64_LENGTH;
@@ -370,7 +370,7 @@ static inline __attribute__((always_inline)) void compute_advance_block (
     uint64_t* Mv,
     const uint64_t *const PEQ,
     const uint64_t *const level_mask,
-    uint64_t* scores,
+    int64_t* scores,
     uint64_t i,
     uint64_t pos_v, 
     uint8_t enc_char, 
@@ -449,6 +449,7 @@ void bpm_compute_matrix_banded_cutoff_score(
                 const uint8_t enc_char6 = dna_encode(text[text_position+5]);
                 const uint8_t enc_char7 = dna_encode(text[text_position+6]);
                 const uint8_t enc_char8 = dna_encode(text[text_position+7]);
+                
 
                 int64_t i = first_block_v;
                 
@@ -474,7 +475,7 @@ void bpm_compute_matrix_banded_cutoff_score(
                 __m256i MHin  = _mm256_set_epi64x(MHin_0, MHin_1, MHin_2, MHin_3);
                 __m256i MHout = MHin; 
                 __m256i PHout = PHout;
-
+                
                 #pragma GCC unroll(4)
                 for (i = first_block_v+3; i < first_block_v+7; i++) 
                 {
@@ -491,7 +492,7 @@ void bpm_compute_matrix_banded_cutoff_score(
                     
                     __m256i Eq    = _mm256_set_epi64x (Eq_3, Eq_2, Eq_1, Eq_0); 
                     __m256i score = _mm256_lddqu_si256((__m256i*)&scores[i+pos_v-3]);
-                    __m256i mask  = _mm256_lddqu_si256((__m256i*)&level_mask[i+pos_v-3]);
+                    __m256i mask  = _mm256_lddqu_si256((__m256i const*)&level_mask[i+pos_v-3]);
                     
                     BPM_ADVANCE_BLOCK_SI256(Eq, mask, Pv_in, Mv_in, PHin, MHin, PHout, MHout);
 
@@ -550,7 +551,7 @@ void bpm_compute_matrix_banded_cutoff_score(
                     uint64_t Eq_0 = PEQ[BPM_PATTERN_PEQ_IDX((i + pos_v - 3), enc_char4)];
                     __m256i Eq    = _mm256_set_epi64x (Eq_3, Eq_2, Eq_1, Eq_0); 
                     __m256i score = _mm256_lddqu_si256((__m256i*)&scores[i+pos_v-3]);
-                    __m256i mask  = _mm256_lddqu_si256((__m256i*)&level_mask[i+pos_v-3]);
+                    __m256i mask  = _mm256_lddqu_si256((__m256i const*)&level_mask[i+pos_v-3]);
                     
                     BPM_ADVANCE_BLOCK_SI256_2(Eq, mask, Pv_in2, Mv_in2, PHin2, MHin2, PHout2, MHout2);
 
@@ -575,7 +576,7 @@ void bpm_compute_matrix_banded_cutoff_score(
                     Eq_0 = PEQ[BPM_PATTERN_PEQ_IDX((i + pos_v - 7), enc_char8)];
                     Eq    = _mm256_set_epi64x (Eq_3, Eq_2, Eq_1, Eq_0); 
                     score = _mm256_lddqu_si256((__m256i*)&scores[i+pos_v-7]);
-                    mask  = _mm256_lddqu_si256((__m256i*)&level_mask[i+pos_v-7]);
+                    mask  = _mm256_lddqu_si256((__m256i const*)&level_mask[i+pos_v-7]);
                     
                     BPM_ADVANCE_BLOCK_SI256(Eq, mask, Pv_in, Mv_in, PHin, MHin, PHout, MHout);
 
@@ -630,7 +631,7 @@ void bpm_compute_matrix_banded_cutoff_score(
                     uint64_t Eq_0 = PEQ[BPM_PATTERN_PEQ_IDX((i + pos_v - 3), enc_char8)];
                     __m256i Eq    = _mm256_set_epi64x (Eq_3, Eq_2, Eq_1, Eq_0); 
                     __m256i score = _mm256_lddqu_si256((__m256i*)&scores[i+pos_v-3]);
-                    __m256i mask  = _mm256_lddqu_si256((__m256i*)&level_mask[i+pos_v-3]);
+                    __m256i mask  = _mm256_lddqu_si256((__m256i const*)&level_mask[i+pos_v-3]);
                     
                     BPM_ADVANCE_BLOCK_SI256(Eq, mask, Pv_in, Mv_in, PHin, MHin, PHout, MHout);
 
@@ -706,7 +707,7 @@ void bpm_compute_matrix_banded_cutoff_score(
                     
                     __m256i Eq    = _mm256_set_epi64x (Eq_3, Eq_2, Eq_1, Eq_0); 
                     __m256i score = _mm256_lddqu_si256((__m256i*)&scores[i+pos_v-3]);
-                    __m256i mask  = _mm256_lddqu_si256((__m256i*)&level_mask[i+pos_v-3]);
+                    __m256i mask  = _mm256_lddqu_si256((__m256i const*)&level_mask[i+pos_v-3]);
                     
                     BPM_ADVANCE_BLOCK_SI256(Eq, mask, Pv_in, Mv_in, PHin, MHin, PHout, MHout);
 
