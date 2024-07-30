@@ -428,7 +428,7 @@ void bpm_compute_matrix_banded_cutoff_score(
     bpm_reset_search(effective_bandwidth_blocks, Pv, Mv, scores);
 
     // Advance in DP-bit_encoded matrix
-    int64_t text_position, k;
+    int64_t text_position = 0, k;
     // uint64_t count = 0;
     //  Main loop
 
