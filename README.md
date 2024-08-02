@@ -249,6 +249,9 @@ ctest -E edlib_tests --output-on-failure # Exclude Edlib tests
 
 ## Development and Debugging
 
+> [!WARNING]
+> Use these commands at your own risk :D
+
 For debugging, build using:
 
 ```bash
@@ -275,3 +278,6 @@ make
 
 > [!WARNING]
 > ASAN and UBSAN could fail when executing the Python binding. This is known behavior.
+
+> [!WARNING]
+> There are some known stability issues with ASAN and UBSAN with 12th-gen and onwards Intel CPUs.
