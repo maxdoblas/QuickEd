@@ -249,6 +249,9 @@ ctest -E edlib_tests --output-on-failure # Exclude Edlib tests
 
 ## Development and Debugging
 
+> [!WARNING]
+> Use these commands at your own risk :D
+
 For debugging, build using:
 
 ```bash
@@ -272,6 +275,9 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Debug -DASAN=ON ..
 make
 ```
+
+> [!WARNING]
+> There are some known issues with ASAN and UBSAN in general. Check https://stackoverflow.com/a/77895910 for more information.
 
 > [!WARNING]
 > ASAN and UBSAN could fail when executing the Python binding. This is known behavior.
