@@ -277,7 +277,7 @@ make
 ```
 
 > [!WARNING]
-> ASAN and UBSAN could fail when executing the Python binding. This is known behavior.
+> There are some known issues with ASAN and UBSAN in general. Check https://stackoverflow.com/a/77895910 for more information.
 
 > [!WARNING]
-> There are some known stability issues with ASAN and UBSAN with 12th-gen and onwards Intel CPUs.
+> ASAN and UBSAN could fail when executing the Python binding. This is known behavior.
