@@ -39,6 +39,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
     const int64_t pattern_length,
     const int64_t cutoff_score,
     cigar_t *cigar_out,
+    const bool force_scalar,
     mm_allocator_t *const mm_allocator)
 {
 
@@ -87,7 +88,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
 
         banded_compute(
             &banded_matrix, &banded_pattern, text,
-            text_length, text_len, SCORE_ONLY);
+            text_length, text_len, SCORE_ONLY, force_scalar);
 
         // Compute right side (for getting the central column)
         banded_matrix_allocate(
@@ -96,7 +97,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
 
         banded_compute(
             &banded_matrix_r, &banded_pattern_r, text_r,
-            text_length, text_len_r, SCORE_ONLY);
+            text_length, text_len_r, SCORE_ONLY, force_scalar);
 
         // vertival position of the first blocks computed on each aligments
         int64_t first_block_band_pos_v = text_len < prolog_column_blocks * BPM_W64_LENGTH ? 0 : (text_len / BPM_W64_LENGTH) - (prolog_column_blocks);
@@ -217,6 +218,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
             pattern_length_right,
             score_r,
             cigar_out,
+            force_scalar,
             mm_allocator);
         
         if(quicked_check_error(status)){
@@ -233,6 +235,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
             pattern_length_left,
             score_l,
             cigar_out,
+            force_scalar,
             mm_allocator);
         
         if(quicked_check_error(status)){
@@ -256,7 +259,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
         // Align
         banded_compute(
             &banded_matrix, &banded_pattern, text,
-            text_length, pattern_length, false);
+            text_length, pattern_length, false, force_scalar);
         // Merge cigar
         cigar_prepend_forward(banded_matrix.cigar, cigar_out);
         // free variables

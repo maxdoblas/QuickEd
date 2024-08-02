@@ -28,56 +28,14 @@
 #include "bpm_banded.h"
 #include "bpm_commons.h"
 #include <sys/mman.h>
+
+#ifndef __AVX2__
+#warning "AVX2 or higher is required for SIMD banded"
+#else
 #include <immintrin.h>
-
-#define BPM_ADVANCE_BLOCK_SI256(Eq, mask, Pv, Mv, PHin, MHin, PHout, MHout) 	       \
-    __m256i Xv    = _mm256_or_si256(Eq, Mv);      /*Eq | Mv*/                          \
-    __m256i _Eq   = _mm256_or_si256(Eq, MHin);    /*Eq | MHin*/      	       	       \
-    __m256i Xh    = _mm256_and_si256(_Eq, Pv);    /*(((_Eq & Pv) + Pv) ^ Pv) | _Eq*/   \
-    	    Xh    = _mm256_add_epi64(Xh, Pv);					                       \
-    	    Xh    = _mm256_xor_si256(Xh, Pv); 					                       \
-    	    Xh    = _mm256_or_si256(Xh, _Eq);					                       \
-    __m256i Ph    = _mm256_or_si256(Xh, Pv);      /*Mv | ~(Xh | Pv)*/                  \
-    	    Ph    = _mm256_or_si256(Mv, ~Ph);					                       \
-    __m256i Mh 	  = _mm256_and_si256(Pv, Xh);     /*Pv & Xh*/			               \
-            PHout = _mm256_and_si256(Ph, mask);   /*(Ph & mask) != 0*/	        	   \
-    	    PHout = _mm256_cmpeq_epi64(PHout, _mm256_setzero_si256());		           \
-            PHout = _mm256_andnot_si256(PHout, _mm256_set1_epi64x(1));				   \
-            MHout = _mm256_and_si256(Mh, mask);   /*(Mh & mask) != 0 */	               \
-    	    MHout = _mm256_cmpeq_epi64(MHout, _mm256_setzero_si256());				   \
-            MHout = _mm256_andnot_si256(MHout, _mm256_set1_epi64x(1));				   \
-      	    Ph 	  = _mm256_slli_epi64(Ph, 1);     /*Ph <<= 1*/		            	   \
-      	    Mh 	  = _mm256_slli_epi64(Mh, 1);     /*Mh <<= 1*/		            	   \
-      	    Ph    = _mm256_or_si256(Ph, PHin);    /*Ph |= PHin*/	        		   \
-      	    Mh    = _mm256_or_si256(Mh, MHin);    /*Mh |= MHin*/		        	   \
-      	    Pv    = _mm256_or_si256(Xv, Ph);      /*Mh | ~(Xv | Ph)*/      		       \
-      	    Pv    = _mm256_or_si256(Mh, ~Pv);                                          \
-            Mv    = _mm256_and_si256(Ph, Xv);                                          \
+#endif
 
 
-#define BPM_ADVANCE_BLOCK_SI256_2(Eq2, mask2, Pv2, Mv2, PHin2, MHin2, PHout2, MHout2) 	       \
-    __m256i Xv2    = _mm256_or_si256(Eq2, Mv2);      /*Eq | Mv*/                          \
-    __m256i _Eq2   = _mm256_or_si256(Eq2, MHin2);    /*Eq | MHin*/      	       	       \
-    __m256i Xh2    = _mm256_and_si256(_Eq2, Pv2);    /*(((_Eq & Pv) + Pv) ^ Pv) | _Eq*/   \
-    	    Xh2    = _mm256_add_epi64(Xh2, Pv2);					                       \
-    	    Xh2    = _mm256_xor_si256(Xh2, Pv2); 					                       \
-    	    Xh2    = _mm256_or_si256(Xh2, _Eq2);					                       \
-    __m256i Ph2    = _mm256_or_si256(Xh2, Pv2);      /*Mv | ~(Xh | Pv)*/                  \
-    	    Ph2    = _mm256_or_si256(Mv2, ~Ph2);					                       \
-    __m256i Mh2 	  = _mm256_and_si256(Pv2, Xh2);     /*Pv & Xh*/			               \
-            PHout2 = _mm256_and_si256(Ph2, mask2);   /*(Ph & mask) != 0*/	        	   \
-    	    PHout2 = _mm256_cmpeq_epi64(PHout2, _mm256_setzero_si256());		           \
-            PHout2 = _mm256_andnot_si256(PHout2, _mm256_set1_epi64x(1));				   \
-            MHout2 = _mm256_and_si256(Mh2, mask2);   /*(Mh & mask) != 0 */	               \
-    	    MHout2 = _mm256_cmpeq_epi64(MHout2, _mm256_setzero_si256());				   \
-            MHout2 = _mm256_andnot_si256(MHout2, _mm256_set1_epi64x(1));				   \
-      	    Ph2 	  = _mm256_slli_epi64(Ph2, 1);     /*Ph <<= 1*/		            	   \
-      	    Mh2 	  = _mm256_slli_epi64(Mh2, 1);     /*Mh <<= 1*/		            	   \
-      	    Ph2    = _mm256_or_si256(Ph2, PHin2);    /*Ph |= PHin*/	        		   \
-      	    Mh2    = _mm256_or_si256(Mh2, MHin2);    /*Mh |= MHin*/		        	   \
-      	    Pv2    = _mm256_or_si256(Xv2, Ph2);      /*Mh | ~(Xv | Ph)*/      		       \
-      	    Pv2    = _mm256_or_si256(Mh2, ~Pv2);                                          \
-            Mv2    = _mm256_and_si256(Ph2, Xv2);                                          \
 
 void banded_pattern_compile(
     banded_pattern_t *const banded_pattern,
@@ -357,14 +315,6 @@ void bpm_compute_matrix_banded_cutoff(
     banded_matrix->lower_block = first_block_v;
 }
 
-void print(uint64_t* v, int64_t start, int64_t end, int k) {
-    puts("PRINT PV");
-    printf("ITER: %d\n", k);
-    for(int64_t i = start; i <= end; i++) {
-        printf("Pv[%ld] = %ld\n", i, v[i]);
-    }
-}
-
 static inline __attribute__((always_inline)) void compute_advance_block (
     uint64_t* Pv, 
     uint64_t* Mv,
@@ -395,7 +345,8 @@ static inline __attribute__((always_inline)) void compute_advance_block (
     scores[i + pos_v] = scores[i + pos_v] + PHout - MHout;
 }
 
-void bpm_compute_matrix_banded_cutoff_score(
+#ifdef __AVX2__
+void bpm_compute_matrix_banded_cutoff_score_avx(
     banded_matrix_t *const banded_matrix,
     banded_pattern_t *const banded_pattern,
     const char* text,
@@ -835,6 +786,183 @@ void bpm_compute_matrix_banded_cutoff_score(
     banded_matrix->higher_block = last_block_v;
     banded_matrix->lower_block = first_block_v;
 }
+#endif
+
+void bpm_compute_matrix_banded_cutoff_score(
+    banded_matrix_t *const banded_matrix,
+    banded_pattern_t *const banded_pattern,
+    const char* text,
+    const int64_t text_length,
+    const int64_t text_finish_pos)
+{
+    // Pattern variables
+    const uint64_t *PEQ = banded_pattern->PEQ;
+    // TODO: remove if necessary
+    const int64_t k_end = ABS(((int64_t)text_length) - (int64_t)(banded_pattern->pattern_length)) + 1;
+    const int64_t real_bandwidth = MAX(MAX(k_end, banded_matrix->cutoff_score), 65);
+    const int64_t effective_bandwidth_blocks = DIV_CEIL(real_bandwidth, BPM_W64_LENGTH) + 1;
+    const int64_t num_block_rows = DIV_CEIL(banded_pattern->pattern_length, BPM_W64_LENGTH);
+
+    const uint64_t *const level_mask = banded_pattern->level_mask;
+    uint64_t *const Pv = banded_matrix->Pv;
+    uint64_t *const Mv = banded_matrix->Mv;
+    int64_t *const scores = banded_matrix->scores;
+
+    const int64_t sequence_length_diff = banded_matrix->sequence_length_diff;
+    const int64_t prologue_columns = banded_matrix->prolog_column_blocks;
+    const int64_t finish_v_pos_inside_band = prologue_columns * BPM_W64_LENGTH + sequence_length_diff;
+
+    // Prepare last block of the next column
+    int64_t pos_v = -prologue_columns;
+    int64_t pos_h = 0;
+    int64_t first_block_v = prologue_columns;
+    int64_t last_block_v = effective_bandwidth_blocks - 1;
+
+    bpm_reset_search(effective_bandwidth_blocks, Pv, Mv, scores);
+
+    // Advance in DP-bit_encoded matrix
+    int64_t text_position = 0, k;
+    // uint64_t count = 0;
+    //  Main loop
+
+    int64_t text_block = (text_finish_pos / 64);
+
+    for (k = 0; k < text_block; k++)
+    {
+        if (last_block_v - first_block_v >= 4)
+        {
+            for (text_position = k * 64; text_position < (k+1) * 64; text_position+=4)
+            {
+                // Fetch next character
+                const uint8_t enc_char1 = dna_encode(text[text_position]);
+                const uint8_t enc_char2 = dna_encode(text[text_position+1]);
+                const uint8_t enc_char3 = dna_encode(text[text_position+2]);
+                const uint8_t enc_char4 = dna_encode(text[text_position+3]);
+
+                int64_t i = first_block_v;
+                
+                uint64_t PHin_0 = 1ul, MHin_0 = 0ul, PHin_1 = 1ul, MHin_1 = 0ul, PHin_2 = 1ul, MHin_2 = 0ul, PHin_3 = 1ul, MHin_3 = 0ul;
+
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i,   pos_v, enc_char1, &PHin_0, &MHin_0);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i+1, pos_v, enc_char1, &PHin_0, &MHin_0);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i+2, pos_v, enc_char1, &PHin_0, &MHin_0);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i,   pos_v, enc_char2, &PHin_1, &MHin_1);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i+1, pos_v, enc_char2, &PHin_1, &MHin_1);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i,   pos_v, enc_char3, &PHin_2, &MHin_2);
+
+                for (i = first_block_v+3; i <= last_block_v; ++i)
+                {
+                    compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i,   pos_v, enc_char1, &PHin_0, &MHin_0);
+                    compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i-1, pos_v, enc_char2, &PHin_1, &MHin_1);
+                    compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i-2, pos_v, enc_char3, &PHin_2, &MHin_2);
+                    compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i-3, pos_v, enc_char4, &PHin_3, &MHin_3);
+                }
+                i = last_block_v;
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i,   pos_v, enc_char2, &PHin_1, &MHin_1);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i-1, pos_v, enc_char3, &PHin_2, &MHin_2);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i,   pos_v, enc_char3, &PHin_2, &MHin_2);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i-2, pos_v, enc_char4, &PHin_3, &MHin_3);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i-1, pos_v, enc_char4, &PHin_3, &MHin_3);
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i,   pos_v, enc_char4, &PHin_3, &MHin_3);
+            }          
+        }
+        else 
+        {
+            for (text_position = k * 64; text_position < (k+1) * 64; text_position+=2)
+            {
+                const uint8_t enc_char  = dna_encode(text[text_position]);
+                const uint8_t enc_char2 = dna_encode(text[text_position+1]);
+                int64_t i = first_block_v;  
+                uint64_t PHin_0 = 1, MHin_0 = 0, PHin_1 = 1, MHin_1 = 0;
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i, pos_v, enc_char, &PHin_0, &MHin_0);
+                for (i = first_block_v+1; i <= last_block_v; ++i)
+                {
+                    compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i-1, pos_v, enc_char2, &PHin_1, &MHin_1);
+                    compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i,   pos_v,  enc_char, &PHin_0, &MHin_0);
+                }
+                i = last_block_v;
+                compute_advance_block(Pv, Mv, PEQ, level_mask, scores, i, pos_v, enc_char2, &PHin_1, &MHin_1);
+            }
+        }
+        
+
+        // chech if the band of the lower side should be cutted
+        int cut_band_lower = (first_block_v + 2 < last_block_v) && (finish_v_pos_inside_band > BPM_W64_LENGTH * (first_block_v + 1)) && (scores[first_block_v + pos_v + 1] + (finish_v_pos_inside_band - BPM_W64_LENGTH * (first_block_v + 1))) > banded_matrix->cutoff_score;
+
+        // if we are in the prolog columns, we have to decrease the first_block_v (apart of cutting the band if necessary)
+        if (cut_band_lower && (pos_h >= prologue_columns))
+        {
+            first_block_v++;
+        }
+        else if (!cut_band_lower && (pos_h < prologue_columns))
+        {
+            first_block_v--;
+        }
+
+        // Shift results one block in the last column of a 64-column block
+        for (int64_t j = first_block_v; j < last_block_v; j++)
+        {
+            Pv[j] = Pv[j + 1];
+            Mv[j] = Mv[j + 1];
+        }
+        Pv[last_block_v] = BPM_W64_ONES;
+        Mv[last_block_v] = 0;
+        // Update the score for the new column
+        int64_t pos = last_block_v + pos_v;
+        scores[pos + 1] = scores[pos] + BPM_W64_LENGTH;
+
+        // chech if the band of the higher side should be cutted
+        int cut_band_higer = (first_block_v + 2 < last_block_v) && (BPM_W64_LENGTH * (last_block_v - 1) > finish_v_pos_inside_band) && (scores[last_block_v + pos_v - 1] + (BPM_W64_LENGTH * (last_block_v - 1) - finish_v_pos_inside_band)) > banded_matrix->cutoff_score;
+
+        if (cut_band_higer || (pos_v + last_block_v >= num_block_rows))
+        {
+            last_block_v--;
+        }
+        pos_v++;
+        pos_h++;
+    }
+
+    for (; text_position < text_finish_pos; ++text_position)
+    {
+        // Fetch next character
+        const uint8_t enc_char = dna_encode(text[text_position]);
+        // Advance all blocks
+        int64_t i;
+        uint64_t PHin = 1, MHin = 0, PHout, MHout;
+        // Main Loop
+        for (i = first_block_v; i <= last_block_v; ++i)
+        {
+            /* Calculate Step Data */
+            uint64_t Pv_in = Pv[i];
+            uint64_t Mv_in = Mv[i];
+            const uint64_t mask = level_mask[i + pos_v];
+            const uint64_t Eq = PEQ[BPM_PATTERN_PEQ_IDX((i + pos_v), enc_char)];
+
+            /* Compute Block */
+            BPM_ADVANCE_BLOCK(Eq, mask, Pv_in, Mv_in, PHin, MHin, PHout, MHout);
+
+            /* Swap propagate Hv */
+            Pv[i] = Pv_in;
+            Mv[i] = Mv_in;
+            PHin = PHout;
+            MHin = MHout;
+            scores[i + pos_v] = scores[i + pos_v] + PHout - MHout;
+        }
+    }
+    uint64_t final_score;
+    if (banded_pattern->pattern_length % BPM_W64_LENGTH)
+    {
+        final_score = scores[(banded_pattern->pattern_length) / BPM_W64_LENGTH] - (BPM_W64_LENGTH - (banded_pattern->pattern_length % BPM_W64_LENGTH));
+    }
+    else
+    {
+        final_score = scores[(banded_pattern->pattern_length - 1) / BPM_W64_LENGTH];
+    }
+    banded_matrix->cigar->score = final_score;
+    banded_matrix->higher_block = last_block_v;
+    banded_matrix->lower_block = first_block_v;
+}
+
 
 void banded_backtrace_matrix_cutoff(
     banded_matrix_t *const banded_matrix,
@@ -913,12 +1041,21 @@ void banded_compute(
     const char* text,
     const int64_t text_length,
     const int64_t text_finish_pos,
-    const bool only_score)
+    const bool only_score,
+    const bool force_scalar)
 {
     if (only_score)
     {
-        // Fill Matrix (Pv,Mv)
-        bpm_compute_matrix_banded_cutoff_score(banded_matrix, banded_pattern, text, text_length, text_finish_pos);
+        #ifdef __AVX2__
+        if (!force_scalar)
+        {
+            bpm_compute_matrix_banded_cutoff_score_avx(banded_matrix, banded_pattern, text, text_length, text_finish_pos);
+        }
+        else 
+        #endif
+        {
+            bpm_compute_matrix_banded_cutoff_score(banded_matrix, banded_pattern, text, text_length, text_finish_pos);
+        }  
     }
     else
     {
