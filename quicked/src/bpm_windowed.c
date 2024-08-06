@@ -581,6 +581,7 @@ void windowed_compute(
         else
         #endif
         {
+            UNUSED(force_scalar);
             windowed_compute_window(windowed_matrix, windowed_pattern, text, window_size);
         }
 

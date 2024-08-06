@@ -276,3 +276,8 @@ uint64_t nominal_prop_u64(const uint64_t base,const double factor);
   int i; \
   for (i=0;i<times;++i) fprintf(stream,"%c",character); \
 }
+
+/*
+* Unused variable
+*/
+#define UNUSED(x) (void)(x)

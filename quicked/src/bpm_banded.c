@@ -1054,6 +1054,7 @@ void banded_compute(
         else 
         #endif
         {
+            UNUSED(force_scalar);
             bpm_compute_matrix_banded_cutoff_score(banded_matrix, banded_pattern, text, text_length, text_finish_pos);
         }  
     }
