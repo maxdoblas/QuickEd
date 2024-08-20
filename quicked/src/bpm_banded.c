@@ -641,7 +641,7 @@ void bpm_compute_matrix_banded_cutoff_score_avx(
                 __m256i PHin  = _mm256_set_epi64x(PHin_0, PHin_1, PHin_2, PHin_3);  
                 __m256i MHin  = _mm256_set_epi64x(MHin_0, MHin_1, MHin_2, MHin_3);
                 __m256i MHout = MHin; 
-                __m256i PHout = Phin;
+                __m256i PHout = PHin;
 
                 for (i = first_block_v+3; i <= last_block_v; ++i)
                 {
