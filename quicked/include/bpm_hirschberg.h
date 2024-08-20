@@ -37,6 +37,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
     const int64_t pattern_length,
     const int64_t cutoff_score,
     cigar_t* cigar_out,
+    const bool force_scalar,
     mm_allocator_t* const mm_allocator);
 
 #endif /* BPM_HIRSCHBERG_H_ */

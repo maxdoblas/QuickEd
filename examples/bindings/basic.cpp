@@ -42,8 +42,8 @@ int main(void) {
 
         aligner.align(&pattern, &text);  // Align the sequences!
 
-        aligner.getScore();              // Get the score
-        aligner.getCigar();              // Get the CIGAR string
+        score = aligner.getScore();              // Get the score
+        cigar = aligner.getCigar();              // Get the CIGAR string
     } catch (quicked::QuickedException &e) {
         cerr << e.what() << endl;
         return 1;

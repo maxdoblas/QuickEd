@@ -9,6 +9,9 @@ on:
       - '**/LICENSE'
   pull_request:
     branches: [ main ]
+    paths-ignore: # Skip the workflow if only documentation files are changed
+      - '**/*.md'
+      - '**/LICENSE'
   workflow_dispatch:
 
 jobs:

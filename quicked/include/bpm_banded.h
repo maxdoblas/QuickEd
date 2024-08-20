@@ -90,6 +90,7 @@ void banded_compute(
     const char* text,
     const int64_t text_length,
     const int64_t text_finish_pos,
-    const bool only_score);
+    const bool only_score,
+    const bool force_scalar);
 
 #endif /* BPM_BANDED_H_ */

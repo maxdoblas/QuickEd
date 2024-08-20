@@ -40,6 +40,6 @@ try:
 except QuickedEception as e:
     print(e)
 
-print(f"Score: {aligner.getScore()}") # Print the score
-print(f"Cigar: {aligner.getCigar()}")  # Print the CIGAR string
+print(f"Score: {score}") # Print the score
+print(f"Cigar: {cigar}")  # Print the CIGAR string
 

@@ -230,7 +230,7 @@ The `quicked_params_t` configuration struct has the following parameters:
 * **unsigned int** `hew_threshold[2]`: The error percentage threshold inside a window to be considered a high error window (HEW). This parameter is only used inside Quicked. Position [0] refers to the WindowEd(S) step and position [1] to the WindowEd(L) step.
 * **unsigned int** `hew_percentage[2]`: percentage of HEW in a particular WindowEd alignment to consider that the estimation is not fitted. This parameter is only used inside Quicked. Position [0] refers to the WindowEd(S) step and position [1] to the WindowEd(L) step.
 * **bool** `only_score`: If set to true, turn off the CIGAR generation for the WindowEd and BandEd methods.
-* **bool** `force_scalar`: If set to true, it forces the WindowEd implementation to use the scalar code.
+* **bool** `force_scalar`: If set to true, it forces WindowEd and BandEd implementation to use the scalar code.
 
 > [!WARNING]
 > **Experimental Parameters**

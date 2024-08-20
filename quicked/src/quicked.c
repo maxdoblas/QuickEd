@@ -74,7 +74,7 @@ quicked_status_t run_banded(
 
     // Align
     timer_start(aligner->timer);
-    banded_compute(&banded_matrix, &banded_pattern, text, text_len, text_len, aligner->params->only_score);
+    banded_compute(&banded_matrix, &banded_pattern, text, text_len, text_len, aligner->params->only_score, aligner->params->force_scalar);
     timer_stop(aligner->timer);
 
     // Retrieve results
@@ -147,7 +147,7 @@ quicked_status_t run_hirschberg(
     // Align
     timer_start(aligner->timer);
     quicked_status_t status = bpm_compute_matrix_hirschberg(text, text_r, text_len, pattern, pattern_r, pattern_len,
-                                  cutoff_score, &cigar_out, mm_allocator);
+                                  cutoff_score, &cigar_out, aligner->params->force_scalar, mm_allocator);
     timer_stop(aligner->timer);
 
     // Retrieve results
@@ -247,7 +247,7 @@ quicked_status_t run_quicked(
 
             banded_matrix_allocate(&banded_matrix_score, pattern_len, text_len, score, SCORE_ONLY, mm_allocator);
 
-            banded_compute(&banded_matrix_score, &banded_pattern, text, text_len, text_len, SCORE_ONLY);
+            banded_compute(&banded_matrix_score, &banded_pattern, text, text_len, text_len, SCORE_ONLY, aligner->params->force_scalar);
 
             // align_input->seqs_with_15 = true; // TODO: Remove if unused
 
@@ -264,7 +264,7 @@ quicked_status_t run_quicked(
 
                 banded_matrix_allocate(&banded_matrix_score, pattern_len, text_len, score, SCORE_ONLY, mm_allocator);
 
-                banded_compute(&banded_matrix_score, &banded_pattern, text, text_len, text_len, SCORE_ONLY);
+                banded_compute(&banded_matrix_score, &banded_pattern, text, text_len, text_len, SCORE_ONLY, aligner->params->force_scalar);
 
                 // align_input->seqs_with_30 = true; // TODO: Remove if unused
 
@@ -288,7 +288,7 @@ quicked_status_t run_quicked(
     cigar_out.end_offset = pattern_len + text_len;
 
     bpm_compute_matrix_hirschberg(text, text_r, text_len, pattern, pattern_r, pattern_len,
-                                  score, &cigar_out, mm_allocator);
+                                  score, &cigar_out, aligner->params->force_scalar, mm_allocator);
 
     timer_stop(aligner->timer_align);
     timer_stop(aligner->timer);
