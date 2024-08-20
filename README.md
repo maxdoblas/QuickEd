@@ -1,7 +1,7 @@
 QuickEd
 &nbsp;
 [![Release](https://img.shields.io/github/release/maxdoblas/quicked.svg)](https://github.com/maxdoblas/quicked/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/maxdoblas/quicked/build_and_test.yaml?branch=dev)](https://github.com/maxdoblas/QuickEd/actions/workflows/build_and_test.yaml)
+[![CI](https://img.shields.io/github/actions/workflow/status/maxdoblas/quicked/build_and_test.yaml)](https://github.com/maxdoblas/QuickEd/actions/workflows/build_and_test.yaml)
 [![Publication](https://img.shields.io/badge/Published%20in-BioRxiv-167DA4.svg)](https://www.biorxiv.org/)
 =====
 
