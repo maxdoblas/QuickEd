@@ -20,16 +20,35 @@ jobs:
         echo "build-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
         echo "bin-dir=${{ github.workspace }}/bin" >> "$GITHUB_OUTPUT"
 
-    - name: Configure CMake
+    - name: Configure CMake (w/ vector support)
       run: >
         cmake -B ${{ steps.strings.outputs.build-dir }}
         -DQUICKED_NONATIVE=ON
         -S ${{ github.workspace }}
 
-    - name: Build
+    - name: Build (w/ vector support)
       run: cmake --build ${{ steps.strings.outputs.build-dir }} --config Release --parallel 2
 
-    - name: Move the target artifacts
+    - name: Move the target artifacts (w/ vector support)
+      run: |
+        mkdir -p ${{ steps.strings.outputs.bin-dir }}/release
+        mv ${{ steps.strings.outputs.bin-dir }}/align_benchmark ${{ steps.strings.outputs.bin-dir }}/release/align_benchmark-x86_64-SIMD
+        mv ${{ steps.strings.outputs.bin-dir }}/generate_dataset ${{ steps.strings.outputs.bin-dir }}/release/generate_dataset-x86_64-SIMD
+
+    - name: Clean
+      run: cmake --build ${{ steps.strings.outputs.build-dir }} --target clean
+
+    - name: Configure CMake (w/o vector support)
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-dir }}
+        -DQUICKED_NONATIVE=ON
+        -DQUICKED_FORCESCALAR=ON
+        -S ${{ github.workspace }}
+
+    - name: Build (w/o vector support)
+      run: cmake --build ${{ steps.strings.outputs.build-dir }} --config Release --parallel 2
+
+    - name: Move the target artifacts (w/o vector support)
       run: |
         mkdir -p ${{ steps.strings.outputs.bin-dir }}/release
         mv ${{ steps.strings.outputs.bin-dir }}/align_benchmark ${{ steps.strings.outputs.bin-dir }}/release/align_benchmark-x86_64
