@@ -9,6 +9,7 @@ enable_testing()
 
 # Options
 option(QUICKED_NONATIVE "Compile QuickEd for generic x86_64" OFF)
+option(QUICKED_FORCESCALAR "Compile QuickEd without vector extensions (SSE,AVX)" OFF)
 
 # Set build type to Release if not specified
 if (NOT CMAKE_BUILD_TYPE)
@@ -61,7 +62,10 @@ add_compile_options(-fPIC)
 if (NOT QUICKED_NONATIVE)
     add_compile_options(-march=native)
 else()
-    add_compile_options(-march=x86-64 -msse4.1)
+    add_compile_options(-march=x86-64)
+    if (NOT QUICKED_FORCESCALAR)
+        add_compile_options(-msse4.1 -mavx2)
+    endif()
 endif()
 
 # Output directories
