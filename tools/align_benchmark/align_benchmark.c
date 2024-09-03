@@ -153,10 +153,10 @@ void align_benchmark_run_algorithm(
       break;
     case alignment_edit_windowed:
       benchmark_windowed(align_input,parameters.window_size, parameters.overlap_size,
-                          parameters.force_scalar, parameters.only_score);
+                          parameters.force_scalar, false);
       break;
     case alignment_edit_banded:
-      benchmark_banded(align_input,parameters.bandwidth, parameters.only_score);
+      benchmark_banded(align_input,parameters.bandwidth, false);
       break;
     case alignment_edit_banded_hirschberg:
       benchmark_hirschberg(align_input,parameters.bandwidth);

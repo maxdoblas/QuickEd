@@ -69,7 +69,6 @@ typedef struct {
   int hew_threshold;
   int hew_percentage;
   bool force_scalar;
-  bool only_score;
   // Misc
   bool check_display;
   bool check_correct;

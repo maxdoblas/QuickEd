@@ -48,7 +48,6 @@ align_bench_params_t parameters = {
   .hew_percentage = 15,
   .hew_threshold = 40,
   .force_scalar = false,
-  .only_score = false,
   // Misc
   .check_display = false,
   .check_correct = false,
@@ -89,7 +88,6 @@ void usage(void) {
       "          --overlap-size INT                                            \n"
       "          --hew-threshold INT                                           \n"
       "          --hew-percentage INT                                          \n"
-      "          --only-score                                                  \n"
       "          --force-scalar                                                \n"
       "        [Misc]                                                          \n"
       "          --check|c 'display'|'correct'|'score'|'alignment'             \n"
@@ -120,7 +118,6 @@ void parse_arguments(
     { "hew-threshold", required_argument, 0, 2003 },
     { "hew-percentage", required_argument, 0, 2004 },
     { "force-scalar", no_argument, 0, 2005 },
-    { "only-score", no_argument, 0, 2006 },
     /* Misc */
     { "check", required_argument, 0, 'c' },
     /* System */
@@ -201,9 +198,6 @@ void parse_arguments(
       break;
     case 2005: // --force-scalar
       parameters.force_scalar = true;
-      break;
-    case 2006: // --only-score
-      parameters.only_score = true;
       break;
     /*
      * Misc
