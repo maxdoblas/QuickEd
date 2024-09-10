@@ -187,9 +187,6 @@ For a detailed list of parameters for each algorithm, please refer to the main [
     # Percentage of HEW to consider that the estimation is not fitted in QuickEd.
     #  This parameter sets the same percentage for both steps.
 
-  --only-score
-    # Only compute the alignment score.
-
   --force-scalar
     # Force the use of the scalar implementations of the algorithms.
 ```

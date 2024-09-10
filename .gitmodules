@@ -1,7 +1,0 @@
-[submodule "bindings/python/pybind11"]
-	path = bindings/python/pybind11
-	url = ../../pybind/pybind11
-	branch = stable
-[submodule "tools/align_benchmark/external/edlib"]
-	path = tools/align_benchmark/external/edlib
-	url = https://github.com/martinsos/edlib
