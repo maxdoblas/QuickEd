@@ -5,3 +5,18 @@
 [submodule "tools/align_benchmark/external/edlib"]
 	path = tools/align_benchmark/external/edlib
 	url = https://github.com/martinsos/edlib
+[submodule "tools/align_benchmark/external/ksw2"]
+	path = tools/align_benchmark/external/ksw2
+	url = https://github.com/lh3/ksw2
+[submodule "tools/align_benchmark/external/Scrooge"]
+	path = tools/align_benchmark/external/Scrooge
+	url = https://github.com/CMU-SAFARI/Scrooge
+[submodule "tools/align_benchmark/external/astar-pairwise-aligner"]
+	path = tools/align_benchmark/external/astar-pairwise-aligner
+	url = https://github.com/RagnarGrootKoerkamp/astar-pairwise-aligner
+[submodule "tools/align_benchmark/external/SneakySnake"]
+	path = tools/align_benchmark/external/SneakySnake
+	url = https://github.com/CMU-SAFARI/SneakySnake
+[submodule "tools/align_benchmark/external/WFA2-lib"]
+	path = tools/align_benchmark/external/WFA2-lib
+	url = https://github.com/smarco/WFA2-lib

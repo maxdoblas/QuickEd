@@ -28,6 +28,8 @@
 #include "edit/edit_bpm.h"
 #include "../../../quicked/quicked.h"
 #include "quicked_utils/include/commons.h"
+
+
 #include "external/edlib/edlib/include/edlib.h"
 
 /*
@@ -370,4 +372,109 @@ void benchmark_edlib(align_input_t* const align_input,
   free(edlib_cigar);
   edlibFreeAlignResult(result);
 }
+
+
+/*
+void benchmark_scrooge(align_input_t* const align_input)
+{
+}
+
+void benchmark_astarpa(align_input_t* const align_input)
+{
+  const int pattern_length = align_input->pattern_length;
+  const int text_length    = align_input->text_length;
+  uint64_t cigar_len; 
+  uint8_t* cigar; 
+  timer_start(&align_input->timer);
+	uint64_t score = astarpa((const uint8_t*)align_input->pattern, pattern_length, 
+                      (const uint8_t*)align_input->text,    text_length,    &cigar, &cigar_len);
+  timer_stop(&align_input->timer);
+  //adapt cigar
+	for(uint64_t i = 0; i < cigar_len;i++){
+    char operation = cigar[i];
+    if (operation=='=') cigar[i] = 'M';
+    else if (operation=='D') cigar[i] = 'I';
+    else if (operation=='I') cigar[i] = 'D';
+  }
+  if (align_input->output_file) {
+    quicked_print_output(align_input,false,cigar,score);
+  }
+  astarpa_free_cigar(cigar);
+}
+
+void benchmark_astarpa2_simple(align_input_t* const align_input)
+{
+  const int pattern_length = align_input->pattern_length;
+  const int text_length    = align_input->text_length;
+  uint64_t cigar_len; 
+  uint8_t* cigar; 
+  timer_start(&align_input->timer);
+	uint64_t score = astarpa2_simple((const uint8_t*)align_input->pattern, pattern_length, 
+                                   (const uint8_t*)align_input->text,    text_length,    &cigar, &cigar_len);
+  timer_stop(&align_input->timer);
+  //adapt cigar
+	for(uint64_t i = 0; i < cigar_len;i++){
+    char operation = cigar[i];
+    if (operation=='=') cigar[i] = 'M';
+    else if (operation=='D') cigar[i] = 'I';
+    else if (operation=='I') cigar[i] = 'D';
+  }
+  if (align_input->output_file) {
+    quicked_print_output(align_input,false,cigar,score);
+  }
+  astarpa_free_cigar(cigar);
+}
+
+void benchmark_astarpa2_full(align_input_t* const align_input)
+{
+  const int pattern_length = align_input->pattern_length;
+  const int text_length    = align_input->text_length;
+  uint64_t cigar_len; 
+  uint8_t* cigar; 
+  timer_start(&align_input->timer);
+	uint64_t score = astarpa2_full((const uint8_t*)align_input->pattern, pattern_length, 
+                                 (const uint8_t*)align_input->text,    text_length,    &cigar, &cigar_len);
+  timer_stop(&align_input->timer);
+  //adapt cigar
+	for(uint64_t i = 0; i < cigar_len;i++){
+    char operation = cigar[i];
+    if (operation=='=') cigar[i] = 'M';
+    else if (operation=='D') cigar[i] = 'I';
+    else if (operation=='I') cigar[i] = 'D';
+  }
+  if (align_input->output_file) {
+    quicked_print_output(align_input,false,cigar,score);
+  }
+  astarpa_free_cigar(cigar);
+}
+
+
+void benchmark_sneakysnake(align_input_t* const align_input)
+{
+  const int pattern_length = align_input->pattern_length;
+  const int text_length    = align_input->text_length;
+  const int min_length     = (pattern_length < text_length) ? pattern_length : text_length; 
+  const char* cigar        = "";
+  timer_start(&align_input->timer);
+  //int score = SneakySnake(min_length, pattern, text, int ErrorThreshold, int KmerSize, 0, int IterationNo);
+  timer_stop(&align_input->timer);
+}
+
+void benchmark_wavefront(align_input_t* const align_input)
+{
+  wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
+  char* wavefront_cigar; 
+  timer_start(&align_input->timer);
+  wavefront_align(wf_aligner,
+                 align_input->pattern, align_input->pattern_length, 
+                 align_input->text, align_input->text_length); 
+  int score = cigar_score_edit(wf_aligner->cigar);
+  timer_stop(&align_input->timer);
+  if (align_input->output_file) {
+    quicked_print_output(align_input, false, wavefront_cigar, score);
+  }
+  free(wavefront_cigar);
+}*/
+
+
 

@@ -76,9 +76,17 @@ void usage(void) {
       "              edit-windowed                                             \n"
       "            [Other Edit (Levenshtein)]                                  \n"
       "              edlib                                                     \n"
+      "              ksw2                                                      \n"
+      "              wfa-edit                                                  \n"
+      "              biwfa-edit                                                \n"
+      "              astarpa                                                   \n"
+      "              astarpa2-simple                                           \n"
+      "              astarpa2-full                                             \n"
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
       "              edit-bpm                                                  \n"
+      "              scrooge                                                   \n"
+      "              sneakysnake                                               \n"
       "        [Input & Output]                                                \n"
       "          --input|i PATH                                                \n"
       "          --output|o PATH                                               \n"
@@ -160,8 +168,24 @@ void parse_arguments(
         parameters.algorithm = alignment_edit_dp;
       } else if (strcmp(optarg,"edit-dp-banded")==0) {
         parameters.algorithm = alignment_edit_dp_banded;
-      }  else if (strcmp(optarg,"edlib")==0) {
+      } else if (strcmp(optarg,"edlib")==0) {
         parameters.algorithm = alignment_edlib;
+      } else if (strcmp(optarg,"ksw2")==0) {
+        parameters.algorithm = alignment_ksw2;
+      } else if (strcmp(optarg,"wfa-edit")==0) {
+        parameters.algorithm = alignment_wavefront;
+      } else if (strcmp(optarg,"biwfa-edit")==0) {
+        parameters.algorithm = alignment_biwavefront;
+      } else if (strcmp(optarg,"astarpa")==0) {
+        parameters.algorithm = alignment_astarpa;
+      } else if (strcmp(optarg,"astarpa2-simple")==0) {
+        parameters.algorithm = alignment_astarpa2_simple;
+      } else if (strcmp(optarg,"astarpa2-full")==0) {
+        parameters.algorithm = alignment_astarpa2_full;
+      } else if (strcmp(optarg,"sneakysnake")==0) {
+        parameters.algorithm = alignment_sneakysanke;
+      } else if (strcmp(optarg,"scrooge")==0) {
+        parameters.algorithm = alignment_scrooge;
       } else {
         fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);
         exit(1);

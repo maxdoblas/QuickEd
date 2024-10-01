@@ -30,6 +30,7 @@
 #include "quicked_utils/include/mm_allocator.h"
 #include "quicked_utils/include/profiler_timer.h"
 #include "quicked_utils/include/cigar.h"
+//#include "external/WFA2-lib/wavefront/wavefront_align.h"
 #include "score_matrix.h"
 
 /*
@@ -61,6 +62,7 @@ typedef struct {
   bool output_full;
   // MM
   mm_allocator_t* mm_allocator;
+  //wavefront_aligner_t* wf_aligner;
   // PROFILE/STATS
   profiler_timer_t timer;
   profiler_timer_t timer_windowed_s;

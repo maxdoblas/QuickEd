@@ -71,4 +71,7 @@ void benchmark_edlib(
     align_input_t* const align_input,
     const int bandwidth);
 
+//void benchmark_wavefront(
+//    align_input_t* const align_input);
+
 #endif /* BENCHMARK_EDIT_H_ */

@@ -43,6 +43,14 @@ typedef enum {
   alignment_edit_quicked,
   // External
   alignment_edlib,
+  alignment_wavefront, 
+  alignment_biwavefront, 
+  alignment_ksw2, 
+  alignment_astarpa,
+  alignment_astarpa2_simple,
+  alignment_astarpa2_full,
+  alignment_sneakysanke,
+  alignment_scrooge
 } alignment_algorithm_type;
 
 /*
