@@ -38,7 +38,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
     const char* pattern_r,
     const int64_t pattern_length,
     const int64_t cutoff_score,
-    cigar_t *cigar_out,
+    cigar2_t *cigar_out,
     const bool force_scalar,
     mm_allocator_t *const mm_allocator)
 {
@@ -261,7 +261,7 @@ quicked_status_t bpm_compute_matrix_hirschberg(
             &banded_matrix, &banded_pattern, text,
             text_length, pattern_length, false, force_scalar);
         // Merge cigar
-        cigar_prepend_forward(banded_matrix.cigar, cigar_out);
+        cigar_prepend_forward_2(banded_matrix.cigar, cigar_out);
         // free variables
         banded_pattern_free(&banded_pattern, mm_allocator);
         banded_matrix_free(&banded_matrix, mm_allocator);

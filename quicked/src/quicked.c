@@ -33,7 +33,7 @@
 
 void extract_results(
     quicked_aligner_t *aligner,
-    cigar_t *const cigar)
+    cigar2_t *const cigar)
 {
     if (aligner->params->only_score)
     {
@@ -47,11 +47,11 @@ void extract_results(
         {
             int buf_size = (2 * (cigar->end_offset - cigar->begin_offset) + 10) * sizeof(char);
             aligner->cigar = (char*) mm_allocator_malloc(aligner->mm_allocator, buf_size);
-            cigar_sprint(aligner->cigar, buf_size, cigar, true);
+            cigar_sprint_2(aligner->cigar, buf_size, cigar, true);
         }
 
         // Score from CIGAR
-        aligner->score = cigar_score_edit(cigar);
+        aligner->score = cigar_score_edit_2(cigar);
     }
 }
 
@@ -139,7 +139,7 @@ quicked_status_t run_hirschberg(
     reverse_string(text, text_r, text_len);
     reverse_string(pattern, pattern_r, pattern_len);
 
-    cigar_t cigar_out;
+    cigar2_t cigar_out;
     cigar_out.operations = (char *)  mm_allocator_malloc(aligner->mm_allocator, (pattern_len + text_len) * sizeof(char));
     cigar_out.begin_offset = pattern_len + text_len;
     cigar_out.end_offset = pattern_len + text_len;
@@ -282,7 +282,7 @@ quicked_status_t run_quicked(
 
     timer_start(aligner->timer_align);
 
-    cigar_t cigar_out;
+    cigar2_t cigar_out;
     cigar_out.operations = (char *)  mm_allocator_malloc(aligner->mm_allocator, (pattern_len + text_len) * sizeof(char));
     cigar_out.begin_offset = pattern_len + text_len;
     cigar_out.end_offset = pattern_len + text_len;

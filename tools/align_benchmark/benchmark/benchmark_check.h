@@ -35,6 +35,6 @@
  */
 void benchmark_check_alignment(
     align_input_t* const align_input,
-    cigar_t* const cigar_computed);
+    cigar2_t* const cigar_computed);
 
 #endif /* BENCHMARK_CHECK_H_ */

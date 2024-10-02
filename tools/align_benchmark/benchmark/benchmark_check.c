@@ -32,9 +32,9 @@
  */
 void benchmark_check_alignment_using_solution(
     align_input_t* const align_input,
-    cigar_t* const cigar_computed,
+    cigar2_t* const cigar_computed,
     const int score_computed,
-    cigar_t* const cigar_correct,
+    cigar2_t* const cigar_correct,
     const int score_correct) {
   counter_add(&(align_input->align),1);
   counter_add(&(align_input->align_score_total),ABS(score_computed));
@@ -46,7 +46,7 @@ void benchmark_check_alignment_using_solution(
     }
     // Check correct
     if (align_input->debug_flags & ALIGN_DEBUG_CHECK_CORRECT) {
-      bool correct = cigar_check_alignment(stderr,
+      bool correct = cigar_check_alignment_2(stderr,
           align_input->pattern,align_input->pattern_length,
           align_input->text,align_input->text_length,
           cigar_computed,align_input->verbose);
@@ -94,7 +94,7 @@ void benchmark_check_alignment_using_solution(
     }
     // Check alignment
     if (align_input->debug_flags & ALIGN_DEBUG_CHECK_ALIGNMENT) {
-      if (cigar_cmp(cigar_computed,cigar_correct) != 0) {
+      if (cigar_cmp_2(cigar_computed,cigar_correct) != 0) {
         // Print
         if (align_input->verbose) {
           fprintf(stderr,"INACCURATE ALIGNMENT\n");
@@ -116,11 +116,11 @@ void benchmark_check_alignment_using_solution(
  */
 void benchmark_check_alignment_edit(
     align_input_t* const align_input,
-    cigar_t* const cigar_computed) {
+    cigar2_t* const cigar_computed) {
   EdlibAlignResult result;
   char* edlib_cigar = NULL;
 
-  cigar_t* const cigar = cigar_new(
+  cigar2_t* const cigar = cigar_new_2(
     align_input->pattern_length + align_input->text_length,
     align_input->mm_allocator
   );
@@ -143,16 +143,16 @@ void benchmark_check_alignment_edit(
     else if (operation=='D') edlib_cigar[i] = 'I';
     else if (operation=='I') edlib_cigar[i] = 'D';
   }
-  cigar_to_operations(cigar, edlib_cigar, cigar_len);
+  cigar_to_operations_2(cigar, edlib_cigar, cigar_len);
 
-  const int score_correct = cigar_score_edit(cigar);
-  const int score_computed = cigar_score_edit(cigar_computed);
+  const int score_correct  = cigar_score_edit_2(cigar);
+  const int score_computed = cigar_score_edit_2(cigar_computed);
 
   benchmark_check_alignment_using_solution(
     align_input, cigar_computed, score_computed,
     cigar, score_correct);
 
-  cigar_free(cigar, align_input->mm_allocator);
+  cigar_free_2(cigar, align_input->mm_allocator);
   free(edlib_cigar);
   edlibFreeAlignResult(result);
 }
@@ -161,7 +161,7 @@ void benchmark_check_alignment_edit(
  */
 void benchmark_check_alignment(
     align_input_t* const align_input,
-    cigar_t* const cigar_computed) {
+    cigar2_t* const cigar_computed) {
   // Compute correct CIGAR
   if ((align_input->debug_flags & ALIGN_DEBUG_CHECK_SCORE) ||
       (align_input->debug_flags & ALIGN_DEBUG_CHECK_ALIGNMENT)) {

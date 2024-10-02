@@ -57,9 +57,9 @@ void benchmark_print_alignment(
     FILE* const stream,
     align_input_t* const align_input,
     const int score_computed,
-    cigar_t* const cigar_computed,
+    cigar2_t* const cigar_computed,
     const int score_correct,
-    cigar_t* const cigar_correct) {
+    cigar2_t* const cigar_correct) {
   // Print Sequence
   fprintf(stream,"ALIGNMENT (#%d)\n",align_input->sequence_id);
   fprintf(stream,"  PATTERN  %s\n",align_input->pattern);
@@ -67,21 +67,21 @@ void benchmark_print_alignment(
   // Print CIGARS
   if (cigar_computed != NULL && score_computed != -1) {
     fprintf(stream,"    COMPUTED\tscore=%d\t",score_computed);
-    cigar_print(stream,cigar_computed,true,align_input->mm_allocator);
+    cigar_print_2(stream,cigar_computed,true,align_input->mm_allocator);
     fprintf(stream,"\n");
   }
   if (cigar_computed != NULL) {
-    cigar_print_pretty(stream,cigar_computed,
+    cigar_print_pretty_2(stream,cigar_computed,
         align_input->pattern,align_input->pattern_length,
         align_input->text,align_input->text_length,align_input->mm_allocator);
   }
   if (cigar_correct != NULL && score_correct != -1) {
     fprintf(stream,"    CORRECT \tscore=%d\t",score_correct);
-    cigar_print(stream,cigar_correct,true,align_input->mm_allocator);
+    cigar_print_2(stream,cigar_correct,true,align_input->mm_allocator);
     fprintf(stream,"\n");
   }
   if (cigar_correct != NULL) {
-    cigar_print_pretty(stream,cigar_correct,
+    cigar_print_pretty_2(stream,cigar_correct,
         align_input->pattern,align_input->pattern_length,
         align_input->text,align_input->text_length,align_input->mm_allocator);
   }
@@ -89,14 +89,14 @@ void benchmark_print_alignment(
 void benchmark_print_output_lite(
     FILE* const stream,
     const int score,
-    cigar_t* const cigar) {
+    cigar2_t* const cigar) {
   // Retrieve CIGAR
   const bool cigar_null = (cigar->begin_offset >= cigar->end_offset);
   char* cigar_str = NULL;
   if (!cigar_null) {
     int cigar_length = 2*(cigar->end_offset-cigar->begin_offset)+10;
     cigar_str = malloc(cigar_length);
-    cigar_sprint(cigar_str,cigar_length,cigar,true);
+    cigar_sprint_2(cigar_str,cigar_length,cigar,true);
   }
   // Print
   fprintf(stream,"%d\t%s\n",score,(cigar_null) ? "-" : cigar_str);
@@ -107,14 +107,14 @@ void benchmark_print_output_full(
     FILE* const stream,
     align_input_t* const align_input,
     const int score,
-    cigar_t* const cigar) {
+    cigar2_t* const cigar) {
   // Retrieve CIGAR
   const bool cigar_null = (cigar->begin_offset >= cigar->end_offset);
   char* cigar_str = NULL;
   if (!cigar_null) {
     int cigar_length = 2*(cigar->end_offset-cigar->begin_offset);
     cigar_str = malloc(2*(cigar->end_offset-cigar->begin_offset));
-    cigar_sprint(cigar_str,cigar_length,cigar,true);
+    cigar_sprint_2(cigar_str,cigar_length,cigar,true);
   }
   // Print
   fprintf(stream,"%d\t%d\t%d\t%s\t%s\t%s\n",
@@ -130,14 +130,14 @@ void benchmark_print_output_full(
 void benchmark_print_output(
     align_input_t* const align_input,
     const bool score_only,
-    cigar_t* const cigar) {
+    cigar2_t* const cigar) {
   if (align_input->output_file) {
     // Compute score
     int score = -1;
     if (score_only) {
       score = cigar->score;
     } else if (cigar->begin_offset < cigar->end_offset) {
-      score = cigar_score_edit(cigar);
+      score = cigar_score_edit_2(cigar);
       cigar->score = score;
     }
     // Print summary

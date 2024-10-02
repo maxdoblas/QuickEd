@@ -60,7 +60,7 @@ typedef struct
     int64_t pos_h;
     int64_t high_error_window;
     // CIGAR
-    cigar_t *cigar;
+    cigar2_t *cigar;
     uint64_t *PEQ_window;
 } windowed_matrix_t;
 

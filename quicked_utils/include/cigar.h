@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef CIGAR_H_
-#define CIGAR_H_
+#ifndef CIGAR_H_2
+#define CIGAR_H_2
 
 #include "quicked_utils/include/mm_allocator.h"
 
@@ -43,39 +43,42 @@ typedef struct {
   int score;               // Computed scored
   int end_v;               // Alignment-end vertical coordinate (pattern characters aligned)
   int end_h;               // Alignment-end horizontal coordinate (text characters aligned)
-} cigar_t;
+} cigar2_t;
 
 /*
  * Setup
  */
-cigar_t* cigar_new(
+cigar2_t* cigar_new_2(
     const int max_operations,
     mm_allocator_t *const mm_allocator);
+/*
 void cigar_clear(
     cigar_t* const cigar);
 void cigar_resize(
     cigar_t* const cigar,
     const int max_operations,
-    mm_allocator_t *const mm_allocator);
-void cigar_free(
-    cigar_t* const cigar,
+    mm_allocator_t *const mm_allocator);*/
+void cigar_free_2(
+    cigar2_t* const cigar,
     mm_allocator_t *const mm_allocator);
 
 /*
  * Accessors
  */
-bool cigar_is_null(
-    cigar_t* const cigar);
+bool cigar_is_null_2(
+    cigar2_t* const cigar);
 
+/*
 int cigar_count_matches(
     cigar_t* const cigar);
+*/
+void cigar_prepend_forward_2(
+    cigar2_t* const cigar_dst,
+    cigar2_t* const cigar_src);
+/* void cigar_append_forward(
+    cigar_t* const cigar_dst,
+    cigar_t* const cigar_src);
 
-void cigar_prepend_forward(
-    cigar_t* const cigar_dst,
-    cigar_t* const cigar_src);
-void cigar_append_forward(
-    cigar_t* const cigar_dst,
-    cigar_t* const cigar_src);
 void cigar_append_reverse(
     cigar_t* const cigar_dst,
     cigar_t* const cigar_src);
@@ -86,32 +89,33 @@ void cigar_append_deletion(
 void cigar_append_insertion(
     cigar_t* const cigar,
     const int length);
-
+*/
 /*
  * SAM-compliant CIGAR
  */
-void cigar_get_CIGAR(
-    cigar_t* const cigar,
+void cigar_get_CIGAR_2(
+    cigar2_t* const cigar,
     const bool show_mismatches,
     uint32_t** const cigar_buffer,
     int* const cigar_length);
 
-void cigar_to_operations(
-    cigar_t* const cigar,
+void cigar_to_operations_2(
+    cigar2_t* const cigar,
     const char* const cigar_str,
     const uint64_t cigar_length);
 /*
  * Score
  */
-int cigar_score_edit(
-    cigar_t* const cigar);
+int cigar_score_edit_2(
+    cigar2_t* const cigar);
 
 /*
  * Utils
  */
-int cigar_cmp(
-    cigar_t* const cigar_a,
-    cigar_t* const cigar_b);
+int cigar_cmp_2(
+    cigar2_t* const cigar_a,
+    cigar2_t* const cigar_b);
+/*
 void cigar_copy(
     cigar_t* const cigar_dst,
     cigar_t* const cigar_src);
@@ -122,51 +126,51 @@ void cigar_discover_mismatches(
     char* const text,
     const int text_length,
     cigar_t* const cigar);
-
+*/
 /*
  * Check
  */
-bool cigar_check_alignment(
+bool cigar_check_alignment_2(
     FILE* const stream,
     const char* const pattern,
     const int pattern_length,
     const char* const text,
     const int text_length,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool verbose);
 
 /*
  * Display
  */
-void cigar_print(
+void cigar_print_2(
     FILE* const stream,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool print_matches,
     mm_allocator_t *const mm_allocator);
-int cigar_sprint(
+int cigar_sprint_2(
     char* const buffer,
     const int buf_size,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool print_matches);
 
-void cigar_print_SAM_CIGAR(
+void cigar_print_SAM_CIGAR_2(
     FILE* const stream,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool show_mismatches,
     mm_allocator_t *const mm_allocator);
-int cigar_sprint_SAM_CIGAR(
+int cigar_sprint_SAM_CIGAR_2(
     char* const buffer,
     const int buf_size,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool show_mismatches);
 
-void cigar_print_pretty(
+void cigar_print_pretty_2(
     FILE* const stream,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const char* const pattern,
     const int pattern_length,
     const char* const text,
     const int text_length,
     mm_allocator_t *const mm_allocator);
 
-#endif /* CIGAR_H_ */
+#endif /* CIGAR_H_2 */

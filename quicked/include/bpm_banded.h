@@ -59,7 +59,7 @@ typedef struct {
     uint64_t higher_block;
     uint64_t lower_block;
     // CIGAR
-    cigar_t *cigar;
+    cigar2_t *cigar;
 } banded_matrix_t;
 
 void banded_pattern_compile(

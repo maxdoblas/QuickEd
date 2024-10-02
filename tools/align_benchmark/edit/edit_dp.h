@@ -37,7 +37,7 @@ void edit_dp_align(
     const int pattern_length,
     const char* const text,
     const int text_length,
-    cigar_t* const cigar);
+    cigar2_t* const cigar);
 /*
  * Edit distance computation using dynamic-programming matrix (banded)
  */
@@ -48,6 +48,6 @@ void edit_dp_align_banded(
     const char* const text,
     const int text_length,
     const int bandwidth,
-    cigar_t* const cigar);
+    cigar2_t* const cigar);
 
 #endif /* EDIT_DP_H_ */

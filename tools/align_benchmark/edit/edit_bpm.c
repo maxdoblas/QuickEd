@@ -156,7 +156,7 @@ void edit_bpm_matrix_allocate(
   bpm_matrix->Mv = Mv;
   bpm_matrix->Pv = Pv;
   // CIGAR
-  bpm_matrix->cigar = cigar_new(pattern_length+text_length,mm_allocator);
+  bpm_matrix->cigar = cigar_new_2(pattern_length+text_length,mm_allocator);
   bpm_matrix->cigar->end_offset = pattern_length + text_length;
   bpm_matrix->cigar->begin_offset = pattern_length + text_length - 1;
 }
@@ -166,7 +166,7 @@ void edit_bpm_matrix_free(
   mm_allocator_free(mm_allocator,bpm_matrix->Mv);
   mm_allocator_free(mm_allocator,bpm_matrix->Pv);
   // CIGAR
-  cigar_free(bpm_matrix->cigar,mm_allocator);
+  cigar_free_2(bpm_matrix->cigar,mm_allocator);
 }
 /*
  * Edit distance computation using BPM

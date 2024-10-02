@@ -31,7 +31,7 @@
  */
 void edit_dp_traceback(
     score_matrix_t* const score_matrix,
-    cigar_t* const cigar) {
+    cigar2_t* const cigar) {
   // Parameters
   int** const dp = score_matrix->columns;
   char* const operations = cigar->operations;
@@ -71,7 +71,7 @@ void edit_dp_align(
     const int pattern_length,
     const char* const text,
     const int text_length,
-    cigar_t* const cigar) {
+    cigar2_t* const cigar) {
   // Parameters
   int** dp = score_matrix->columns;
   int h, v;
@@ -102,7 +102,7 @@ void edit_dp_align_banded(
     const char* const text,
     const int text_length,
     const int bandwidth,
-    cigar_t* const cigar) {
+    cigar2_t* const cigar) {
   // Parameters
   const int k_end = ABS(text_length-pattern_length)+1;
   const int effective_bandwidth = MAX(k_end,bandwidth);

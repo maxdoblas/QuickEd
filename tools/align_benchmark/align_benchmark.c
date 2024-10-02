@@ -48,20 +48,21 @@ void align_input_configure_global(
   align_input->output_file = parameters.output_file;
   align_input->output_full = parameters.output_full;
   // MM
-  align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);/*
+  align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);
   if (parameters.algorithm == alignment_wavefront ||
       parameters.algorithm == alignment_biwavefront) 
   {
     wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-    attributes.distance_metric = (parameters.algorithm == alignment_wavefront) ? wavefront_memory_high
-                                                                               : wavefront_memory_ultralow;  
-    attributes.distance_metric = (distance_metric_t) 1; //edit 
-    align_input->wf_aligner    = wavefront_aligner_new(&attributes);
+    attributes.heuristic.strategy = wf_heuristic_none;
+    attributes.distance_metric    = (distance_metric_t) 1; //edit 
+    attributes.memory_mode        = (parameters.algorithm == alignment_wavefront) ? wavefront_memory_high
+                                                                                  : wavefront_memory_ultralow;  
+    align_input->wf_aligner       = wavefront_aligner_new(&attributes);
   }
   else
   {
     align_input->wf_aligner = NULL;
-  }*/
+  }
   // PROFILE/STATS
   timer_reset(&align_input->timer);
   timer_reset(&align_input->timer_windowed_s);
@@ -79,7 +80,8 @@ void align_input_configure_global(
 void align_benchmark_free(
     align_input_t* const align_input) {
   mm_allocator_delete(align_input->mm_allocator);
-  //wavefront_aligner_delete(align_input->wf_aligner);
+  if (align_input->wf_aligner != NULL)
+    wavefront_aligner_delete(align_input->wf_aligner);
 }
 /*
  * I/O
@@ -192,8 +194,8 @@ void align_benchmark_run_algorithm(
       break;
     case alignment_wavefront:
     case alignment_biwavefront:
-      //benchmark_wavefront(align_input);
-      //break;
+      benchmark_wavefront(align_input);
+      break;
     case alignment_astarpa:
     case alignment_astarpa2_simple: 
     case alignment_astarpa2_full:

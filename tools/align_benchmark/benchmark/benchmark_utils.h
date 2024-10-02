@@ -30,8 +30,9 @@
 #include "quicked_utils/include/mm_allocator.h"
 #include "quicked_utils/include/profiler_timer.h"
 #include "quicked_utils/include/cigar.h"
-//#include "external/WFA2-lib/wavefront/wavefront_align.h"
 #include "score_matrix.h"
+
+#include "external/WFA2-lib/wavefront/wavefront_align.h"
 
 /*
  * Constants
@@ -62,7 +63,7 @@ typedef struct {
   bool output_full;
   // MM
   mm_allocator_t* mm_allocator;
-  //wavefront_aligner_t* wf_aligner;
+  wavefront_aligner_t* wf_aligner;
   // PROFILE/STATS
   profiler_timer_t timer;
   profiler_timer_t timer_windowed_s;
@@ -99,13 +100,13 @@ void benchmark_print_alignment(
     FILE* const stream,
     align_input_t* const align_input,
     const int score_computed,
-    cigar_t* const cigar_computed,
+    cigar2_t* const cigar_computed,
     const int score_correct,
-    cigar_t* const cigar_correct);
+    cigar2_t* const cigar_correct);
 void benchmark_print_output(
     align_input_t* const align_input,
     const bool score_only,
-    cigar_t* const cigar);
+    cigar2_t* const cigar);
 void quicked_print_output(
     align_input_t* const align_input,
     const bool score_only,

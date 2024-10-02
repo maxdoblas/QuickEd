@@ -29,9 +29,7 @@
 #include "../../../quicked/quicked.h"
 #include "quicked_utils/include/commons.h"
 
-
 #include "external/edlib/edlib/include/edlib.h"
-
 /*
  * Benchmark Edit
  */
@@ -71,15 +69,15 @@ void benchmark_quicked(
   
   // DEBUG
   if (align_input->debug_flags) {
-    cigar_t* const cigar = cigar_new(
+    cigar2_t* const cigar = cigar_new_2(
       align_input->pattern_length + align_input->text_length,
       align_input->mm_allocator
     );
-    cigar_to_operations(cigar, aligner.cigar, strlen(aligner.cigar));
+    cigar_to_operations_2(cigar, aligner.cigar, strlen(aligner.cigar));
 
     benchmark_check_alignment(align_input,cigar);
 
-    cigar_free(cigar, align_input->mm_allocator);
+    cigar_free_2(cigar, align_input->mm_allocator);
   }
   // Output
   if (align_input->output_file) {
@@ -117,15 +115,15 @@ void benchmark_banded(
   
   // DEBUG
   if (align_input->debug_flags) {
-    cigar_t* const cigar = cigar_new(
+    cigar2_t* const cigar = cigar_new_2(
       align_input->pattern_length + align_input->text_length,
       align_input->mm_allocator
     );
-    cigar_to_operations(cigar, aligner.cigar, strlen(aligner.cigar));
+    cigar_to_operations_2(cigar, aligner.cigar, strlen(aligner.cigar));
 
     benchmark_check_alignment(align_input,cigar);
 
-    cigar_free(cigar, align_input->mm_allocator);
+    cigar_free_2(cigar, align_input->mm_allocator);
   }
   // Output
   if (align_input->output_file) {
@@ -165,15 +163,15 @@ void benchmark_hirschberg(
   
   // DEBUG
   if (align_input->debug_flags) {
-    cigar_t* const cigar = cigar_new(
+    cigar2_t* const cigar = cigar_new_2(
       align_input->pattern_length + align_input->text_length,
       align_input->mm_allocator
     );
-    cigar_to_operations(cigar, aligner.cigar, strlen(aligner.cigar));
+    cigar_to_operations_2(cigar, aligner.cigar, strlen(aligner.cigar));
 
     benchmark_check_alignment(align_input,cigar);
 
-    cigar_free(cigar, align_input->mm_allocator);
+    cigar_free_2(cigar, align_input->mm_allocator);
   }
   // Output
   if (align_input->output_file) {
@@ -220,15 +218,15 @@ void benchmark_windowed(
   
   // DEBUG
   if (align_input->debug_flags) {
-    cigar_t* const cigar = cigar_new(
+    cigar2_t* const cigar = cigar_new_2(
       align_input->pattern_length + align_input->text_length,
       align_input->mm_allocator
     );
-    cigar_to_operations(cigar, aligner.cigar, strlen(aligner.cigar));
+    cigar_to_operations_2(cigar, aligner.cigar, strlen(aligner.cigar));
 
     benchmark_check_alignment(align_input,cigar);
 
-    cigar_free(cigar, align_input->mm_allocator);
+    cigar_free_2(cigar, align_input->mm_allocator);
   }
   // Output
   if (align_input->output_file) {
@@ -280,7 +278,7 @@ void benchmark_edit_dp(
   score_matrix_allocate(
       &score_matrix,pattern_length+1,
       text_length+1,align_input->mm_allocator);
-  cigar_t* const cigar = cigar_new(
+  cigar2_t* const cigar = cigar_new_2(
       pattern_length+text_length, align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
@@ -298,7 +296,7 @@ void benchmark_edit_dp(
   }
   // Free
   score_matrix_free(&score_matrix);
-  cigar_free(cigar,align_input->mm_allocator);
+  cigar_free_2(cigar,align_input->mm_allocator);
 }
 
 void benchmark_edit_dp_banded(
@@ -313,7 +311,7 @@ void benchmark_edit_dp_banded(
   score_matrix_allocate(
       &score_matrix,pattern_length+1,
       text_length+1,align_input->mm_allocator);
-  cigar_t* const cigar = cigar_new(
+  cigar2_t* const cigar = cigar_new_2(
       pattern_length+text_length,align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
@@ -332,7 +330,7 @@ void benchmark_edit_dp_banded(
   }
   // Free
   score_matrix_free(&score_matrix);
-  cigar_free(cigar,align_input->mm_allocator);
+  cigar_free_2(cigar,align_input->mm_allocator);
 }
 
 
@@ -375,8 +373,28 @@ void benchmark_edlib(align_input_t* const align_input,
 
 
 /*
-void benchmark_scrooge(align_input_t* const align_input)
-{
+void benchmark_scrooge(align_input_t* const align_input) {
+  // Parameters
+  const int max_cigar_length = align_input->pattern_length + align_input->text_length;
+  cigar_t* const cigar = cigar_new(2*max_cigar_length);
+  // Align
+  uint64_t time_ns = 0;
+  benchmark_scrooge_bridge(
+      align_input->pattern,align_input->pattern_length,
+      align_input->text,align_input->text_length,
+      cigar->operations,&cigar->end_offset,&time_ns);
+  counter_add(&align_input->timer.time_ns,time_ns);
+  cigar_score_edit(cigar);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,false,cigar);
+  }
+  // Free
+  cigar_free(cigar);
 }
 
 void benchmark_astarpa(align_input_t* const align_input)
@@ -395,6 +413,9 @@ void benchmark_astarpa(align_input_t* const align_input)
     if (operation=='=') cigar[i] = 'M';
     else if (operation=='D') cigar[i] = 'I';
     else if (operation=='I') cigar[i] = 'D';
+  }
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,cigar);
   }
   if (align_input->output_file) {
     quicked_print_output(align_input,false,cigar,score);
@@ -419,6 +440,9 @@ void benchmark_astarpa2_simple(align_input_t* const align_input)
     else if (operation=='D') cigar[i] = 'I';
     else if (operation=='I') cigar[i] = 'D';
   }
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,cigar);
+  }
   if (align_input->output_file) {
     quicked_print_output(align_input,false,cigar,score);
   }
@@ -442,6 +466,9 @@ void benchmark_astarpa2_full(align_input_t* const align_input)
     else if (operation=='D') cigar[i] = 'I';
     else if (operation=='I') cigar[i] = 'D';
   }
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,cigar);
+  }
   if (align_input->output_file) {
     quicked_print_output(align_input,false,cigar,score);
   }
@@ -458,23 +485,62 @@ void benchmark_sneakysnake(align_input_t* const align_input)
   timer_start(&align_input->timer);
   //int score = SneakySnake(min_length, pattern, text, int ErrorThreshold, int KmerSize, 0, int IterationNo);
   timer_stop(&align_input->timer);
+  if (align_input->output_file) {
+    quicked_print_output(align_input,false,cigar,score);
+  }
 }
+
+
+
+typedef struct {
+  // Alignment operations
+  char* operations;        // Raw alignment operations
+  int max_operations;      // Maximum buffer size
+  int begin_offset;        // Begin offset
+  int end_offset;          // End offset
+  // Score and end position (useful for partial alignments like Z-dropped)
+  int score;               // Computed scored
+  int end_v;               // Alignment-end vertical coordinate (pattern characters aligned)
+  int end_h;               // Alignment-end horizontal coordinate (text characters aligned)
+  // CIGAR (SAM compliant)
+  bool has_misms;          // Show 'X' and '=', instead of  just 'M'
+  uint32_t* cigar_buffer;  // CIGAR-operations (max_operations length)
+  int cigar_length;        // Total CIGAR-operations
+} cigar_t;
+
+
+typedef struct {
+  // Alignment operations
+  char* operations;        // Raw alignment operations
+  // CIGAR (SAM compliant)
+  uint32_t* cigar_buffer;  // CIGAR-operations (max_operations length)
+  int cigar_length;        // Total CIGAR-operations
+  int max_operations;      // Maximum buffer size
+  int begin_offset;        // Begin offset
+  int end_offset;          // End offset
+  // Score and end position (useful for partial alignments like Z-dropped)
+  int score;               // Computed scored
+  int end_v;               // Alignment-end vertical coordinate (pattern characters aligned)
+  int end_h;               // Alignment-end horizontal coordinate (text characters aligned)
+} cigar2_t
+*/
 
 void benchmark_wavefront(align_input_t* const align_input)
 {
   wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
-  char* wavefront_cigar; 
   timer_start(&align_input->timer);
   wavefront_align(wf_aligner,
                  align_input->pattern, align_input->pattern_length, 
                  align_input->text, align_input->text_length); 
-  int score = cigar_score_edit(wf_aligner->cigar);
   timer_stop(&align_input->timer);
+  int score = align_input->wf_aligner->cigar->score;
+  /*if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input, NULL);
+  }*/
   if (align_input->output_file) {
-    quicked_print_output(align_input, false, wavefront_cigar, score);
+    quicked_print_output(align_input, false, "", score);
   }
-  free(wavefront_cigar);
-}*/
+}
 
 
 

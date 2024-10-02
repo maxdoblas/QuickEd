@@ -162,7 +162,7 @@ void banded_matrix_allocate(
     banded_matrix->Pv = Pv;
     banded_matrix->scores = scores;
     // CIGAR
-    banded_matrix->cigar = cigar_new(pattern_length + text_length,mm_allocator);
+    banded_matrix->cigar = cigar_new_2(pattern_length + text_length,mm_allocator);
     banded_matrix->cigar->end_offset = pattern_length + text_length;
 }
 
@@ -174,7 +174,7 @@ void banded_matrix_free(
     mm_allocator_free(mm_allocator, banded_matrix->Pv);
     mm_allocator_free(mm_allocator, banded_matrix->scores);
     // CIGAR
-    cigar_free(banded_matrix->cigar,mm_allocator);
+    cigar_free_2(banded_matrix->cigar,mm_allocator);
 }
 
 void bpm_reset_search(

@@ -85,6 +85,8 @@ void usage(void) {
       "              edit-dp                                                   \n"
       "              edit-dp-banded                                            \n"
       "              edit-bpm                                                  \n"
+      "            [Heuristic Edit (Levenshtein)]                              \n"
+      "              wfa-adapt                                                 \n"
       "              scrooge                                                   \n"
       "              sneakysnake                                               \n"
       "        [Input & Output]                                                \n"
@@ -337,6 +339,13 @@ void parse_arguments(
     case alignment_edit_dp:
     case alignment_edit_bpm:
     case alignment_edlib:
+    case alignment_wavefront:
+    case alignment_biwavefront:
+    case alignment_astarpa:
+    case alignment_astarpa2_simple: 
+    case alignment_astarpa2_full:
+    case alignment_scrooge:
+    case alignment_sneakysanke:
     default:
       break;
   }

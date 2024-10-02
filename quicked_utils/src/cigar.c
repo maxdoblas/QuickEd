@@ -38,7 +38,7 @@
 /* ... */
 #define SAM_CIGAR_NA    15
 
-const uint8_t sam_cigar_lut[256] =
+const uint8_t sam_cigar_lut_2[256] =
 {
   [0 ... 255] = SAM_CIGAR_NA,
   ['M'] = SAM_CIGAR_MATCH,
@@ -52,11 +52,11 @@ const uint8_t sam_cigar_lut[256] =
 /*
  * Setup
  */
-cigar_t* cigar_new(
+cigar2_t* cigar_new_2(
     const int max_operations,
     mm_allocator_t *const mm_allocator) {
   // Allocate
-  cigar_t* const cigar = mm_allocator_malloc(mm_allocator, sizeof(cigar_t));
+  cigar2_t* const cigar = mm_allocator_malloc(mm_allocator, sizeof(cigar2_t));
   // Allocate alignment-operations buffer
   cigar->max_operations = max_operations;
   cigar->operations = mm_allocator_malloc(mm_allocator, cigar->max_operations);
@@ -72,34 +72,8 @@ cigar_t* cigar_new(
   // Return
   return cigar;
 }
-void cigar_clear(
-    cigar_t* const cigar) {
-  // Alignment operations
-  cigar->begin_offset = 0;
-  cigar->end_offset = 0;
-  // Score and end position
-  cigar->score = INT32_MIN;
-  cigar->end_v = -1;
-  cigar->end_h = -1;
-  // CIGAR
-  cigar->cigar_length = 0;
-}
-void cigar_resize(
-    cigar_t* const cigar,
-    const int max_operations,
-    mm_allocator_t *const mm_allocator) {
-  // Check maximum operations
-  if (max_operations > cigar->max_operations) {
-    cigar->max_operations = max_operations;
-    free(cigar->operations); // Free
-    free(cigar->cigar_buffer); // Free
-    cigar->operations = mm_allocator_malloc(mm_allocator, max_operations); // Allocate
-    cigar->cigar_buffer = mm_allocator_calloc(mm_allocator, max_operations, uint32_t, true); // Allocate
-  }
-  cigar_clear(cigar);
-}
-void cigar_free(
-    cigar_t* const cigar,
+void cigar_free_2(
+    cigar2_t* const cigar,
     mm_allocator_t *const mm_allocator) {
   mm_allocator_free(mm_allocator, cigar->operations);
   mm_allocator_free(mm_allocator, cigar->cigar_buffer);
@@ -108,77 +82,16 @@ void cigar_free(
 /*
  * Accessors
  */
-bool cigar_is_null(
-    cigar_t* const cigar) {
+bool cigar_is_null_2(
+    cigar2_t* const cigar) {
   return (cigar->begin_offset >= cigar->end_offset);
-}
-int cigar_count_matches(
-    cigar_t* const cigar) {
-  int i, num_matches=0;
-  for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
-    num_matches += (cigar->operations[i]=='M');
-  }
-  return num_matches;
-}
-void cigar_append_forward(
-    cigar_t* const cigar_dst,
-    cigar_t* const cigar_src) {
-  // Parameters
-  const int cigar_length = cigar_src->end_offset - cigar_src->begin_offset;
-  char* const operations_src = cigar_src->operations + cigar_src->begin_offset;
-  char* const operations_dst = cigar_dst->operations + cigar_dst->end_offset;
-  // Append forward
-  memcpy(operations_dst,operations_src,cigar_length);
-  // Update offset
-  cigar_dst->end_offset += cigar_length;
-}
-void cigar_append_reverse(
-    cigar_t* const cigar_dst,
-    cigar_t* const cigar_src) {
-  // Parameters
-  const int begin_offset = cigar_src->begin_offset;
-  const int end_offset = cigar_src->end_offset;
-  const int cigar_length = end_offset - begin_offset;
-  char* const operations_src = cigar_src->operations + begin_offset;
-  char* const operations_dst = cigar_dst->operations + cigar_dst->end_offset;
-  // Append reverse
-  int i;
-  for (i=0;i<cigar_length;++i) {
-    operations_dst[i] = operations_src[cigar_length-1-i];
-  }
-  // Update offset
-  cigar_dst->end_offset += cigar_length;
-}
-void cigar_append_deletion(
-    cigar_t* const cigar,
-    const int length) {
-  // Append deletions
-  char* const operations = cigar->operations + cigar->end_offset;
-  int i;
-  for (i=0;i<length;++i) {
-    operations[i] = 'D';
-  }
-  // Update offset
-  cigar->end_offset += length;
-}
-void cigar_append_insertion(
-    cigar_t* const cigar,
-    const int length) {
-  // Append insertions
-  char* const operations = cigar->operations + cigar->end_offset;
-  int i;
-  for (i=0;i<length;++i) {
-    operations[i] = 'I';
-  }
-  // Update offset
-  cigar->end_offset += length;
 }
 
 // Inserts cigar_in just before the last carecter of the cigar_out
 // TODO: check possible errors (not enough spcace)
-void cigar_prepend_forward(
-    cigar_t* const cigar_in,
-    cigar_t* const cigar_out) {
+void cigar_prepend_forward_2(
+    cigar2_t* const cigar_in,
+    cigar2_t* const cigar_out) {
   // Print Sequence
   int op_sentinel = cigar_out->begin_offset-1;
   for(int i = cigar_in->end_offset-1; i >= cigar_in->begin_offset; i--){
@@ -190,8 +103,8 @@ void cigar_prepend_forward(
 /*
  * SAM-compliant CIGAR
  */
-void cigar_compute_CIGAR(
-    cigar_t* const cigar,
+void cigar_compute_CIGAR_2(
+    cigar2_t* const cigar,
     const bool show_mismatches) {
   // Prepare CIGAR (SAM compliant)
   if (cigar->cigar_length == 0) {
@@ -221,7 +134,7 @@ void cigar_compute_CIGAR(
         if (show_mismatches && last_op=='M') {
           cigar_buffer[cigar_length++] = (last_op_len << 4) | ((uint32_t)SAM_CIGAR_EQ);
         } else {
-          cigar_buffer[cigar_length++] = (last_op_len << 4) | ((uint32_t)sam_cigar_lut[(int)last_op]);
+          cigar_buffer[cigar_length++] = (last_op_len << 4) | ((uint32_t)sam_cigar_lut_2[(int)last_op]);
         }
         // Save new operation
         last_op = op;
@@ -232,25 +145,25 @@ void cigar_compute_CIGAR(
     if (show_mismatches && last_op=='M') {
       cigar_buffer[cigar_length++] = (last_op_len << 4) | ((uint32_t)SAM_CIGAR_EQ);
     } else {
-      cigar_buffer[cigar_length++] = (last_op_len << 4) | ((uint32_t)sam_cigar_lut[(int)last_op]);
+      cigar_buffer[cigar_length++] = (last_op_len << 4) | ((uint32_t)sam_cigar_lut_2[(int)last_op]);
     }
     // Set as ready
     cigar->cigar_length = cigar_length;
   }
 }
-void cigar_get_CIGAR(
-    cigar_t* const cigar,
+void cigar_get_CIGAR_2(
+    cigar2_t* const cigar,
     const bool show_mismatches,
     uint32_t** const cigar_buffer,
     int* const cigar_length) {
   // Compute CIGAR
-  cigar_compute_CIGAR(cigar,show_mismatches);
+  cigar_compute_CIGAR_2(cigar,show_mismatches);
   // Return
   *cigar_buffer = cigar->cigar_buffer;
   *cigar_length = cigar->cigar_length;
 }
-void cigar_to_operations(
-    cigar_t* const cigar,
+void cigar_to_operations_2(
+    cigar2_t* const cigar,
     const char* const cigar_str,
     const uint64_t cigar_length) {
   int num;
@@ -271,8 +184,8 @@ void cigar_to_operations(
 /*
  * Score
  */
-int cigar_score_edit(
-    cigar_t* const cigar) {
+int cigar_score_edit_2(
+    cigar2_t* const cigar) {
   int score = 0, i;
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
     switch (cigar->operations[i]) {
@@ -290,9 +203,9 @@ int cigar_score_edit(
 /*
  * Utils
  */
-int cigar_cmp(
-    cigar_t* const cigar_a,
-    cigar_t* const cigar_b) {
+int cigar_cmp_2(
+    cigar2_t* const cigar_a,
+    cigar2_t* const cigar_b) {
   // Compare lengths
   const int length_cigar_a = cigar_a->end_offset - cigar_a->begin_offset;
   const int length_cigar_b = cigar_b->end_offset - cigar_b->begin_offset;
@@ -309,64 +222,16 @@ int cigar_cmp(
   // Equal
   return 0;
 }
-void cigar_copy(
-    cigar_t* const cigar_dst,
-    cigar_t* const cigar_src) {
-  cigar_dst->max_operations = cigar_src->max_operations;
-  cigar_dst->begin_offset = cigar_src->begin_offset;
-  cigar_dst->end_offset = cigar_src->end_offset;
-  cigar_dst->score = cigar_src->score;
-  memcpy(cigar_dst->operations+cigar_src->begin_offset,
-         cigar_src->operations+cigar_src->begin_offset,
-         cigar_src->end_offset-cigar_src->begin_offset);
-}
-void cigar_discover_mismatches(
-    char* const pattern,
-    const int pattern_length,
-    char* const text,
-    const int text_length,
-    cigar_t* const cigar) {
-  // Refine adding mismatches
-  int i, p=0, t=0;
-  for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
-    // Check limits
-    if (p >= pattern_length || t >= text_length) break;
-    switch (cigar->operations[i]) {
-      case 'M':
-        cigar->operations[i] = (pattern[p]==text[t]) ? 'M' : 'X';
-        ++p; ++t;
-        break;
-      case 'I':
-        ++t;
-        break;
-      case 'D':
-        ++p;
-        break;
-      default:
-        fprintf(stderr,"[CIGAR] Wrong edit operation\n");
-        exit(1);
-        break;
-    }
-  }
-  while (p < pattern_length) { cigar->operations[i++] = 'D'; ++p; };
-  while (t < text_length) { cigar->operations[i++] = 'I'; ++t; };
-  cigar->end_offset = i;
-  cigar->operations[cigar->end_offset] = '\0';
-  //  // DEBUG
-  //  printf("Score=%ld\nPath-length=%" PRIu64 "\nCIGAR=%s\n",
-  //      gaba_alignment->score,gaba_alignment->plen,
-  //      cigar->operations);
-}
 /*
  * Check
  */
-bool cigar_check_alignment(
+bool cigar_check_alignment_2(
     FILE* const stream,
     const char* const pattern,
     const int pattern_length,
     const char* const text,
     const int text_length,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool verbose) {
   // Parameters
   char* const operations = cigar->operations;
@@ -435,28 +300,28 @@ bool cigar_check_alignment(
 /*
  * Display
  */
-void cigar_print(
+void cigar_print_2(
     FILE* const stream,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool print_matches,
     mm_allocator_t *const mm_allocator) {
   // Check null
-  if (cigar_is_null(cigar)) return;
+  if (cigar_is_null_2(cigar)) return;
   // Generate and print operations
   int buf_size = 2*(cigar->end_offset-cigar->begin_offset)+10;
   char* const buffer = mm_allocator_malloc(mm_allocator, buf_size);
-  cigar_sprint(buffer,buf_size,cigar,print_matches);
+  cigar_sprint_2(buffer,buf_size,cigar,print_matches);
   fprintf(stream,"%s",buffer); // Print
   // Free
   mm_allocator_free(mm_allocator, buffer);
 }
-int cigar_sprint(
+int cigar_sprint_2(
     char* const buffer,
     const int buf_size,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool print_matches) {
   // Check null
-  if (cigar_is_null(cigar)) {
+  if (cigar_is_null_2(cigar)) {
     buffer[0] = '\0';
     return 0;
   }
@@ -486,30 +351,30 @@ int cigar_sprint(
   buffer[cursor] = '\0';
   return cursor;
 }
-void cigar_print_SAM_CIGAR(
+void cigar_print_SAM_CIGAR_2(
     FILE* const stream,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool show_mismatches,
     mm_allocator_t *const mm_allocator) {
   // Check null
-  if (cigar_is_null(cigar)) return;
+  if (cigar_is_null_2(cigar)) return;
   // Generate and print operations
   int buf_size = 2*(cigar->end_offset-cigar->begin_offset);
   char* const buffer = mm_allocator_malloc(mm_allocator,buf_size);
-  cigar_sprint_SAM_CIGAR(buffer,buf_size,cigar,show_mismatches);
+  cigar_sprint_SAM_CIGAR_2(buffer,buf_size,cigar,show_mismatches);
   fprintf(stream,"%s",buffer); // Print
   // Free
   mm_allocator_free(mm_allocator, buffer);
 }
-int cigar_sprint_SAM_CIGAR(
+int cigar_sprint_SAM_CIGAR_2(
     char* const buffer,
     const int buf_size,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const bool show_mismatches) {
   // Get SAM CIGAR
   uint32_t* cigar_buffer;
   int cigar_length;
-  cigar_get_CIGAR(cigar,show_mismatches,&cigar_buffer,&cigar_length);
+  cigar_get_CIGAR_2(cigar,show_mismatches,&cigar_buffer,&cigar_length);
   // Print CIGAR-operations
   int i, cursor = 0;
   for (i=0;i<cigar_length;++i) {
@@ -527,9 +392,9 @@ int cigar_sprint_SAM_CIGAR(
   buffer[cursor] = '\0';
   return cursor;
 }
-void cigar_print_pretty(
+void cigar_print_pretty_2(
     FILE* const stream,
-    cigar_t* const cigar,
+    cigar2_t* const cigar,
     const char* const pattern,
     const int pattern_length,
     const char* const text,
@@ -600,13 +465,13 @@ void cigar_print_pretty(
   }
   // Print string
   fprintf(stream,"      ALIGNMENT ");
-  cigar_print(stream,cigar,true,mm_allocator);
+  cigar_print_2(stream,cigar,true,mm_allocator);
   fprintf(stream,"\n");
   fprintf(stream,"      ETRACE    ");
-  cigar_print(stream,cigar,false,mm_allocator);
+  cigar_print_2(stream,cigar,false,mm_allocator);
   fprintf(stream,"\n");
   fprintf(stream,"      CIGAR     ");
-  cigar_print_SAM_CIGAR(stream,cigar,false,mm_allocator);
+  cigar_print_SAM_CIGAR_2(stream,cigar,false,mm_allocator);
   fprintf(stream,"\n");
   fprintf(stream,"      PATTERN    %s\n",pattern_alg);
   fprintf(stream,"                 %s\n",ops_alg);
