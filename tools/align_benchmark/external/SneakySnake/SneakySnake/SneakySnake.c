@@ -204,7 +204,7 @@ int SneakySnake(int ReadLength, char * RefSeq, char * ReadSeq, int EditThreshold
 					goto LOOP;
 				roundsNo=roundsNo+1;
 				if (Edits > EditThreshold)
-					return 0;
+					return Edits;
 				
 				////////////////////////////////////////////
 				// END of Building the Hamming masks
@@ -247,7 +247,7 @@ int SneakySnake(int ReadLength, char * RefSeq, char * ReadSeq, int EditThreshold
 				printf("Global Count: %d, Edits: %d\n",GlobalCount,Edits);
 			}*/
 			if (Edits > EditThreshold)
-				return 0;	
+				return Edits;	
 		}
 	}
 	////////////////////////////////////////////////
@@ -256,5 +256,5 @@ int SneakySnake(int ReadLength, char * RefSeq, char * ReadSeq, int EditThreshold
 	////////////////////////////////////////////////
 	////////////////////////////////////////////////
 	
-	return Accepted;
+	return Edits;
 }
