@@ -133,7 +133,6 @@ To build QuickEd, clone the repository and update the submodules:
 ```bash
 git clone https://github.com/maxdoblas/QuickEd.git
 cd QuickEd
-git submodule update --init --recursive
 ```
 
 > [!IMPORTANT]
@@ -142,6 +141,10 @@ git submodule update --init --recursive
 Execute the following command to build QuickEd using CMake:
 
 ```bash
+cd tools/align_benchmark/external/astar-pairwise-aligner/
+cargo build --release --offline
+cbindgen --lang c --cpp-compat --crate astarpa-c -o astarpa.h
+cd ../../../../
 mkdir build && cd build
 cmake ..
 make
