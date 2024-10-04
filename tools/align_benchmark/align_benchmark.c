@@ -49,15 +49,18 @@ void align_input_configure_global(
   align_input->output_full = parameters.output_full;
   // MM
   align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_128M);
-  if (parameters.algorithm == alignment_wavefront ||
-      parameters.algorithm == alignment_biwavefront) 
-  {
+  if (parameters.algorithm == alignment_wavefront   ||
+      parameters.algorithm == alignment_biwavefront ||
+      parameters.algorithm == alignment_wfa_adapt    ) {
     wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-    attributes.heuristic.strategy = wf_heuristic_none;
-    attributes.distance_metric    = (distance_metric_t) 1; //edit 
-    attributes.memory_mode        = (parameters.algorithm == alignment_wavefront) ? wavefront_memory_high
-                                                                                  : wavefront_memory_ultralow;  
-    align_input->wf_aligner       = wavefront_aligner_new(&attributes);
+    if (parameters.algorithm != alignment_wfa_adapt) 
+    {
+        attributes.heuristic.strategy = wf_heuristic_none;
+        attributes.memory_mode        = (parameters.algorithm == alignment_wavefront) ? wavefront_memory_high
+                                                                                      : wavefront_memory_ultralow;  
+    }
+    attributes.distance_metric = (distance_metric_t) 1; //edit 
+    align_input->wf_aligner    = wavefront_aligner_new(&attributes);
   }
   else
   {
@@ -194,13 +197,23 @@ void align_benchmark_run_algorithm(
       break;
     case alignment_wavefront:
     case alignment_biwavefront:
+    case alignment_wfa_adapt:
       benchmark_wavefront(align_input);
       break;
     case alignment_astarpa:
+      benchmark_astarpa(align_input);
+      break;
     case alignment_astarpa2_simple: 
+      benchmark_astarpa2_simple(align_input);
+      break;
     case alignment_astarpa2_full:
+      benchmark_astarpa2_full(align_input);
+      break;
     case alignment_scrooge:
+      break;
     case alignment_sneakysanke:
+      benchmark_sneakysnake(align_input);
+      break;
     default:
       fprintf(stderr,"Algorithm not implemented\n");
       exit(1);

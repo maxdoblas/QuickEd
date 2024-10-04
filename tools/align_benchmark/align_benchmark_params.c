@@ -178,6 +178,8 @@ void parse_arguments(
         parameters.algorithm = alignment_wavefront;
       } else if (strcmp(optarg,"biwfa-edit")==0) {
         parameters.algorithm = alignment_biwavefront;
+      } else if (strcmp(optarg,"wfa-adapt")==0) {
+        parameters.algorithm = alignment_wfa_adapt;
       } else if (strcmp(optarg,"astarpa")==0) {
         parameters.algorithm = alignment_astarpa;
       } else if (strcmp(optarg,"astarpa2-simple")==0) {

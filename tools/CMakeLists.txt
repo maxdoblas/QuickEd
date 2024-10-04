@@ -30,7 +30,12 @@ add_subdirectory(align_benchmark/external/WFA2-lib EXCLUDE_FROM_ALL)
 target_include_directories(align_benchmark PRIVATE align_benchmark/external/)
 target_link_libraries(align_benchmark PRIVATE wfa2::wfa2_static)
 
+#add_subdirectory(align_benchmark/external/astar-pairwise-aligner EXCLUDE_FROM_ALL)
+target_link_directories(align_benchmark PRIVATE align_benchmark/external/astar-pairwise-aligner/target/release)
+target_link_libraries(align_benchmark PRIVATE astarpa_c)
+
 file(GLOB ALIGN_BENCH_SRCS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/align_benchmark/external/SneakySnake/SneakySnake/SneakySnake.c
     ${CMAKE_CURRENT_SOURCE_DIR}/align_benchmark/edit/edit_bpm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/align_benchmark/edit/edit_dp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/align_benchmark/benchmark/benchmark_edit.c

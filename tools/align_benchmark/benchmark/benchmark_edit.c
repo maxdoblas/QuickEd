@@ -30,6 +30,8 @@
 #include "quicked_utils/include/commons.h"
 
 #include "external/edlib/edlib/include/edlib.h"
+#include "external/astar-pairwise-aligner/astarpa.h"
+#include "external/SneakySnake/SneakySnake/SneakySnake.h"
 /*
  * Benchmark Edit
  */
@@ -395,7 +397,7 @@ void benchmark_scrooge(align_input_t* const align_input) {
   }
   // Free
   cigar_free(cigar);
-}
+}*/
 
 void benchmark_astarpa(align_input_t* const align_input)
 {
@@ -413,10 +415,10 @@ void benchmark_astarpa(align_input_t* const align_input)
     if (operation=='=') cigar[i] = 'M';
     else if (operation=='D') cigar[i] = 'I';
     else if (operation=='I') cigar[i] = 'D';
-  }
+  }/*
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,cigar);
-  }
+  }*/
   if (align_input->output_file) {
     quicked_print_output(align_input,false,cigar,score);
   }
@@ -440,9 +442,10 @@ void benchmark_astarpa2_simple(align_input_t* const align_input)
     else if (operation=='D') cigar[i] = 'I';
     else if (operation=='I') cigar[i] = 'D';
   }
+  /*
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,cigar);
-  }
+  }*/
   if (align_input->output_file) {
     quicked_print_output(align_input,false,cigar,score);
   }
@@ -465,10 +468,10 @@ void benchmark_astarpa2_full(align_input_t* const align_input)
     if (operation=='=') cigar[i] = 'M';
     else if (operation=='D') cigar[i] = 'I';
     else if (operation=='I') cigar[i] = 'D';
-  }
+  }/*
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,cigar);
-  }
+  }*/
   if (align_input->output_file) {
     quicked_print_output(align_input,false,cigar,score);
   }
@@ -478,52 +481,18 @@ void benchmark_astarpa2_full(align_input_t* const align_input)
 
 void benchmark_sneakysnake(align_input_t* const align_input)
 {
-  const int pattern_length = align_input->pattern_length;
-  const int text_length    = align_input->text_length;
-  const int min_length     = (pattern_length < text_length) ? pattern_length : text_length; 
-  const char* cigar        = "";
+  const int pattern_length  = align_input->pattern_length;
+  const int text_length     = align_input->text_length;
+  const int min_length      = (pattern_length < text_length) ? pattern_length : text_length; 
+  const int iteration_num   = (0.21f * (float)min_length); 
   timer_start(&align_input->timer);
-  //int score = SneakySnake(min_length, pattern, text, int ErrorThreshold, int KmerSize, 0, int IterationNo);
+  int score = SneakySnake(min_length, align_input->pattern, align_input->text, min_length, iteration_num, 0, iteration_num);
   timer_stop(&align_input->timer);
   if (align_input->output_file) {
-    quicked_print_output(align_input,false,cigar,score);
+    quicked_print_output(align_input,false, "",score);
   }
 }
 
-
-
-typedef struct {
-  // Alignment operations
-  char* operations;        // Raw alignment operations
-  int max_operations;      // Maximum buffer size
-  int begin_offset;        // Begin offset
-  int end_offset;          // End offset
-  // Score and end position (useful for partial alignments like Z-dropped)
-  int score;               // Computed scored
-  int end_v;               // Alignment-end vertical coordinate (pattern characters aligned)
-  int end_h;               // Alignment-end horizontal coordinate (text characters aligned)
-  // CIGAR (SAM compliant)
-  bool has_misms;          // Show 'X' and '=', instead of  just 'M'
-  uint32_t* cigar_buffer;  // CIGAR-operations (max_operations length)
-  int cigar_length;        // Total CIGAR-operations
-} cigar_t;
-
-
-typedef struct {
-  // Alignment operations
-  char* operations;        // Raw alignment operations
-  // CIGAR (SAM compliant)
-  uint32_t* cigar_buffer;  // CIGAR-operations (max_operations length)
-  int cigar_length;        // Total CIGAR-operations
-  int max_operations;      // Maximum buffer size
-  int begin_offset;        // Begin offset
-  int end_offset;          // End offset
-  // Score and end position (useful for partial alignments like Z-dropped)
-  int score;               // Computed scored
-  int end_v;               // Alignment-end vertical coordinate (pattern characters aligned)
-  int end_h;               // Alignment-end horizontal coordinate (text characters aligned)
-} cigar2_t
-*/
 
 void benchmark_wavefront(align_input_t* const align_input)
 {
@@ -534,12 +503,26 @@ void benchmark_wavefront(align_input_t* const align_input)
                  align_input->text, align_input->text_length); 
   timer_stop(&align_input->timer);
   int score = align_input->wf_aligner->cigar->score;
-  /*if (align_input->debug_flags) {
-    benchmark_check_alignment(align_input, NULL);
-  }*/
+  //cigar_t to cigar2_t
+  cigar2_t* cigar = (cigar2_t*)malloc(sizeof(cigar2_t));
+  cigar->score          = wf_aligner->cigar->score; 
+  cigar->end_h          = wf_aligner->cigar->end_h;
+  cigar->end_offset     = wf_aligner->cigar->end_offset;
+  cigar->end_v          = wf_aligner->cigar->end_v;
+  cigar->begin_offset   = wf_aligner->cigar->begin_offset; 
+  cigar->max_operations = wf_aligner->cigar->max_operations; 
+  cigar->cigar_length   = wf_aligner->cigar->cigar_length; 
+  cigar->cigar_buffer   = wf_aligner->cigar->cigar_buffer;
+  cigar->operations     = wf_aligner->cigar->operations; 
+
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input, cigar);
+  }
+
   if (align_input->output_file) {
     quicked_print_output(align_input, false, "", score);
   }
+  free(cigar);
 }
 
 

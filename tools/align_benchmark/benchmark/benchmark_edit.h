@@ -74,4 +74,16 @@ void benchmark_edlib(
 void benchmark_wavefront(    
     align_input_t* const align_input);
 
+void benchmark_astarpa(
+    align_input_t* const align_input);
+
+void benchmark_astarpa2_simple(
+    align_input_t* const align_input);
+
+void benchmark_astarpa2_full(
+    align_input_t* const align_input);
+
+void benchmark_sneakysnake(
+    align_input_t* const align_input);
+
 #endif /* BENCHMARK_EDIT_H_ */

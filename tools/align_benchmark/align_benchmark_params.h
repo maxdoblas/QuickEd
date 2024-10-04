@@ -45,6 +45,7 @@ typedef enum {
   alignment_edlib,
   alignment_wavefront, 
   alignment_biwavefront, 
+  alignment_wfa_adapt,
   alignment_ksw2, 
   alignment_astarpa,
   alignment_astarpa2_simple,
