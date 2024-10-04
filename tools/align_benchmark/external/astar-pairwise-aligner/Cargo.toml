@@ -1,0 +1,50 @@
+[workspace]
+members = [
+    "pa-affine-types",
+    "pa-heuristic",
+    "pa-vis",
+    "pa-test",
+
+    "astarpa",
+    "astarpa-c",
+    "astarpa2",
+
+    "pa-vis",
+
+    "pa-bin",
+    "pa-web",
+
+    "pa-bitpacking",
+    "pa-base-algos",
+    "astarpa-next",
+]
+resolver = "2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+# 2x smaller file size when 'true', but that takes longer
+lto = "thin"
+incremental = true
+opt-level = 3
+debug = false
+# 10x smaller file size without debug symbols.
+# Breaks backtrace printing.
+strip = false
+
+[workspace.dependencies]
+pa-types.git = "https://github.com/pairwise-alignment/pa-types"
+pa-generate.git = "https://github.com/pairwise-alignment/pa-generate"
+pa-affine-types.path = "pa-affine-types"
+pa-heuristic.path = "pa-heuristic"
+pa-vis.path = "pa-vis"
+pa-base-algos.path = "pa-base-algos"
+astarpa.path = "astarpa"
+astarpa2.path = "astarpa2"
+pa-bin.path = "pa-bin"
+pa-bitpacking.path = "pa-bitpacking"
+
+clap = { version = "4", features = ["derive", "wrap_help"] }
+serde = { version = "1", features = ["derive"] }
+itertools = "0.10"
+# NOTE: Cargo 1.3.1 uses `editdistancek` which currently doesn't build on macbook M1.
+bio = "=1.3.0"

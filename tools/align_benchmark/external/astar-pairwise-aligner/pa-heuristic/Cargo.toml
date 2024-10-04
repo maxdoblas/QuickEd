@@ -1,0 +1,42 @@
+[package]
+name = "pa-heuristic"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pa-types.workspace = true
+
+clap.workspace = true
+serde.workspace = true
+bio.workspace = true
+
+# wasm-friendly instant
+instant = "0.1"
+itertools = "0.10"
+rustc-hash = "1"
+num-traits = "0.2"
+derive_more = { version = "0.99", default-features = false, features = ["add_assign"] }
+smallvec = { version = "1", features = ["union"] }
+rand = "0.8"
+
+[dev-dependencies]
+pa-generate.workspace = true
+aho-corasick = "0.7"
+lazy_static = "1"
+suffix = "1"
+criterion = { version = "0.4.0" }
+
+[features]
+# Enable marking matches as pruned in SH.
+example = []
+
+
+[[bench]]
+name = "qgrams"
+harness = false
+
+[[bench]]
+name = "matches"
+harness = false

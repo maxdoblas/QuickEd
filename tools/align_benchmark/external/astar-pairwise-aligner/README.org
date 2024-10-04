@@ -1,0 +1,177 @@
+#+TITLE: A*PA & A*PA2: A* Pairwise Aligner
+#+PROPERTY: header-args :eval no-export :exports results
+
+A*PA is a global pairwise sequence aligner for edit distance using A*, co-authored by [[https://github.com/pesho-ivanov][@pesho-ivanov]] and [[https://github.com/RagnarGrootKoerkamp][@RagnarGrootKoerkamp]].
+
+A*PA2 is an improvement of A*PA that uses a DP-based approach instead of plain A*.
+It achieves up to 20x speedup over other exact aligners and is competitive with
+approximate aligners.
+
+An alignment of two sequences of length 500 with 30% error rate using A*PA:
+
+[[file:imgs/readme/layers.gif]]
+
+An alignment of two sequences of length 10'000 with 15% error rate using A*PA2:
+
+[[file:imgs/readme/astarpa2.gif]]
+
+- Papers ::
+  For A*PA, we recommend reading the bioRxiv version which directly includes the
+  supplement and has better formatting. But please cite the Bioinformatics version!
+  - A*PA BioRxiv preprint:
+
+    *Ragnar Groot Koerkamp*, *Pesho Ivanov*.
+    "Exact global alignment using A* with chaining seed heuristic and match pruning".
+    bioRxiv (2024). [[https://doi.org/10.1101/2022.09.19.508631][10.1101/2022.09.19.508631]]
+  - A*PA OUP Bioinformatics paper:
+
+    *Ragnar Groot Koerkamp*, *Pesho Ivanov*.
+    "Exact global alignment using A* with chaining seed heuristic and match pruning".
+    Bioinformatics (2024). [[https://doi.org/10.1093/bioinformatics/btae032][10.1093/bioinformatics/btae032]]
+
+  - A*PA2 BioRxiv preprint:
+
+    *Ragnar Groot Koerkamp*.
+    "A*PA2: up to 20 times faster exact global alignment".
+    bioRxiv (2024). [[https://doi.org/10.1101/2024.03.24.586481][10.1101/2024.03.24.586481]]
+
+- Links ::
+  - Twitter: [[https://mobile.twitter.com/curious_coding][@curious_coding]], [[https://mobile.twitter.com/peshotrie][@peshotrie]],
+  - Matrix: =@curious_coding:matrix.org=,
+  - Blog: [[https://curiouscoding.nl]]
+
+* Usage
+If you run into any kind of problem or unclarity, please (/please/ 🥺) make an issue or
+reach out on twitter or matrix.
+
+** Rust API
+To call A*PA2 from another Rust crate, simply add the =astarpa[2]= crate in this
+repo as a git dependency.
+
+For A*PA2, use ~astarpa2_simple(a, b)~ or ~astarpa2_full(a, b)~ in the
+[[file:astarpa2/src/lib.rs][~astarpa2~ crate]], or customize parameters with e.g.
+#+begin_src rust
+let mut params = astarpa2::AstarPa2Params::full();
+params.front.incremental_doubling = false;
+let mut aligner = params.make_aligner(true);
+let (cost, cigar) = aligner.align(a, b);
+#+end_src
+
+The ~astarpa~ crate is the [[file:astarpa/src/lib.rs][main entrypoint]] for A*PA. See the docs there.
+Use ~astarpa::astarpa(a, b)~ for alignment with default settings or
+~astarpa::astarpa_gcsh(a,b,r,k,end_pruning)~ to use GCSH+DT with custom parameters.
+
+More complex usage examples can be found in [[file:pa-bin/examples/][pa-bin/examples]].
+
+** C API
+The ~astarpa-c~ [[file:astarpa-c/astarpa.h][crate]] contains simple C-bindings for the
+~astarpa::{astarpa,astarpa_gcsh}~ and ~astarpa2::astarpa2_{simple,full}~ functions and an [[file:astarpa-c/example.c][example]] with [[file:astarpa-c/makefile][makefile]]. More should not be needed for
+simple usage. To run the resulting binary, make sure to ~export LD_LIBRARY_PATH=/path/to/astarpa/target/release~.
+
+
+** Command line application
+=pa-bin= is a small command line application that takes as input consecutive pairs of
+sequences from a =.fasta=, =.seq=, or =.txt= file (or can generate random input)
+and outputs costs and alignments to a =.csv=.
+#+end_src
+
+This requires =cargo= and Rust =nightly=. To get both, first install [[https://rustup.rs/][rustup]]. Then enable ~nightly~: ~rustup install nightly; rustup default nightly~.
+
+Install =pa-bin= to =~/.local/share/cargo/bin/pa-bin= using the following (cloning this repo is not needed):
+#+begin_src shell
+cargo install --git https://github.com/RagnarGrootKoerkamp/astar-pairwise-aligner pa-bin
+
+To run from the repository: clone and ~cargo run --release -- <pa-bin flags>~.
+
+#+begin_src shell :exports both :results verbatim
+cargo run --release -- -h
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Globally align pairs of sequences using A*PA
+
+Usage: pa-bin [OPTIONS] <--input <INPUT>|--length <LENGTH>>
+
+Options:
+  -i, --input <INPUT>      A .seq, .txt, or Fasta file with sequence pairs to align
+  -o, --output <OUTPUT>    Write a .csv of `{cost},{cigar}` lines
+      --aligner <ALIGNER>  The aligner to use [default: astarpa2-full] [possible values: astarpa,
+                           astarpa2-simple, astarpa2-full]
+  -h, --help               Print help (see more with '--help')
+
+Generated input:
+  -n, --length <LENGTH>          Target length of each generated sequence [default: 1000]
+  -e, --error-rate <ERROR_RATE>  Error rate between sequences [default: 0.05]
+#+end_example
+
+* Visualization
+The Rust API supports generating visualizations using the =sdl2= library and
+=ttf= fonts. If this gives errors, install =sdl2=: e.g. using ~apt-get install libsdl2-ttf-dev~.
+
+Here are some sample videos. The first five correspond to figure 1 of the A*PA paper.
+Timings are not comparable due to differences in visualization strategies (cell vs layer updates).
+
+|----------------------------------------------------------------------+----------------------------------------------------------------------------|
+| Dijkstra [[file:imgs/readme/2_dijkstra.gif]]                             | Ukkonen's exponential search (Edlib) [[file:imgs/readme/1_ukkonen.gif]]        |
+| Diagonal transition (WFA) [[file:imgs/readme/3_diagonal_transition.gif]] | DT + Divide & Conquer (BiWFA) [[file:imgs/readme/4_dt-divide-and-conquer.gif]] |
+| A*PA (GCSH+DT) [[file:imgs/readme/5_astarpa.gif]]                        | A*PA2-full (8-bit words; block size 32) [[file:imgs/readme/6_astarpa2.gif]] |
+
+* Paper artefacts
+- Figures ::
+  Paper figures are generated using the example binaries at
+  [[file:pa-bin/examples/astarpa-figures][pa-bin/examples/astarpa-figures]] and [[file:pa-bin/examples/astarpa2-figures][pa-bin/examples/astarpa2-figures]].
+
+- Evals ::
+  Benchmarking code, evals, and datasets can be found in the [[https://github.com/pairwise-alignment/pa-bench][pa-bench]] repo.
+  For A*PA, results can be found in [[https://github.com/pairwise-alignment/pa-bench/blob/main/evals/astarpa/evals.ipynb][this notebook]] and reproduced using [[https://github.com/pairwise-alignment/pa-bench/blob/main/evals/astarpa/makefile][this makefile]].
+  For A*PA2, results can be found in [[https://github.com/pairwise-alignment/pa-bench/blob/main/evals/astarpa2/evals.ipynb][this notebook]] and reproduced using [[https://github.com/pairwise-alignment/pa-bench/blob/main/evals/astarpa2/justfile][this justfile]].
+  Dataset downloads are in [[https://github.com/pairwise-alignment/pa-bench/releases/tag/datasets][this release]].
+
+- Tests ::
+  Code is tested for correctness in various tests ([[file:astarpa/src/tests.rs][astarpa/src/tests.rs]]) against
+  ~triple-accel~.
+  The benchmark tool [[https://github.com/pairwise-alignment/pa-bench][pa-bench]] also checks correctness automatically.
+
+* Crate structure
+
+Code is spread out over multiple crates.
+From low to high:
+- ~pa-types~: Basic types such as ~Seq~, ~Pos~, ~Cigar~, and ~Cost~, hosted in
+  the ~pairwise-alignment~ org.
+- ~pa-affine-types~: Types for affine edit graphs such as
+   ~State = (Pos, Layer)~, ~AffineCigar~, and ~CostModel~. Not used by A*PA, but other
+  algorithms and the visualizer support it.
+- ~pa-heuristic~: Code for
+  - finding matches
+  - computing contours (fast and bruteforce)
+  - heuristics themselves
+  - wrapper/bruteforce heuristics for debugging
+- ~pa-vis-types~: Trait definition of the visualizer callbacks, and the empty ~NoVis~ visualizer.
+- ~astarpa~: Main A*PA API entrypoint containing the ~astar~ and ~astar_dt~
+  functions, the ~bucket_queue~ data structure, and the ~astarpa(a,b)~ entrypoint.
+- ~astarpa-c~: C-bindings for ~astarpa~
+- ~pa-vis~: The visualizer. Contains a ~Canvas~ trait implemented for the
+  ~SDL2Canvas~. The ~sdl2~ feature is optional.
+- ~pa-generate~: Library and binary to generate different types of random sequences.
+- ~pa-bin~: Main command line interface to A*PA. Allows for input from file,
+  generated input, visualizing, and customization of the A*PA parameters.
+- ~pa-bitpacking~: Implementation of Myers' bitpacking algorithms and SIMD extensions.
+- ~astarpa2~: A*PA2 entrypoint containing ~astarpa2_simple~ and ~astarpa2_full~ functions.
+- ~pa-base-algos~: Re-implementations of Needleman-Wunsch/Edlib and
+  Diagonal-transition/WFA/BiWFA for visualizations.
+- ~astarpa-next~: Some code for other new ideas such as [[https://curiouscoding.nl/posts/speeding-up-astar/][path-pruning]].
+- ~pa-web~: web-interface to A*PA by compiling to webassembly. Implements the
+  ~Canvas~ trait for ~HTMLCanvas~. (Not maintained.)
+
+#+begin_src shell :results file :file imgs/readme/depgraph.svg :exports results
+cargo depgraph --dedup-transitive-deps \
+    --include pa-generate,pa-bin,pa-vis,astarpa,pa-types,pa-affine-types,sdl2,pa-base-algos,pa-heuristic,pa-vis-types,astarpa-c,pa-bitpacking,astarpa2,astarpa-next \
+    | dot -T svg
+#+end_src
+
+#+RESULTS:
+[[file:imgs/readme/depgraph.svg]]
+
+* License
+MPL-2.0

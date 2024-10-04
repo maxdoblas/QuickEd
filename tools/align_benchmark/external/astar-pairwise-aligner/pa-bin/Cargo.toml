@@ -1,0 +1,82 @@
+[package]
+name = "pa-bin"
+version = "0.1.0"
+edition = "2021"
+default-run = "pa-bin"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pa-types.workspace = true
+pa-generate.workspace = true
+pa-heuristic.workspace = true
+astarpa.workspace = true
+astarpa2.workspace = true
+itertools.workspace = true
+clap.workspace = true
+serde.workspace = true
+bio.workspace = true
+rand_chacha = "0.3"
+rand = "0.8"
+parse_duration0 = "3"
+
+[dev-dependencies]
+# Dependencies used by the examples.
+pa-base-algos.workspace = true
+pa-affine-types.workspace = true
+pa-bitpacking.workspace = true
+pa-vis.workspace = true
+
+[features]
+# Needed to correctly show pruned matches in visualizations.
+example = ["pa-heuristic/example", "astarpa2/example"]
+sdl = ["pa-vis/sdl"]
+default = []
+
+# A*PA figures
+[[example]]
+name = "fig-intro"
+path = "examples/astarpa-figures/intro.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-layers"
+path = "examples/astarpa-figures/layers.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-comparison"
+path = "examples/astarpa-figures/comparison.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-limitations"
+path = "examples/astarpa-figures/limitations.rs"
+required-features = ["example"]
+
+# A*PA2 figures
+[[example]]
+name = "fig-intro-2"
+path = "examples/astarpa2-figures/intro.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-trace-2"
+path = "examples/astarpa2-figures/trace.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-prepruning-2"
+path = "examples/astarpa2-figures/prepruning.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-doubling-2"
+path = "examples/astarpa2-figures/doubling.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-ranges-2"
+path = "examples/astarpa2-figures/ranges.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-simd-2"
+path = "examples/astarpa2-figures/simd.rs"
+required-features = ["example"]
+[[example]]
+name = "fig-comparison-2"
+path = "examples/astarpa2-figures/comparison.rs"
+required-features = ["example"]

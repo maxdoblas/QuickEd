@@ -1,0 +1,321 @@
+#+TITLE: Todo
+
+List of TODOs and other quick remarks.
+
+* Correctness
+** DONE Proof for consistency of $h$ at start of matches
+** DONE Proof that =consistent pruned heuristics= works
+** DONE Proof that pruning heuristic yields a consistent pruned heuristic
+By definition, now that we are more conservative with checking neighbours before pruning.
+
+* Run-time analysis
+** TODO What is the expected deviation from the diagonal for a random sequence?
+Is this $\sqrt n$ like in a drunkard's walk? Or is it less, because we know
+where we end and can use $j = (m/n) * i$ as prediction.
+** TODO Proof expected linear runtime
+*** TODO MISSING: Probability that on-diagonal matches are actually pruned is large.
+** Max edit distance for large n
+$k \geq \lg n$.
+$k \leq 1/e$.
+$e \leq 1/k \leq 1/\lg n$.
+them: $n \cdot s = n ^2 e = n^2 / \lg n$
+us: $n$
+
+* Code
+** TODO Make a separate type for transformed positions
+** TODO Check code coverage
+** TODO Test if ~dyn Contour~ is as fast as ~C: Contour~, and if so simplify the code this way.
+Same for Heuristic. Compilation is very slow after enumerating over all possible
+implementations in ~algorithms.rs~.
+** TODO Trie for inexact matching
+WIP, but not so efficient yet.
+*** TODO Instead of a Vec<> in each node, make one big vec of data pointers
+*** TODO Insert words in sorted order
+- Cache locality
+- data can be a slice from larger vector.
+** TODO More compact Match/Arrow representation; using delta encoding for end
+** TODO
+** TODO Parallellize code
+*** TODO Trie building (lock after the first 2 layers)
+*** TODO Trie lookup: trie is immutable at this point
+*** TODO A*: One thread for pruning, one thread for querying
+** DONE A*:
+CLOSED: [2022-02-14 Mon 20:10]
+*** DONE Instead of storing f for expanded states, store g for queue states
+CLOSED: [2022-01-21 Fri 03:24]
+Only process if f is up-to-date and g_queue == g_expanded
+
+Not much speedup, but fixes a potential bug because checking ~f_queue < f~ isn't
+always accurate in context of pruning.
+Double-expands slightly more now, but retries much less, because the check for
+~g_queue == g~ (which just ignores the element if false), makes for skipping
+some retries.
+** DONE Make deleting from ~contours~ vector faster
+CLOSED: [2022-02-10 Thu 16:16]
+Replace the single vector by something that allows faster deletion but still
+constant time lookup.
+*** Fixed by using a double-stack approach, shifting elements from one to the other once we pass them.
+** DONE Reduce number of retries by adding an offset to the BucketQueue that's updated after every prune.
+CLOSED: [2022-02-06 Sun 13:02]
+When the position to be pruned is the largest transformed position seen so far,
+add an offset to the priority queue since all expanded states need updating.
+
+Currently this can only work if the pruned match is preceded by another exact
+match, since expanded states just above/left of the pruned position will be
+larger than the pruned position in the transformed domain.
+
+For large n and e=0.01 or e=0.05, this reduces the number of retries by 10x to 100x.
+** TODO Reduce retries more: Also prune when there's <Constant~=10 states that need updating.
+
+** TODO Computational domains: Estimate/Exponential search f, and prune states with larger f.
+** TODO Single-vec bucket queue: Just use a normal queue and keep indices to the slices for each value
+This only works when we only push values equal to the minimum f or 1 larger (so
+that a single swap is sufficient).
+** TODO Single vec version of HashMap<Pos, Vec<Arrows>>
+Allocating all the vectors is slow. Also reserve size for the hashmap.
+** TODO Discard seeds with >1 match
+This can simplify Contours datastructures
+** TODO HintContours using a single vec
+Instead of storing a vec per contour, we can take adjacent slices of on larger
+vector.
+When all contours only contain one point, this is much more compact.
+** TODO Add bloom filters in front of hashmaps
+These can be very small, so fit in L1 cache and can quickly discard elements not
+in the hashmap.
+** TODO Try out a 4^k bitvector as well
+** TODO Use u64 instead of usize where appropriate (i.e. for qgrams)
+
+* WFA merger / next version
+** TODO Do not store parent pointers
+** TODO Store wavefronts for g instead of per-cell
+** TODO For unordered heuristic, we don't need the h hint
+** TODO Try to get rid of A* state (not needed for consistent h)
+** TODO What to do with current_seed_cost?
+** TODO Extend multiple chars at a time (usize for 8 / SIMD for 16)
+
+* Extensions
+** LCS: Do not generate substitutions
+** MSA (delayed; pruning complications)
+*** TODO instantiate one heuristic per pair of sequences
+*** TODO run A* on the one-by-one step graph
+** Non-constant indel/substitution cost
+** Affine gaps
+*** Git-diff, but better?
+
+** Use much larger m and k
+Given a seed, find the best match in b. Then find a lower bound on the cost of
+aligning all other matches of the seed. For something like k=20, e=0.1, we may have
+an on-diagonal match of cost 2, and find that all other matches have cost at
+least in the range 5-10. This allows much more aggressive pruning.
+** Investigate kmer-counting distance
+Similar, but does all kmers instead of disjoint kmers.
+
+* Seeds
+** TODO Dynamic seeding, either greedy or using some DP[i, j, distance].
+- Maximize h(0,0) or r/k
+- Minimize number of extra seeds.
+** TODO choosing seeds bases on guessed alignment
+** DONE Strategies for choosing seeds:
+CLOSED: [2022-01-19 Wed 18:01]
+- A: Each seed does not match, and covers exactly max_dist+1 mutations.
+  - This way, no pruning is needed because there are no matches on the
+    diagonal, and h(0,0) exactly equals the actual distance, so that only a
+    very narrow region is expanded.
+- B: Maximize the number of seeds that matches exactly (at most 10 times).
+- Experiment: make one mutation every k positions, and make seeds of length k.
+** DONE Instead of finding all matches and then filtering, only find matches within the cone
+CLOSED: [2022-02-10 Thu 16:26]
+- Could be done by keeping a dynamic trie, only inserting positions in b once
+  they fall within the cone, and removing then as soon as they leave the cone again.
+*** Added an option to config.rs. Slightly slower but saves a lot of memory potentially.
+
+* Optimizations done:
+** Seed Heuristic
+** Count Heuristic
+** Inexact matches
+** Pruning
+** Pruning correctness: Do not prune matches that are next to a better match.
+** Skip pruning some a small % of matches, giving faster overall pruning time
+** A* optimizations: together 4x speedup
+   - HashMap -> FxHashMap: a faster hash function for ints
+   - HashMap -> DiagonalMap: for expanded/explored states, since these are dense on the diagonal.
+   - BinaryHeap -> BucketHeap: much much faster; turns log(n) pop into O(1) push&pop
+** Do internal iteration over outgoing edges, instead of collecting them.
+
+* short-term todolist
+** Analysis
+- $k \geq log_\Sigma(n)$
+- $k \ll q/e$, but by how much? $k\leq 3/4\cdot 1/e$ seems good? -> next
+  theoretical paper.
+** Supplement
+- Expanded states plots
+- Memory usage plots
+** TODO Fixed k performs better than dynamic k for unordered, but WHY?
+Has to do with h0 being smaller
+** TODO Only consider inexact matches that satisfy greedy matching
+Inexact matches that can not occur as a result of greedy matching can be disregarded.
+** TODO Batch pruning
+When pruning is slow, we can batch multiple prunes and wait untill the band
+becomes too large.
+** TODO Greedy matching and diagonal-transition
+What if in the D-T method we do not allow leaving the path of a greedy match?
+** TODO Speed up exact match finding for SH
+For CSH, we first put seeds in a map and then only store seeds matching a key.
+For SH, we currently make a map of all kmers of B, which is inefficient.
+** DONE Skip insertions at inexact match start/end
+*** TODO Why do we need to preserve insertions at the end when using gapcost?
+** TODO Can we use computational domains
+
+* Parameter tuning
+** CSH [no gapcost]
+|    e | n    | k (m=0)  | k (m=1) | remark         |
+| 0.01 | 10k  | 8+       |         |                |
+| 0.01 | 100k | 10+      |         |                |
+| 0.01 | 1M   | 12+      |         |                |
+| 0.05 | 10k  | 9 - ~15  |         |                |
+| 0.05 | 100k | 10 - ~15 |         |                |
+| 0.05 | 1M   | 12 - ~15 |         |                |
+|  0.1 | 10k  | 8 - 9    | 11 - 18 | m=1 30% slower |
+|  0.1 | 100k | 9 - 10   | 12 - 18 | m=1 40% faster |
+|  0.1 | 1M   | *        | 14 - 18 |                |
+|  0.2 | 10k  | *        | 10 (11) |                |
+|  0.2 | 100k | *        | 11      |                |
+|  0.2 | 1M   | *        | *       |                |
+
+Parameter choice:
+|    e | m |  k | remark                  |
+| 0.01 | 0 | 31 |                         |
+| 0.05 | 0 | 14 |                         |
+|  0.1 | 1 | 16 | for simplicity, fix m=1 |
+|  0.2 | 1 | 11 |                         |
+
+** SH
+|    e | n    | k (m=0)  | k (m=1) | remark         |
+| 0.01 | 10k  | 8+       |         |                |
+| 0.01 | 100k | 10+      |         |                |
+| 0.01 | 1M   | 12+      |         |                |
+| 0.05 | 10k  | 8 - ~16  |         |                |
+| 0.05 | 100k | 9 - ~16  |         |                |
+| 0.05 | 1M   | 11 - ~16 |         |                |
+|  0.1 | 10k  | 8 - 9    | 11 - 18 | m=1 10% faster |
+|  0.1 | 100k | *        | 13 - 18 |                |
+|  0.1 | 1M   | *        | 15 - 18 |                |
+|  0.2 | 10k  | *        | 12      |                |
+|  0.2 | 100k | *        | *       |                |
+|  0.2 | 1M   | *        | *       |                |
+
+Parameter choice v1:
+| m |    e |  k | remark                                              |   |   |   |
+| 0 | 0.01 | 31 |                                                     |   |   |   |
+| 0 | 0.05 | 14 |                                                     |   |   |   |
+| 1 |  0.1 | 16 | for simplicity, fix m=1                             |   |   |   |
+| 1 |  0.2 | 11 | 12 is better at large n, but 11 consistent with CSH |   |   |   |
+
+Parameter choice v2:
+| m | e       |  k | remark                                        |
+| 0 | <= 0.07 | 14 | works reasonably well everywhere              |
+| 1 | > 0.07  | 14 | 12 works better for larger e, 14 for larger n |
+
+
+* SIMD notes
+** Settings:
+*** Enable optimizer logs:
+~.cargo/config~:
+#+begin_src
+[target.'cfg(any(windows, unix))']
+rustflags = ["-C", "target-cpu=native", "-C", "llvm-args=-ffast-math", "-C", "opt-level=3", "-C", "remark=loop-vectorize", "-C", "debuginfo=2"]
+#+end_src
+*** Logs only show when ~lto=true~, but are applied also without
+*** ~opt-level=2~ is sufficient
+** Code
+*** Make sure there are no linear dependencies!
+*** Pre-slice ranges!!!!!
+*** Use half open ranges ~start..end~
+*** Use uncheck range indexing
+*** Make sure function to be tested is actually built
+*** loop over usize?
+*** loop from 0?
+
+** Assembly
+*** Use ~cargo asm --list~ to show functions
+*** Use ~cargo asm <function>~ to show assembly for function
+Target function may be inlined elsewhere!
+~cargo asm --lib --rust --comments pairwise_aligner::aligners::nw::test~
+
+** Links:
+- inclusive scan (prefix min) may be useful to do col-wise NW faster:
+  - https://www.intel.com/content/www/us/en/developer/articles/technical/optimize-scan-operations-explicit-vectorization.html#gs.3ym2aq
+  - https://stackoverflow.com/questions/36085271/horizontal-running-diff-and-conditional-update-using-simd-sse
+  - Blog post on exactly this recursion: https://matklad.github.io/2017/03/18/min-of-three-part-2.html
+
+
+* Flamegraph notes
+
+Flamegraphs after running on $n=10^7$ at [[https://raw.githubusercontent.com/RagnarGrootKoerkamp/astar-pairwise-aligner/master/imgs/flamegraphs/0.05.svg][5%]] and [[https://raw.githubusercontent.com/RagnarGrootKoerkamp/astar-pairwise-aligner/master/imgs/flamegraphs/0.15.svg][15%]] with SH ($r=1$) and CSH
+($r=2$), from ~make flamegraphs~. (Download them for better interaction.)
+
+Breakdown:
+- $e=5\%$
+  - $9\%$: finding all matches,
+  - $31\%$: exploring edges,
+  - $\mathbf 21\%$: traceback.
+- $e=15\%$ :
+  - $14\%$: computing $h$,
+  - $10\%$: exploring edges,
+  - $\mathbf 60\%$: hashmap indexing. Large memory is slower probably?
+
+* New list of ideas
+** More shifting: Bucket queue with buffer
+- Allow shifting everything less than a given position, even when a few
+  positions remain constant.
+** Fewer retries:
+- From the HintContours, return a pair ~(Pos, shift)~: the bottom-right most
+  position ~p~ for which all other positions ~q <= p~ are shifted by the given
+  amount ~shift~.
+** HashMap with buffer for DT
+- The last few layers could be stored separately, so that accessing the front is
+  faster. Especially since this memory will remain hot, while indexing the
+  larger hashmap may go to random parts of memory.
+** Computational domains for DT
+- When a potential optimal path is given, we can compute in advance which
+  regions need to be computed.
+- Together with storing matches in a vector per diagonal, this should make most
+  indexing operations more predictable.
+** Return Cigar instead of Path from A* and A*-DT
+- Should save a bit of time.
+** Linear memory optimization for DT
+- Using less memory by only storing positions where the traceback joins/splits
+  should make the hashmap smaller, leading to faster operations.
+- Hypotheses: it is sufficient to only store those states at the parent of a
+  /critical/ substitution edge.
+*** Figure out exactly how to on-line determine which states to store.
+** Run SH with dynamic seeds such that (after direct pruning) no matches remain
+- This way, computing the value of the heuristic anyway is trivial, and fewer
+  datastructures need to be kept. The only numbers needed are the total number
+  of seeds and the number of seeds starting before the given position.
+- NOTE: This first requires reviving/re-implementing the dynamic seed choosing.
+** Reduce allocations
+** Reuse allocations between runs
+** Divide & Conquer without bidirectional
+Instead of going from two sides, go from one side and keep the middle layer.
+For each position in the front keep the parent in the middle layer, so we can
+restart there.
+
+
+* AFFINE HEURISTIC
+All we need if that lemma 6 holds for some T'.
+** Linear
+gap(x) = ax
+gapcost(u,v) = a * (|(i'-i) - (j'-j)|) <= P(u) - P(v) = seedcost
+T(i,j) = (a(i-j)-P, a(j-i)-P)
+(substitution cost doesn't matter)
+
+** Affine
+gap(x) = ax+b
+2 options:
+- gapcost(u,v) = 0
+- gapcost(u,v) = a * (|(i'-i) - (j'-j)|) + b
+We want T(u) <= T(v) equivalent to
+a((i'-i)-(j'-j)) + b <= P(u) - P(v)
+a(i-j)-P(u) + b <= a(i'-j')-P(v)
+a(j-i)-P(u) + b <= a(j'-i')-P(v)
