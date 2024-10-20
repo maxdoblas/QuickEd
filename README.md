@@ -2,7 +2,7 @@ QuickEd
 &nbsp;
 [![Release](https://img.shields.io/github/release/maxdoblas/quicked.svg)](https://github.com/maxdoblas/quicked/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/maxdoblas/quicked/build_and_test.yaml)](https://github.com/maxdoblas/QuickEd/actions/workflows/build_and_test.yaml)
-[![Publication](https://img.shields.io/badge/Published%20in-BioRxiv-167DA4.svg)](https://www.biorxiv.org/)
+[![Publication](https://img.shields.io/badge/Published%20in-BioRxiv-167DA4.svg)]([https://www.biorxiv.org/](https://www.biorxiv.org/content/10.1101/2024.09.13.612714))
 =====
 
 QuickEd is a high-performance exact sequence alignment based on the bound-and-align paradigm.
