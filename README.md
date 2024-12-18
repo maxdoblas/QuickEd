@@ -2,7 +2,7 @@ QuickEd
 &nbsp;
 [![Release](https://img.shields.io/github/release/maxdoblas/quicked.svg)](https://github.com/maxdoblas/quicked/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/maxdoblas/quicked/build_and_test.yaml?branch=dev)](https://github.com/maxdoblas/QuickEd/actions/workflows/build_and_test.yaml)
-[![Publication](https://img.shields.io/badge/Published%20in-BioRxiv-167DA4.svg)](https://www.biorxiv.org/)
+[![Publication](https://img.shields.io/badge/Published%20in-BioRxiv-167DA4.svg)](https://doi.org/10.1101/2024.09.13.612714)
 =====
 
 QuickEd is a high-performance exact sequence alignment based on the bound-and-align paradigm.
@@ -46,6 +46,7 @@ Contents
 * [Development and Debugging](#development-and-debugging)
   * [Generate code coverage data](#generate-code-coverage-data)
   * [AddressSanitizer and UndefinedBehaviorSanitizer](#addresssanitizer-and-undefinedbehaviorsanitizer)
+* [Experimental Evaluation](#experimental-evaluation)
 
 ## Integrate QuickEd in your tools
 
@@ -232,7 +233,6 @@ The `quicked_params_t` configuration struct has the following parameters:
 * **unsigned int** `overlap_size`: sets the overlap size in blocks for the WindowEd algorithms. Also, it sets the window size for the WindowEd(L) inside the QuickEd method. **Note**: the size in cells will be `64*window_size`.
 * **unsigned int** `hew_threshold[2]`: The error percentage threshold inside a window to be considered a high error window (HEW). This parameter is only used inside Quicked. Position [0] refers to the WindowEd(S) step and position [1] to the WindowEd(L) step.
 * **unsigned int** `hew_percentage[2]`: percentage of HEW in a particular WindowEd alignment to consider that the estimation is not fitted. This parameter is only used inside Quicked. Position [0] refers to the WindowEd(S) step and position [1] to the WindowEd(L) step.
-* **bool** `only_score`: If set to true, turn off the CIGAR generation for the WindowEd and BandEd methods.
 * **bool** `force_scalar`: If set to true, it forces WindowEd and BandEd implementation to use the scalar code.
 
 > [!WARNING]
@@ -284,3 +284,126 @@ make
 
 > [!WARNING]
 > ASAN and UBSAN could fail when executing the Python binding. This is known behavior.
+
+## Experimental Evaluation
+
+We evaluated the performance of QuickEd compared to other state-of-the-art sequence alignment libraries. In this section, we provide a brief overview of the steps to reproduce the experimental evaluation found in the paper.
+
+### Datasets
+
+The used datasets are enumerated in S1 of the Supplementary Material and can be found at [Zenodo MISSING LINK]().
+
+### Methods
+
+We evaluated QuickEd against the following libraries/algorithms:
+
+* [Scrooge](https://github.com/CMU-SAFARI/Scrooge) [in _WFA2-lib_ [455be3b](https://github.com/smarco/WFA2-lib/tree/455be3bf8ba43f4fd7a33017b306a1bb5d8dcbec)]
+* [Edlib](https://github.com/Martinsos/edlib) [[931be2b](https://github.com/Martinsos/edlib/tree/931be2b0909985551eb17d767694a6e64e31ebfa)]
+* [KSW2](https://github.com/lh3/ksw2) [in _WFA2-lib_ [455be3b](https://github.com/smarco/WFA2-lib/tree/455be3bf8ba43f4fd7a33017b306a1bb5d8dcbec)]
+* [A* Pairwise Aligner](https://github.com/RagnarGrootKoerkamp/astar-pairwise-aligner) (_A*PA_ and _A*PA2_) [[8ca0f21](https://github.com/RagnarGrootKoerkamp/astar-pairwise-aligner/tree/8ca0f216886765a85a2260e6ac0a6b2f3f69819e)]
+* [WFA2-lib](https://github.com/smarco/WFA2-lib) (_WFA_ and _BiWFA_) [[455be3b](https://github.com/smarco/WFA2-lib/tree/455be3bf8ba43f4fd7a33017b306a1bb5d8dcbec)]
+
+Edlib is integrated in the [**align_benchmark**](https://github.com/maxdoblas/QuickEd/tree/benchmark/tools) tool, as a ground-truth comparison.
+A* Pairwise Aligners is also integrated through its C binding.
+
+WFA/BiWFA can be used either in QuickEd's integration or through its original repository.
+
+Scrooge and KSW2 can be found already integrated in the WFA2-lib repository (`benchmark` branch), and they have been evaluated using its [**align_benchmark**](https://github.com/smarco/WFA2-lib/tree/benchmark/tools) tool which is very similar to ours.
+
+
+
+### Environment
+
+All the experiments were run on a machine with the following specifications:
+
+* **CPU**: Intel Xeon Platinum 8480+ @ 3GHZ _(fixed at this frequency)_
+* **RAM**: 256 GB
+
+All runs were performed using a single thread and a single, exclusive node (enforced by SLURM with `#SBATCH --hint=nomultithread` and `#SBATCH --exclusive`).
+
+We also used the following versions for compilers and other tools:
+
+* **GCC**: 12.3.0
+* **CMake**: 3.25.1
+* **Rust**: 1.85.0-nightly
+
+With this setup, `AVX512` instructions are available whenever the tool can leverage them.
+All libraries were compiled following the instructions provided in their respective repositories.
+
+### Reproducing the results
+
+To reproduce the results, you need to follow these steps:
+
+**1.** Clone and compile both QuickEd and [WFA2-lib](https://github.com/smarco/WFA2-lib/tree/benchmark) repositories, according to the instructions provided in their README files, **using the `benchmark` branch**.
+
+```bash
+git clone -b 'benchmark' https://github.com/maxdoblas/QuickEd.git
+cd QuickEd
+cd tools/align_benchmark/external/astar-pairwise-aligner/
+cargo build --release --offline
+cbindgen --lang c --cpp-compat --crate astarpa-c -o astarpa.h
+cd ../../../../
+mkdir build && cd build
+cmake ..
+make
+```
+
+```bash
+git clone -b 'bechmark' https://github.com/smarco/WFA2-lib
+cd WFA2-lib
+make external-all
+make all
+```
+
+**2.** Using the corresponding **align_benchmark** for the desired algorithm, run the following command:
+
+```bash
+./align_benchmark -i <dataset> -o <output> -a <algorithm> --verbose 4
+```
+
+The available algorithms in QuickEd repo are:
+
+|       **Method**       | **`-a <algorithm>`** |
+|:----------------------:|:--------------------:|
+| QuickEd                | quicked              |
+| * BandEd _(QuickEd)_   | edit-banded          |
+| * WindowEd _(QuickEd)_ | edit-windowed        |
+| WFA                    | wfa2-edit            |
+| BiWFA                  | biwfa-edit           |
+| A*PA                   | astarpa              |
+| Edlib                  | edlib                |
+| A*PA2 Simple           | astarpa2-simple      |
+| A*PA2 Full             | astarpa2-full        |
+
+Likewise, the available algorithms in WFA2-lib repo are:
+
+|       **Method**      | **`-a <algorithm>`** |
+|:---------------------:|:--------------------:|
+| Scrooge               | scrooge              |
+| KSW2 _(Gap-Affine)_   | ksw2-extz2-sse       |
+
+For KSW2 to represent edit-distance, you need to add the `--affine-penalties 0,1,0,1` flag.
+
+**3.** For _BandEd_ and _WindowEd_ methods, additional parameters can be set:
+
+```bash
+./align_benchmark -i <dataset> -o <output> -a edit-banded --bandwidth <int> --only-score
+```
+
+```bash
+./align_benchmark -i <dataset> -o <output> -a edit-windowed -a edit-windowed --overlap-size <int> --window-size <int>
+```
+
+For _BandEd_ and _WindowEd_ executions without vectorization, you can use the `--force-scalar` flag.
+
+**4.** To obtain the memory consumption, prepend the command with `/bin/time -v`:
+
+```bash
+/bin/time -v ./align_benchmark ...
+```
+
+Or alternatively with `\time`:
+
+```bash
+\time -v ./align_benchmark ...
+```
