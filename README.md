@@ -132,18 +132,21 @@ Now you can compile it with `gcc aligner.c -o aligner -I quicked -I quicked_util
 To build QuickEd, clone the repository and update the submodules:
 
 ```bash
-git clone https://github.com/maxdoblas/QuickEd.git
+git clone https://github.com/maxdoblas/QuickEd.git -b benchmark
 cd QuickEd
 ```
 
 > [!IMPORTANT]
 > QuickEd is built using CMake, so make sure you have it installed on your system. The minimum required version is 3.20
 
+> [!NOTE]
+> `benchmark` branch integrates [**A\* Pairwise Alignment**](https://github.com/RagnarGrootKoerkamp/astar-pairwise-aligner). For more information about its building process, please refer to the original repo.
+
 Execute the following command to build QuickEd using CMake:
 
 ```bash
 cd tools/align_benchmark/external/astar-pairwise-aligner/
-cargo build --release --offline
+cargo build --release
 cbindgen --lang c --cpp-compat --crate astarpa-c -o astarpa.h
 cd ../../../../
 mkdir build && cd build
@@ -338,7 +341,7 @@ To reproduce the results, you need to follow these steps:
 git clone -b 'benchmark' https://github.com/maxdoblas/QuickEd.git
 cd QuickEd
 cd tools/align_benchmark/external/astar-pairwise-aligner/
-cargo build --release --offline
+cargo build --release
 cbindgen --lang c --cpp-compat --crate astarpa-c -o astarpa.h
 cd ../../../../
 mkdir build && cd build
