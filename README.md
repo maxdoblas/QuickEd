@@ -301,7 +301,7 @@ We evaluated QuickEd against the following libraries/algorithms:
 * [Edlib](https://github.com/Martinsos/edlib) [[931be2b](https://github.com/Martinsos/edlib/tree/931be2b0909985551eb17d767694a6e64e31ebfa)]
 * [KSW2](https://github.com/lh3/ksw2) [in _WFA2-lib_ [455be3b](https://github.com/smarco/WFA2-lib/tree/455be3bf8ba43f4fd7a33017b306a1bb5d8dcbec)]
 * [A* Pairwise Aligner](https://github.com/RagnarGrootKoerkamp/astar-pairwise-aligner) (_A*PA_ and _A*PA2_) [[8ca0f21](https://github.com/RagnarGrootKoerkamp/astar-pairwise-aligner/tree/8ca0f216886765a85a2260e6ac0a6b2f3f69819e)]
-* [WFA2-lib](https://github.com/smarco/WFA2-lib) (_WFA_ and _BiWFA_) [[455be3b](https://github.com/smarco/WFA2-lib/tree/455be3bf8ba43f4fd7a33017b306a1bb5d8dcbec)]
+* [WFA2-lib](https://github.com/smarco/WFA2-lib) (_WFA_ and _BiWFA_) [[42f8bf3](https://github.com/smarco/WFA2-lib/commit/42f8bf3178fb5fd5896f46ffdd08f6d5fb927b51)]
 
 Edlib is integrated in the [**align_benchmark**](https://github.com/maxdoblas/QuickEd/tree/benchmark/tools) tool, as a ground-truth comparison.
 A* Pairwise Aligners is also integrated through its C binding.
