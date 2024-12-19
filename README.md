@@ -1,8 +1,8 @@
 QuickEd
 &nbsp;
 [![Release](https://img.shields.io/github/release/maxdoblas/quicked.svg)](https://github.com/maxdoblas/quicked/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/maxdoblas/quicked/build_and_test.yaml?branch=dev)](https://github.com/maxdoblas/QuickEd/actions/workflows/build_and_test.yaml)
 [![Publication](https://img.shields.io/badge/Published%20in-BioRxiv-167DA4.svg)](https://doi.org/10.1101/2024.09.13.612714)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14526794.svg)](https://doi.org/10.5281/zenodo.14526794)
 =====
 
 QuickEd is a high-performance exact sequence alignment based on the bound-and-align paradigm.
@@ -291,7 +291,7 @@ We evaluated the performance of QuickEd compared to other state-of-the-art seque
 
 ### Datasets
 
-The used datasets are enumerated in S1 of the Supplementary Material and can be found at [Zenodo MISSING LINK]().
+The used datasets are enumerated in S1.2 of the Supplementary Material, and simulated datasets can be found at [Zenodo](https://doi.org/10.5281/zenodo.14526793).
 
 ### Methods
 
@@ -309,8 +309,6 @@ A* Pairwise Aligners is also integrated through its C binding.
 WFA/BiWFA can be used either in QuickEd's integration or through its original repository.
 
 Scrooge and KSW2 can be found already integrated in the WFA2-lib repository (`benchmark` branch), and they have been evaluated using its [**align_benchmark**](https://github.com/smarco/WFA2-lib/tree/benchmark/tools) tool which is very similar to ours.
-
-
 
 ### Environment
 
