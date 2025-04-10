@@ -5,9 +5,9 @@ QuickEd
 [![Publication](https://img.shields.io/badge/Published%20in-Bioinformatics-167DA4.svg)](https://doi.org/10.1093/bioinformatics/btaf112)
 =====
 
-QuickEd is a high-performance exact sequence alignment based on the bound-and-align paradigm.
+QuickEd is a high-performance exact sequence alignment C library, based on the bound-and-align paradigm.
 
-Calculating the edit distance of two DNA sequences using the quicked library is as simple as:
+Calculating the edit distance of two DNA sequences (A, C, G, T, N) using the QuickEd library is as simple as:
 
 ```c
 quicked_params_t params = quicked_default_params();
